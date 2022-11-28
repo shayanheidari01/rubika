@@ -8,7 +8,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name = 'rubpy',
-    version = '4.6.9',
+    version = '4.7.0',
     author='Shayan Heidari',
     author_email = 'snipe4kill@yahoo.com',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',
@@ -16,7 +16,7 @@ setup(
     long_description = readme,
     python_requires="~=3.7",
     long_description_content_type = 'text/markdown',
-    url = 'https://github.com/snipe4kill/rubika/',
+    url = 'https://github.com/shayanheidari01/rubika',
     packages = find_packages(),
     install_requires = requirements,
     classifiers=[
@@ -26,7 +26,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
         'Topic :: Internet',
         'Topic :: Communications',
         'Topic :: Communications :: Chat',
