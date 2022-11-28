@@ -19,6 +19,7 @@ class Client(object):
         self._auth = auth
         self.tools = Tools()
         self.__pool_manager = PoolManager()
+        self.run = asyncio.run
 
     async def sendMessage(self, object_guid, text, reply_to_message_id=None, meta_data=None):
         data = {'object_guid': object_guid, 'rnd': f'{randint(100000, 999999999)}', 'text': text, 'reply_to_message_id': reply_to_message_id}
