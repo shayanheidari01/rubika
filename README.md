@@ -38,6 +38,19 @@ async def hello(message):
 
 ```
 
+**Another example:**
+``` python
+from rubpy import Client
+
+app = Client("my_account")
+
+async def hello():
+    await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
+
+app.run(hello())
+
+```
+
 **Rubpy** is a modern, elegant and asynchronous framework. It enables you to easily interact with the main Rubika API through a user account (custom client) or a bot
 identity (bot API alternative) using Python.
 
