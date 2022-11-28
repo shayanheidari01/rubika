@@ -67,5 +67,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy
+pip3 install rubpy==4.7.0
 ```
