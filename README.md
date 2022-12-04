@@ -33,7 +33,7 @@ app = Client("my_account_auth")
 
 @app.Handler
 async def hello(message):
-    await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
+    await message.reply('Hello from **Rubpy**!')
 
 
 ```
