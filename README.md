@@ -33,7 +33,7 @@ app = Client("my_account_auth")
 
 @app.Handler
 async def hello(message):
-    await message.reply('Hello from **Rubpy**!')
+    await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
 
 
 ```
@@ -67,5 +67,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.0.1
+pip3 install rubpy==5.0.3
 ```

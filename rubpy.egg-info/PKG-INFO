@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: rubpy
-Version: 5.0.1
+Version: 5.0.3
 Summary: This is an unofficial library and fastest library for deploying robots on Rubika accounts.
 Home-page: https://github.com/shayanheidari01/rubika
 Author: Shayan Heidari
@@ -91,5 +91,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.0.0
+pip3 install rubpy==5.0.3
 ```

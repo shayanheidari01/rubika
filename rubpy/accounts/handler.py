@@ -1,3 +1,5 @@
+from re import findall
+
 class Message:
     __slots__ = (
         'bot',
@@ -24,7 +26,7 @@ class Message:
     async def of_user(self):
         return self.msg.get('type') == 'User'
 
-    async def message_id(self):
+    async def id(self):
         return self.msg.get('message_id')
 
     async def text(self):
@@ -45,3 +47,14 @@ class Message:
     async def is_forward(self):
         message = self.msg.get('message')
         return 'forwarded_from' in message.keys() and message.get('forwarded_from').get('type_from') == 'Channel'
+
+    async def hasAds(self):
+        if self.msg.get('message').get('type') == 'Text':
+            string = self.msg.get('message').get('text')
+            urls = findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', string)
+            if urls != []: return True
+            elif '@' in string: return True
+            for check in ['.ir', '.com', '.org']:
+                if check in string: return True
+            else:
+                return False

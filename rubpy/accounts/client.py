@@ -44,7 +44,6 @@ class _Client:
             method='sendMessage',
             data=data,
         )
-        print(data)
         return data
 
     async def sendText(self, object_guid, text, reply_to_message_id=None,):
@@ -471,7 +470,7 @@ class _Client:
         data = {'channel_guid': channel_guid, 'member_guids': member_guids}
         return await self.__make__.request('addChannelMembers', data,)
 
-    async def getChannelAllMembers(self, channel_guid, search_text, start_id=None):
+    async def getChannelAllMembers(self, channel_guid, search_text=None, start_id=None):
         data = {'channel_guid': channel_guid, 'search_text': search_text, 'start_id': start_id}
         return await self.__make__.request('getChannelAllMembers', data,)
 
@@ -508,6 +507,9 @@ class _Client:
 
     async def getContacts(self):
         return await self.__make__.request('getContacts', {})
+
+    async def deleteContact(self):
+        pass
 
     # settings
     async def addFolder(
@@ -751,12 +753,10 @@ class _Client:
 
     def Handler(self, func):
         async def runner():
+            print('This method will be removed in the update version 5.1.0 and later, please use newUpdatesHandler')
             async for i in self.websocket():
                 await func(Message(self, i))
         RUN(runner())
-        raise RuntimeWarning(
-            'This method will be removed in the update version 5.0.3 and later, please use newUpdatesHandler'
-            )
 
     def run(self, func):
         RUN(func())

@@ -109,6 +109,14 @@ class Utils:
 
     async def getMusicArtist(self, music_bytes):
         return str(TinyTag.get(music_bytes).artist)
-    
+
+    async def getMimeFromURL(self, url):
+        if '?' in url:
+            return url.split('/')[-1].split('?')[0].split('.')[-1]
+        elif '.' in url:
+            return url.split('.')[-1]
+        else:
+            return '.unknown'
+
     async def thumb_inline(self):
         return 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAL0lEQVR4nO3NQQ0AAAgEIPVz/Rsbw81BATpJXZiTVSwWi8VisVgsFovFYrFY/DRelEIAZd5yXa4AAAAASUVORK5CYII='
