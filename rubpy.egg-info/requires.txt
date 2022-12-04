@@ -1,0 +1,7 @@
+wheel
+pycryptodome
+websockets
+pybase64
+urllib3
+mutagen
+TinyTag
