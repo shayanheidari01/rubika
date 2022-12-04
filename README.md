@@ -5,7 +5,7 @@
     <br>
     <b>Rubika API Framework for Python</b>
     <br>
-    <a href="home">
+    <a href="https://github.com/shayanheidari01/rubika">
         Homepage
     </a>
     •
@@ -29,7 +29,7 @@
 ``` python
 from rubpy import Client
 
-app = Client("my_account")
+app = Client("my_account_auth")
 
 @app.Handler
 async def hello(message):
@@ -42,12 +42,12 @@ async def hello(message):
 ``` python
 from rubpy import Client
 
-app = Client("my_account")
+app = Client("my_account_auth")
 
 async def hello():
     await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
 
-app.run(hello())
+app.run(hello)
 
 ```
 
@@ -60,12 +60,12 @@ identity (bot API alternative) using Python.
 - **Ready**: Install Rubpy with pip and start building your applications right away.
 - **Easy**: Makes the Rubika API simple and intuitive, while still allowing advanced usages.
 - **Elegant**: Low-level details are abstracted and re-presented in a more convenient way.
-- **Fast**: Boosted up by pycryptodome, ujson and urllib3, a high-performance cryptography library written in C.
+- **Fast**: Boosted up by pycryptodome, a high-performance cryptography library written in C.
 - **Async**: Fully asynchronous (also usable synchronously if wanted, for convenience).
 - **Powerful**: Full access to Rubika's API to execute any official client action and more.
 
 ### Installing
 
 ``` bash
-pip3 install rubpy==4.7.0
+pip3 install rubpy==5.0.0
 ```
