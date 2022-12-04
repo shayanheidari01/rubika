@@ -31,9 +31,9 @@ from rubpy import Client
 
 app = Client("my_account_auth")
 
-@app.Handler
+@app.newUpdatesHandler
 async def hello(message):
-    await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
+    await message.reply('Hello from **Rubpy**!')
 
 
 ```
@@ -45,7 +45,7 @@ from rubpy import Client
 app = Client("my_account_auth")
 
 async def hello():
-    await app.sendMessage(message.get('object-guid'), 'Hello from **Rubpy**!')
+    await app.sendText('object-guid', 'Hello from **Rubpy**!')
 
 app.run(hello)
 
