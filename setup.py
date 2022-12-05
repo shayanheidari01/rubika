@@ -1,14 +1,21 @@
 from setuptools import setup, find_packages
 
-
-requirements = ['wheel', 'pycryptodome', 'websockets', 'pybase64', 'urllib3', 'mutagen', 'TinyTag']
+requirements = [
+    'wheel',
+    'pycryptodome',
+    'websockets',
+    'pybase64',
+    'urllib3',
+    'mutagen',
+    'TinyTag',
+]
 
 with open("README.md", encoding="utf-8") as f:
     readme = f.read()
 
 setup(
     name = 'rubpy',
-    version = '5.0.3',
+    version = '5.0.5',
     author='Shayan Heidari',
     author_email = 'snipe4kill@yahoo.com',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',

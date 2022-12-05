@@ -20,11 +20,19 @@ class Message:
     async def show(self):
         return self.msg
 
-    async def of_group(self):
-        return self.msg.get('type') == 'Group'
+    async def of_group(self, groups=None):
+        if groups == None:
+            return self.msg.get('type') == 'Group'
+        else:
+            if self.msg.get('type') == 'Group':
+                return self.msg.get('object_guid') in groups
 
-    async def of_user(self):
-        return self.msg.get('type') == 'User'
+    async def of_user(self, users=None):
+        if users == None:
+            return self.msg.get('type') == 'User'
+        else:
+            if self.msg.get('type') == 'User':
+                return self.msg.get('object_guid') in users
 
     async def id(self):
         return self.msg.get('message_id')
@@ -40,6 +48,12 @@ class Message:
 
     async def author_type(self):
         return self.msg.get('message').get('author_type')
+
+    async def author_object_guid(self, authors=None):
+        if authors == None:
+            return self.msg.get('message').get('author_object_guid')
+        else:
+            return self.msg.get('message').get('author_object_guid') in authors
 
     async def chat_id(self):
         return self.msg.get('object_guid')

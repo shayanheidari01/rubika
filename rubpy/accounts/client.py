@@ -15,9 +15,11 @@ class _Client:
         '__make__',
         'websocket',
         'utils',
+        '__auth',
     )
     def __init__(self, auth):
         self.__make__ = MethodsMaker(auth=auth,)
+        self.__auth = auth
         self.websocket = WebSocket(auth,).updatesHandler
         self.utils = Utils()
         del auth
@@ -692,13 +694,13 @@ class _Client:
         )
 
     async def download(self, object_guid=None, message_id=None, from_link=None, save=False, file_name=None, **kwargs):
-        file = b''
-
         file_id = kwargs.get('file_id')
+
         if file_id != None:
             size = kwargs.get('size')
             dc_id = kwargs.get('dc_id')
             access_hash_rec = kwargs.get('access_hash_rec')
+
         elif from_link != None and from_link.startswith('http'):
             geted_data = await self.getLinkFromAppUrl(from_link)
             geted_data = geted_data.get('link').get('open_chat_data')
@@ -709,6 +711,7 @@ class _Client:
             dc_id = message_data.get('dc_id')
             access_hash_rec = message_data.get('access_hash_rec')
             file_name = message_data.get('file_name')
+
         elif object_guid and message_id != None:
             geted_data = await self.getMessagesByID(object_guid, [message_id])
             message_data = geted_data.get('messages')[0].get('file_inline')
@@ -720,7 +723,7 @@ class _Client:
 
         url = 'https://messenger{}.iranlms.ir/GetFile.ashx'.format(dc_id)
         headers = {
-            'auth': self._auth,
+            'auth': self.__auth,
             'file-id': file_id,
 			'access-hash-rec': access_hash_rec
         }
