@@ -69,3 +69,6 @@ identity (bot API alternative) using Python.
 ``` bash
 pip3 install rubpy==5.0.5
 ```
+
+**Thanks From:**
+- https://t.me/HajiApi
