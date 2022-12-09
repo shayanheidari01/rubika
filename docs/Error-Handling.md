@@ -1,0 +1,16 @@
+# مدیریت خطا ها
+**خطا ها را میتوان با درستی در rubpy مدیریت کرد، زیرا در rubpy تعریف شده اند برای راحتی شما کاربران عزیز**
+```python
+from rubpy import exceptions
+```
+___
+## دسته بندی خطاها
+**بسته exceptions برای کنترل کردن خطاهایی که ممکن است در طول زمان اجرای برنامه به وجود می آیند،  به وجود آمده است**
+```python
+from runpy.exceptions import InvalidInput, TooRequests, ...
+```
+- NotRegistered
+- InvalidInput
+- TooRequests
+- InvaildAuth
+- Repeated
