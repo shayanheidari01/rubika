@@ -26,7 +26,7 @@ async def my_bot(bot, message):
 ###### این فقط یک مرور سریع بود. در چند صفحه بعدی مقدمه، نگاه بسیار عمیق تری به آنچه در بالا انجام دادیم خواهیم داشت.
 
 <p align="center">
-    <a href="[https://github.com/shayanheidari01/rubika](https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md)">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md">
         صفحه بعدی
     </a>
 </p>
