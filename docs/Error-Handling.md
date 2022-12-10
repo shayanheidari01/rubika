@@ -5,7 +5,7 @@ from rubpy import exceptions
 ```
 ___
 ## دسته بندی خطاها
-**بسته exceptions برای کنترل کردن خطاهایی که ممکن است در طول زمان اجرای برنامه به وجود می آیند،  به وجود آمده است**
+**بسته exceptions برای کنترل کردن خطاهایی که ممکن است در طول زمان اجرای برنامه به وجود بیایند،  به وجود آمده است**
 ```python
 from runpy.exceptions import InvalidInput, TooRequests, ...
 ```
