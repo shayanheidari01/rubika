@@ -1,7 +1,7 @@
 # ثبت نام و ورود
 
 <p align="center">
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Authorization.md">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Handling-Updates.md">
         صفحه بعدی
     </a>
   •
