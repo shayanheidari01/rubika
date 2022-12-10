@@ -40,7 +40,6 @@ app.run(my_bot)
 ```
 **OR**
 ```python
-```python
 from rubpy import Bot
 
 app = Bot('token')
