@@ -9,7 +9,7 @@
         Homepage
     </a>
     •
-    <a href="https://github.com/shayanheidari01/rubika/raw/master/docs/rubpy-documents.pdf">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/basic.md">
         Documentation
     </a>
     •
