@@ -25,7 +25,34 @@
 ## Rubpy
 
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
+#For Bots:
+___
+```python
+from rubpy import Bot
 
+app = Bot('token')
+
+async def my_bot(bot):
+    me = await bot.getMe()
+    print(me)
+
+app.run(my_bot)
+```
+**OR**
+```python
+```python
+from rubpy import Bot
+
+app = Bot('token')
+
+async def my_bot(bot):
+    data = bot.sendMessage('chat_id', 'text')
+    print(await data)
+
+app.run(my_bot)
+```
+___
+# Accounts
 ``` python
 from rubpy import Client
 
