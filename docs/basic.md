@@ -28,6 +28,8 @@ async def my_bot(bot, message):
 <p align="center">
     </a>
     <br>
-    <b>صفحه بعدی</b>
+    <a href="[https://github.com/shayanheidari01/rubika](https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md)">
+        صفحه بعدی
+    </a>
     <br>
 </p>
