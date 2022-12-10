@@ -19,7 +19,7 @@ pip3 install -U rubpy
         صفحه بعدی
     </a>
   •
-  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md">
+  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/basic.md">
         صفحه قبلی
     </a>
 </p>
