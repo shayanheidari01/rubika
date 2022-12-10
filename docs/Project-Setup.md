@@ -36,7 +36,7 @@ ___
 ##### حالا که شناسه آث را توسط آموزش های قبلی به دست آورده ایم، میتوانیم پیکربندی پروژه را شروع کنیم:
 **شناسه آث را به آرگومان یا پارامتر auth در Client بدهید**
 ```python
-from pyrogram import Client
+from rubpy import Client
 
 auth = 'qwertyuiopasdfghjklzxcvbnmqwert'
 
