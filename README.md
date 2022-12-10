@@ -25,7 +25,7 @@
 ## Rubpy
 
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
-#For Bots:
+# For Bots:
 ___
 ```python
 from rubpy import Bot
