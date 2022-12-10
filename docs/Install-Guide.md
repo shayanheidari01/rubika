@@ -13,3 +13,13 @@ pip3 install -U rubpy
 >>> pyrogram.__version__
 'x.y.z'
 ```
+
+<p align="center">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md">
+        صفحه بعدی
+    </a>
+  •
+  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md">
+        صفحه قبلی
+    </a>
+</p>
