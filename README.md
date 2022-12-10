@@ -9,7 +9,7 @@
         Homepage
     </a>
     •
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/basic.md">
+    <a href="https://github.com/shayanheidari01/rubika/raw/master/docs/rubpy-documents.pdf">
         Documentation
     </a>
     •
@@ -29,12 +29,11 @@
 ``` python
 from rubpy import Client
 
-app = Client("my_account_auth")
+app = Client('MY-AUTH')
 
-@app.Handler
-async def hello(message):
+@app.handler
+async def my_bot(bot, message):
     await message.reply('``Hello`` __from__ **Rubpy**!')
-
 
 ```
 
@@ -44,10 +43,10 @@ from rubpy import Client
 
 app = Client("my_account_auth")
 
-async def hello():
-    await app.sendText('object_guid', '``Hello`` __from__ **Rubpy**!')
+async def my_bot(bot):
+    await bot.sendText('object_guid', '``Hello`` __from__ **Rubpy**!')
 
-app.run(hello)
+app.run(my_bot)
 
 ```
 
@@ -67,8 +66,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.0.5
+pip3 install rubpy==5.1.0
 ```
-
-**Thanks From:**
-- https://t.me/HajiApi

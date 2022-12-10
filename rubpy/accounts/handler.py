@@ -72,3 +72,9 @@ class Message:
                 if check in string: return True
             else:
                 return False
+    
+    async def setPin(self):
+        return await self.bot.setPinMessage(
+            self.msg.get('object_guid'),
+            self.msg.get('message_id'),
+        )

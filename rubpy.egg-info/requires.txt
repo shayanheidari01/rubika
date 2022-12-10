@@ -2,6 +2,6 @@ wheel
 pycryptodome
 websockets
 pybase64
-urllib3
+aiohttp
 mutagen
 TinyTag

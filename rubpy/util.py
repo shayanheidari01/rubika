@@ -1,51 +1,95 @@
-from re import findall
-try: from PIL import Image
-except ModuleNotFoundError: Image = None
+from re import finditer, sub, findall
 from io import BytesIO
 from pybase64 import b64encode
 from mutagen.mp3 import MP3
-try: from tinytag import TinyTag
-except ModuleNotFoundError: TinyTag = None
+try:
+    from tinytag import TinyTag
+except ModuleNotFoundError:
+    TinyTag = None
+try:
+    from PIL import Image
+except ModuleNotFoundError:
+    Image = None
 
 
 class Utils:
     __slots__ = ()
+
     def __init__(self):
         pass
 
-    def textParser(self, text,):
-        results = []
-        real_text = text.replace('**', '').replace('__', '').replace('``', '')
+    def textParser(self, text):
+        try:
+            pattern = r'``(.*)``|\*\*(.*)\*\*|__(.*)__|\[(.*)\]\((\S+)\)'
+            conflict = 0
+            meta_data_parts = []
+            for markdown in finditer(pattern, text):
+                span = markdown.span()
+                if markdown.group(0).startswith('``'):
+                    text = sub(pattern, r'\1', text, count=1)
+                    meta_data_parts.append(
+                        {
+                            'type': 'Mono',
+                            'from_index': span[0] - conflict,
+                            'length': span[1] - span[0] - 2
+                        }
+                    )
+                    conflict += 2
 
-        bolds = findall(r'\*\*(.*?)\*\*', text)
-        italics = findall(r'\_\_(.*?)\_\_', text)
-        monos = findall(r'\`\`(.*?)\`\`', text)
-        mResult = [real_text.index(i) for i in monos]
-        bResult = [real_text.index(i) for i in bolds]
-        iResult = [real_text.index(i) for i in italics]
+                elif markdown.group(0).startswith('**'):
+                    text = sub(pattern, r'\2', text, count=1)
+                    meta_data_parts.append(
+                        {
+                            'type': 'Bold',
+                            'from_index': span[0] - conflict,
+                            'length': span[1] - span[0] - 4
+                        }
+                    )
+                    conflict += 4
 
-        for bIndex, bWord in zip(bResult, bolds):
-            results.append({
-				'from_index' : bIndex,
-				'length' : len(bWord),
-				'type' : 'Bold'
-			})
+                elif markdown.group(0).startswith('__'):
+                    text = sub(pattern, r'\3', text, count=1)
+                    meta_data_parts.append(
+                        {
+                            'type': 'Italic',
+                            'from_index': span[0] - conflict,
+                            'length': span[1] - span[0] - 4
+                        }
+                    )
+                    conflict += 4
 
-        for iIndex, iWord in zip(iResult, italics):
-            results.append({
-				'from_index' : iIndex,
-				'length' : len(iWord),
-				'type' : 'Italic'
-			})
+                else:
+                    text = sub(pattern, r'\4', text, count=1)
 
-        for mIndex, mWord in zip(mResult, monos):
-            results.append({
-				'from_index' : mIndex,
-				'length' : len(mWord),
-				'type' : 'Mono'
-			})
+                    mention_text_object_type = 'User'
+                    mention_text_object_guid = markdown.group(5)
+                    if mention_text_object_guid.startswith('g'):
+                        mention_text_object_type = 'Group'
 
-        return (results, real_text)
+                    elif mention_text_object_guid.startswith('c'):
+                        mention_text_object_type = 'Channel'
+
+                    meta_data_parts.append(
+                        {
+                            'type': 'MentionText',
+                            'from_index': span[0] - conflict,
+                            'length': len(markdown.group(4)),
+                            'mention_text_object_guid': mention_text_object_guid,
+                            'mention_text_object_type': mention_text_object_type
+                        }
+                    )
+                    conflict += 4 + len(mention_text_object_guid)
+
+            result = {'text': text.replace('**', '').replace('__', '').replace('``', '')}
+            if meta_data_parts:
+                result['metadata'] = {
+                    'meta_data_parts': meta_data_parts
+                }
+
+            return (result.get('metadata').get('meta_data_parts'), result.get('text'))
+
+        except AttributeError:
+            return ([], '')
 
     def adsFinder(self, string):
         urls = findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', string)
@@ -120,3 +164,8 @@ class Utils:
 
     async def thumb_inline(self):
         return 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAL0lEQVR4nO3NQQ0AAAgEIPVz/Rsbw81BATpJXZiTVSwWi8VisVgsFovFYrFY/DRelEIAZd5yXa4AAAAASUVORK5CYII='
+
+
+u = Utils()
+
+print(u.textParser(''))

@@ -8,9 +8,14 @@ rubpy.egg-info/dependency_links.txt
 rubpy.egg-info/requires.txt
 rubpy.egg-info/top_level.txt
 rubpy/accounts/__init__.py
-rubpy/accounts/client.py
+rubpy/accounts/_client.py
 rubpy/accounts/handler.py
 rubpy/accounts/connections/__init__.py
 rubpy/accounts/methods/__init__.py
+rubpy/bots/__init__.py
+rubpy/bots/client.py
+rubpy/bots/connections.py
+rubpy/bots/methods.py
+rubpy/bots/requests.py
 rubpy/crypto/__init__.py
 rubpy/exceptions/__init__.py

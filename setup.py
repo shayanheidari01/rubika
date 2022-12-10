@@ -5,17 +5,17 @@ requirements = [
     'pycryptodome',
     'websockets',
     'pybase64',
-    'urllib3',
+    'aiohttp',
     'mutagen',
     'TinyTag',
 ]
 
-with open("README.md", encoding="utf-8") as f:
+with open("README.md", encoding="UTF-8") as f:
     readme = f.read()
 
 setup(
     name = 'rubpy',
-    version = '5.0.5',
+    version = '5.1.0',
     author='Shayan Heidari',
     author_email = 'snipe4kill@yahoo.com',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',
