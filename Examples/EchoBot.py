@@ -12,4 +12,4 @@ async def EchoBot(bot, message):
 
 
 # If a new message is received and the message is of text type
-Copies the textual content of that message and replies to the same message again
+#Copies the textual content of that message and replies to the same message again
