@@ -15,7 +15,7 @@ with open("README.md", encoding="UTF-8") as f:
 
 setup(
     name = 'rubpy',
-    version = '5.1.0',
+    version = '5.1.1',
     author='Shayan Heidari',
     author_email = 'snipe4kill@yahoo.com',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',

@@ -164,8 +164,3 @@ class Utils:
 
     async def thumb_inline(self):
         return 'iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAIAAAADnC86AAAAL0lEQVR4nO3NQQ0AAAgEIPVz/Rsbw81BATpJXZiTVSwWi8VisVgsFovFYrFY/DRelEIAZd5yXa4AAAAASUVORK5CYII='
-
-
-u = Utils()
-
-print(u.textParser(''))

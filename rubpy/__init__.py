@@ -11,5 +11,5 @@ from .exceptions import (
 )
 
 
-__version__ = '5.1.0'
+__version__ = '5.1.1'
 __author__ = 'Shayan Heidari'

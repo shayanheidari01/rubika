@@ -477,7 +477,7 @@ class Methods:
     async def addGroupMembers(self, group_guid, member_guids):
         data = {'group_guid': group_guid, 'member_guids': member_guids}
         return await self.make.request(
-            method='banGroupMember',
+            method='addGroupMembers',
             data=data,
         )
 
