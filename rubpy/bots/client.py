@@ -22,6 +22,7 @@ class _Client:
     def run(self, func):
         async def runner():
             async with ClientSession() as session:
+                self.session = session
                 methods = Methods(self.token, session=session)
                 with open('setup.json', 'w+') as setup:
                     me = await methods.getMe()

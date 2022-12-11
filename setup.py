@@ -8,6 +8,7 @@ requirements = [
     'aiohttp',
     'mutagen',
     'TinyTag',
+    'urllib3',
 ]
 
 with open("README.md", encoding="UTF-8") as f:
@@ -15,7 +16,7 @@ with open("README.md", encoding="UTF-8") as f:
 
 setup(
     name = 'rubpy',
-    version = '5.1.1',
+    version = '5.2.0',
     author='Shayan Heidari',
     author_email = 'snipe4kill@yahoo.com',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',

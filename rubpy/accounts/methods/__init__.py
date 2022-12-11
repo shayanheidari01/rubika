@@ -107,9 +107,10 @@ class Maker:
                     return response.get('data').get('access_hash_rec')
 
 class Methods:
-    def __init__(self, auth, session):
+    def __init__(self, auth, session, account_guid):
         self.auth = auth
         self.session = session
+        self.account_guid = account_guid
         self.make = Maker(auth=auth, session=session)
         self.utils = Utils()
 
@@ -117,7 +118,7 @@ class Methods:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        print(exc_type, exc_val, exc_tb)
+        pass
 
     # Messages
     async def sendText(self, object_guid, text, reply_to_message_id=None, mention=None):
@@ -784,6 +785,7 @@ class Methods:
     async def download(self, object_guid, message_id, save=False):
         message_info = await self.getMessagesByID(object_guid=object_guid, message_ids=[message_id])
         message_info = message_info.get('messages')[0]
+
         if 'file_inline' in list(message_info.keys()):
             message_info = message_info.get('file_inline')
             dc_id = message_info.get('dc_id')
@@ -795,38 +797,47 @@ class Methods:
             data = b''
 
             headers = {
+                'start-index': '0',
+                'last-index': '131071',
                 'auth': self.auth,
                 'file-id': file_id,
-                'start-index': '0',
-                'last-index': str(size),
                 'access-hash-rec': access_hash_rec,
+                'client-app-version': '3.0.6',
+                'client-platform': 'Android',
+                'client-app-name': 'Main',
+                'client-package': 'app.rbmain.a',
+                'clinet-user-guid': self.account_guid if self.account_guid != None else '',
+                'Content-Type': 'application/json',
+                'User-Agent': 'okhttp/3.12.1',
             }
-            start_index = 0
 
             while True:
-                if start_index <= 131072:
-                    headers['start-index'], headers['last-index'] = '0', str(size)
-                    data += await self.make.connections._download(
-                        session=self.session,
+                if size <= 131072:
+                    headers['last-index'] = str(size)
+                    result = self.make.connections._download(
                         url=makeURL,
                         headers=headers
                     )
                     if save:
-                        with open(file_name, 'wb+') as my_file:
+                        with open(file_name, 'wb') as my_file:
+                            my_file.write(await result)
+                            my_file.close()
+                            return True
+                    else:
+                        return await result
+
+                else:
+                    for start in range(0, size, 131072):
+                        headers["start-index"] = str(start) 
+                        headers["last-index"] = str(start + 131072 if start + 131072 <= size else size)
+                        data += await self.make.connections._download(
+                            url=makeURL,
+                            headers=headers
+                        )
+                    if save:
+                        with open(file_name, 'wb') as my_file:
                             my_file.write(data)
                             my_file.close()
                             return True
                     else:
                         return data
-
-                else:
-                    for i in range(0, size, 131072):
-                        headers['start-index'], headers['last-index'] = str(i), str(i + 131072 if i + 131072 <= size else size)
-                        data += await self.make.connections._download(
-                            session=self.session,
-                            url=makeURL,
-                            headers=headers
-                        )
-                        continue
-        else:
-            return None

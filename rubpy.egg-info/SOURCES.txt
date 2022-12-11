@@ -16,6 +16,5 @@ rubpy/bots/__init__.py
 rubpy/bots/client.py
 rubpy/bots/connections.py
 rubpy/bots/methods.py
-rubpy/bots/requests.py
 rubpy/crypto/__init__.py
 rubpy/exceptions/__init__.py

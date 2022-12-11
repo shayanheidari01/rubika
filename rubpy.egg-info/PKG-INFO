@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: rubpy
-Version: 5.1.1
+Version: 5.2.0
 Summary: This is an unofficial library and fastest library for deploying robots on Rubika accounts.
 Home-page: https://github.com/shayanheidari01/rubika
 Author: Shayan Heidari
@@ -49,7 +49,31 @@ Description-Content-Type: text/markdown
 ## Rubpy
 
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
+### Bots Examples
+```python
+from rubpy import Bot
 
+app = Bot('token')
+
+async def my_bot(bot):
+    me = await bot.getMe()
+    print(me)
+
+app.run(my_bot)
+```
+**OR**
+```python
+from rubpy import Bot
+
+app = Bot('token')
+
+async def my_bot(bot):
+    me = await bot.sendMessage('chat_id', 'text')
+    print(me)
+
+app.run(my_bot)
+```
+### Accounts
 ``` python
 from rubpy import Client
 
@@ -90,5 +114,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.1.1
+pip3 install rubpy==5.2.0
 ```

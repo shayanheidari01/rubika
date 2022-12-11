@@ -1,7 +1,7 @@
 from websockets import connect, ConnectionClosed
 from json import dumps, loads
 from random import choice, randint
-from asyncio import create_task
+from urllib3 import PoolManager
 from ...crypto import Crypto
 
 __all__ = (
@@ -11,7 +11,7 @@ __all__ = (
 
 class Connections:
     def __init__(self):
-        pass
+        self.__download = PoolManager().request
 
     async def get(self, session, url, headers=None):
         while True:
@@ -21,14 +21,18 @@ class Connections:
                 else:
                     continue
 
-    async def _download(self, session, url, headers):
-        while True:
-            async with session.get(url, headers=headers) as response:
-                if response.ok:
-                    print(response.data)
-                    return await response.data
-                else:
+    async def _download(self, url, headers):
+        async def runner():
+            while True:
+                try:
+                    response = self.__download(method='POST', url=url, body=b'', headers=headers)
+                    if response.status == 200:
+                        return response.data
+                    else:
+                        continue
+                except TypeError:
                     continue
+        return await runner()
 
     async def post(self, session, url=f'https://messengerg2c{randint(1, 11)}.iranlms.ir/', json=None, data=None, headers=None):
         while True:

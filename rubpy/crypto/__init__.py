@@ -20,7 +20,14 @@ class Crypto:
         return ''.join(chr(((ord(cha) - 97 + 9) % 26) + 97) for cha in key[16:24] + key[0:8] + key[24:32] + key[8:16])
 
     def decrypt(self, text):
-        return unpad(new(self.key, 2, self.iv).decrypt(b64decode(text.encode('UTF-8'))), 16).decode('UTF-8')
+        return unpad(
+            new(
+                self.key, 2, self.iv
+                ).decrypt(
+                    b64decode(text.encode('UTF-8')
+                )),
+                16
+            ).decode('UTF-8')
 
     def encrypt(self, text):
         return b64encode(new(self.key, 2, self.iv).encrypt(pad(text.encode('UTF-8'), 16))).decode('UTF-8')
