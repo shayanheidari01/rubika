@@ -3,6 +3,9 @@
         <img src="https://upcdn.io/W142hJk/thumbnail/demo/4mrDXtYPJA.png.crop" alt="Rubpy" width="128">
     </a>
     <br>
+    <img src="https://img.shields.io/pypi/dm/rubpy" alt="Rubpy" width="128">
+    <br>
+    <br>
     <b>Rubika API Framework for Python</b>
     <br>
     <a href="https://github.com/shayanheidari01/rubika">
