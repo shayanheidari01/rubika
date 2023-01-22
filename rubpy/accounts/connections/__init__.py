@@ -11,7 +11,7 @@ __all__ = (
 
 class Connections:
     def __init__(self):
-        self.__download = PoolManager().request
+        pass
 
     async def get(self, session, url, headers=None):
         while True:
@@ -20,19 +20,6 @@ class Connections:
                     return await response.json()
                 else:
                     continue
-
-    async def _download(self, url, headers):
-        async def runner():
-            while True:
-                try:
-                    response = self.__download(method='POST', url=url, body=b'', headers=headers)
-                    if response.status == 200:
-                        return response.data
-                    else:
-                        continue
-                except TypeError:
-                    continue
-        return await runner()
 
     async def post(self, session, url=f'https://messengerg2c{randint(1, 11)}.iranlms.ir/', json=None, data=None, headers=None):
         while True:

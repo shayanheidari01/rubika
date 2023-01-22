@@ -1,4 +1,6 @@
 from ..connections import Connections
+from aiohttp import ClientSession
+from urllib3 import PoolManager
 from ...crypto import Crypto
 from random import randint
 from ...util import Utils
@@ -15,7 +17,7 @@ from ...exceptions import (
 class Maker:
     def __init__(self, auth, session):
         self.auth = auth
-        self.session = session
+        self.session: ClientSession = session
         self.connections = Connections()
         self.crypto = Crypto(auth)
 
@@ -51,7 +53,9 @@ class Maker:
             elif status_det == 'INVALID_INPUT':
                 raise InvalidInput('The data sent to the server is wrong')
             elif status_det == 'INVALID_AUTH':
-                raise InvaildAuth('An error was received from the server side, probably the data sent is wrong or your AUTH is invalid')
+                raise InvaildAuth(
+                    'This error usually occurs because you do not have the required access to perform the operation, for example, you do not have access to send messages to the group.'
+                )
             elif status_det == 'TOO_REQUESTS':
                 raise TooRequests('Unfortunately, your account has been limited')
             elif status_det.lower() == 'repeated':
@@ -109,10 +113,11 @@ class Maker:
 class Methods:
     def __init__(self, auth, session, account_guid):
         self.auth = auth
-        self.session = session
+        self.session: ClientSession = session
         self.account_guid = account_guid
         self.make = Maker(auth=auth, session=session)
         self.utils = Utils()
+        self.PoolManager = PoolManager()
 
     async def __aenter__(self):
         return self
@@ -791,14 +796,11 @@ class Methods:
             dc_id = message_info.get('dc_id')
             access_hash_rec = message_info.get('access_hash_rec')
             file_id = message_info.get('file_id')
-            size = message_info.get('size')
             file_name = message_info.get('file_name')
             makeURL = f'https://messenger{dc_id}.iranlms.ir/GetFile.ashx'
             data = b''
 
             headers = {
-                'start-index': '0',
-                'last-index': '131071',
                 'auth': self.auth,
                 'file-id': file_id,
                 'access-hash-rec': access_hash_rec,
@@ -811,33 +813,24 @@ class Methods:
                 'User-Agent': 'okhttp/3.12.1',
             }
 
-            while True:
-                if size <= 131072:
-                    headers['last-index'] = str(size)
-                    result = self.make.connections._download(
-                        url=makeURL,
-                        headers=headers
-                    )
-                    if save:
-                        with open(file_name, 'wb') as my_file:
-                            my_file.write(await result)
-                            my_file.close()
-                            return True
-                    else:
-                        return await result
+            if save:
+                with open(file_name, 'wb+') as file:
+                    file.close()
 
-                else:
-                    for start in range(0, size, 131072):
-                        headers["start-index"] = str(start) 
-                        headers["last-index"] = str(start + 131072 if start + 131072 <= size else size)
-                        data += await self.make.connections._download(
-                            url=makeURL,
-                            headers=headers
-                        )
+            with self.PoolManager.request(
+                method='POST',
+                url=makeURL,
+                headers=headers,
+                preload_content=False,
+            ) as response:
+                for chunk in response.stream(524284):
                     if save:
-                        with open(file_name, 'wb') as my_file:
-                            my_file.write(data)
-                            my_file.close()
-                            return True
+                        with open(file_name, 'ab+') as file:
+                            file.write(chunk)
+                            file.close()
                     else:
-                        return data
+                        data += chunk
+                if save:
+                    return True
+                else:
+                    return data

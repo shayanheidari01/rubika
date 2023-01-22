@@ -3,9 +3,6 @@
         <img src="https://upcdn.io/W142hJk/thumbnail/demo/4mrDXtYPJA.png.crop" alt="Rubpy" width="128">
     </a>
     <br>
-    <img src="https://img.shields.io/pypi/dm/rubpy" alt="Rubpy" width="128">
-    <br>
-    <br>
     <b>Rubika API Framework for Python</b>
     <br>
     <a href="https://github.com/shayanheidari01/rubika">
@@ -30,11 +27,11 @@
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
 ### Bots Examples
 ```python
-from rubpy import Bot, BotMethods
+from rubpy import Bot
 
 app = Bot('token')
 
-async def my_bot(bot: BotMethods):
+async def my_bot(bot):
     me = await bot.getMe()
     print(me)
 
@@ -42,11 +39,11 @@ app.run(my_bot)
 ```
 **OR**
 ```python
-from rubpy import Bot, BotMethods
+from rubpy import Bot
 
 app = Bot('token')
 
-async def my_bot(bot: BotMethods):
+async def my_bot(bot):
     me = await bot.sendMessage('chat_id', 'text')
     print(me)
 
@@ -54,23 +51,23 @@ app.run(my_bot)
 ```
 ### Accounts
 ``` python
-from rubpy import Client, Methods, Message
+from rubpy import Client
 
 app = Client('MY-AUTH')
 
 @app.handler
-async def my_bot(bot: Methods, message: Message):
+async def my_bot(bot, message):
     await message.reply('``Hello`` __from__ **Rubpy**!')
 
 ```
 
 **Another example:**
 ``` python
-from rubpy import Client, Methods
+from rubpy import Client
 
 app = Client("my_account_auth")
 
-async def my_bot(bot: Methods):
+async def my_bot(bot):
     await bot.sendText('object_guid', '``Hello`` __from__ **Rubpy**!')
 
 app.run(my_bot)
