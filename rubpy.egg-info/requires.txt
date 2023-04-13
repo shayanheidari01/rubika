@@ -1,8 +1,0 @@
-wheel
-pycryptodome
-websockets
-pybase64
-aiohttp
-mutagen
-TinyTag
-urllib3
