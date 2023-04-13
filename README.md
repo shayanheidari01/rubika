@@ -27,11 +27,11 @@
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
 ### Bots Examples
 ```python
-from rubpy import Bot, BotMethods
+from rubpy import Bot
 
 app = Bot('token')
 
-async def my_bot(bot: BotMethods):
+async def my_bot(bot):
     me = await bot.getMe()
     print(me)
 
@@ -39,11 +39,11 @@ app.run(my_bot)
 ```
 **OR**
 ```python
-from rubpy import Bot, BotMethods
+from rubpy import Bot
 
 app = Bot('token')
 
-async def my_bot(bot: BotMethods):
+async def my_bot(bot):
     me = await bot.sendMessage('chat_id', 'text')
     print(me)
 
@@ -53,9 +53,12 @@ app.run(my_bot)
 ``` python
 from rubpy import Client, Methods, Message
 
-app = Client('MY-AUTH')
+app = Client(
+    'MY-AUTH',
+    "my_guid"
+)
 
-@app.handler
+@app.MessageUpdates
 async def my_bot(bot: Methods, message: Message):
     await message.reply('``Hello`` __from__ **Rubpy**!')
 
@@ -65,7 +68,10 @@ async def my_bot(bot: Methods, message: Message):
 ``` python
 from rubpy import Client, Methods
 
-app = Client("my_account_auth")
+app = Client(
+    "my_account_auth",
+    "my_account_guid"
+)
 
 async def my_bot(bot: Methods):
     await bot.sendText('object_guid', '``Hello`` __from__ **Rubpy**!')
@@ -90,5 +96,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.2.1
+pip3 install rubpy==5.2.2
 ```
