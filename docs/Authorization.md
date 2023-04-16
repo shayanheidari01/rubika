@@ -17,6 +17,8 @@ async def main():
 
 asyncio.run(main())
 ```
+3. حالا با دستور ``python3 login.py`` در ترمینال خود فایل را اجرا کنید.
+4. حالا شما میتوانید عملیات وارد شدن به حساب کاربری خود را کامل کنید. 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Handling-Updates.md">
         صفحه بعدی
