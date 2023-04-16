@@ -8,7 +8,7 @@ ___
  
 
 <p align="center">
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Install-Guide.md">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/basic.md">
         مستندات
     </a>
 </p>
