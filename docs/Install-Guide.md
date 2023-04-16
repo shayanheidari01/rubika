@@ -15,7 +15,7 @@ pip3 install -U rubpy
 ```
 
 <p align="center">
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Project-Setup.md">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Authorization.md">
         صفحه بعدی
     </a>
   •
