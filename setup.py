@@ -1,32 +1,26 @@
 from setuptools import setup, find_packages
 
-requirements = [
-    'wheel',
-    'pycryptodome',
-    'websockets',
-    'pybase64',
-    'aiohttp',
-    'mutagen',
-    'TinyTag',
-    'urllib3',
-]
+requirements = ['aiohttp', 'pycryptodome', 'aiofiles']
 
 with open("README.md", encoding="UTF-8") as f:
     readme = f.read()
 
 setup(
     name = 'rubpy',
-    version = '5.2.2',
+    version = '6.0.4',
     author='Shayan Heidari',
     author_email = 'contact@shayanheidari.info',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',
-    keywords = ['rubika', 'rubpy', 'rubikaio', 'chat', 'bot', 'robot', 'asyncio'],
+    keywords = ['rubika', 'rubpy', 'chat', 'bot', 'robot', 'asyncio'],
     long_description = readme,
     python_requires="~=3.7",
     long_description_content_type = 'text/markdown',
     url = 'https://github.com/shayanheidari01/rubika',
     packages = find_packages(),
     install_requires = requirements,
+    extras_require={
+        'opencv-python': ['opencv-python']
+    },
     classifiers=[
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

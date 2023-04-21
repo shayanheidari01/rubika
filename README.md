@@ -9,7 +9,7 @@
         Homepage
     </a>
     •
-    <a href="https://github.com/shayanheidari01/rubika/raw/master/docs/rubpy-documents.pdf">
+    <a href="https://github.com/shayanheidari01/rubika/tree/master/docs">
         Documentation
     </a>
     •
@@ -25,59 +25,33 @@
 ## Rubpy
 
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
-### Bots Examples
-```python
-from rubpy import Bot
 
-app = Bot('token')
-
-async def my_bot(bot):
-    me = await bot.getMe()
-    print(me)
-
-app.run(my_bot)
-```
-**OR**
-```python
-from rubpy import Bot
-
-app = Bot('token')
-
-async def my_bot(bot):
-    me = await bot.sendMessage('chat_id', 'text')
-    print(me)
-
-app.run(my_bot)
-```
 ### Accounts
-``` python
-from rubpy import Client, Methods, Message
+```python
+import asyncio
+from rubpy import Client, handlers
 
-app = Client(
-    'MY-AUTH',
-    "my_guid"
-)
+async def main():
+    async with Client(session='rubpy') as client:
+        @client.on(handlers.MessageUpdates())
+        async def updates(update):
+            await update.reply('`hello` __from__ **rubpy**')
+        await client.run_until_disconnected()
 
-@app.MessageUpdates
-async def my_bot(bot: Methods, message: Message):
-    await message.reply('``Hello`` __from__ **Rubpy**!')
-
+asyncio.run(main())
 ```
 
 **Another example:**
-``` python
-from rubpy import Client, Methods
+```python
+from rubpy import Client
+from asyncio import run
 
-app = Client(
-    "my_account_auth",
-    "my_account_guid"
-)
+async def main():
+    async with Client(session='rubpy') as client:
+        result = await client.send_message('GUID', '`hello` __from__ **rubpy**')
+        print(result)
 
-async def my_bot(bot: Methods):
-    await bot.sendText('object_guid', '``Hello`` __from__ **Rubpy**!')
-
-app.run(my_bot)
-
+run(main())
 ```
 
 **Rubpy** is a modern, elegant and asynchronous framework. It enables you to easily interact with the main Rubika API through a user account (custom client) or a bot
@@ -96,5 +70,5 @@ identity (bot API alternative) using Python.
 ### Installing
 
 ``` bash
-pip3 install rubpy==5.2.2
+pip3 install rubpy==6.0.4
 ```
