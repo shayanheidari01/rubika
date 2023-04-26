@@ -16,7 +16,7 @@ from runpy.exceptions import InvalidInput, TooRequests, ...
 - Repeated
 
 <p align="center">
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Handling-Updates.md">
         صفحه بعدی
     </a>
   •
