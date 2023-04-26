@@ -8,15 +8,15 @@ ___
 ## استفاده از دکوراتورها
 زیباترین راه برای ثبت یک کنترل کننده پیام، استفاده از دکوراتور  @client.on است.
 ```python
-from rubpy import Client, handlers
+from rubpy import Client, handlers, Message
 import asyncio
 
 async def main():
     async with Client(session='MyAccount') as client:
         @client.on(handlers.MessageUpdates())
-        async def updates(update):
-            if update.raw_text != None and update.raw_text == 'سلام':
-                await update.reply('`hello` __from__ **rubpy**')
+        async def updates(message: Message):
+            if message.raw_text != None and message.raw_text == 'سلام':
+                await message.reply('`hello` __from__ **rubpy**')
         await client.run_until_disconnected()
 
 asyncio.run(main())
