@@ -42,6 +42,25 @@ async def custom_filter(message, result):
 
 handlers.MessageUpdates(custom_filter)
 ```
+## دریافت به‌روزرسانی ها (افزودن handler)
+```python
+async with Client(session='rubpy') as client:
+    @client.on(handler)
+    async def updates(message: Message):
+        pass
+    @client.on(handler)
+    async def updates(message: Message):
+        pass
+
+# ----- OR -----
+
+async with Client(session='rubika') as client:
+    async def updates(message: Message):
+        pass
+    
+    client.add_handler(updates, handler)
+    
+```
 ### نکات
 - فیلترها می توانند توابع باشند
 - بین فیلترها می توانید از عملگرهای |, &, !=, ==, >, >=, <, <= استفاده کنید
