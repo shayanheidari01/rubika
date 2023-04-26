@@ -46,6 +46,7 @@ handlers.MessageUpdates(custom_filter)
 - فیلترها می توانند توابع باشند
 - بین فیلترها می توانید از عملگرهای |, &, !=, ==, >, >=, <, <= استفاده کنید
 - برای استفاده از عملگرها باید فیلتر (models) فراخوانی شود
+- در آینده در مورد models بیشتر صحبت خواهیم کرد
 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
