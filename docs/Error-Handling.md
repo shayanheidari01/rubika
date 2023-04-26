@@ -20,7 +20,7 @@ from runpy.exceptions import InvalidInput, TooRequests, ...
         صفحه بعدی
     </a>
   •
-  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Authorization.md">
+  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Models.md">
         صفحه قبلی
     </a>
 </p>
