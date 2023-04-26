@@ -42,6 +42,10 @@ async def custom_filter(message, result):
 
 handlers.MessageUpdates(custom_filter)
 ```
+### نکات
+- فیلترها می توانند توابع باشند
+- بین فیلترها می توانید از عملگرهای |, &, !=, ==, >, >=, <, <= استفاده کنید
+- برای استفاده از عملگرها باید فیلتر (models) فراخوانی شود
 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
