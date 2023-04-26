@@ -26,6 +26,12 @@ asyncio.run(main())
 کلاس handlers شامل 5 کلاس است(ممکن است افزایش یابد) که عبارتند از: `ChatUpdates`، `MessageUpdates`، `ShowActivities`، `ShowNotifications`، `RemoveNotifications`
 
 ورودی این کلاس ها models هستند، اگر __any برابر true باشد، عملگر OR بین فیلترها قرار می گیرد، در غیر این صورت روی AND قرار میگیرد.
+#### از کلاس models میتوانید به عنوان یک فیلتر در کلاس handlers استفاده کنید:
+```python
+from rubpy import models
+
+@client.on(handlers.MessageUpdates(models.is_group))
+```
 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
