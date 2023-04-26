@@ -32,7 +32,16 @@ from rubpy import models
 
 @client.on(handlers.MessageUpdates(models.is_group))
 ```
-* در مثال بالا ما از `models.is_group` برای دریافت آپدیت های گروه ها استفاده کرده ایم، این یعنی اگر به روزرسانی جدیدی دریافت کنیم، فقط به روزرسانی های گروه را برای ما دریافت میکند. 
+* در مثال بالا ما از `models.is_group` برای دریافت آپدیت های گروه ها استفاده کرده ایم، این یعنی اگر به روزرسانی جدیدی دریافت کنیم، فقط به روزرسانی های گروه را برای ما دریافت میکند.
+### فیلترها می توانند تابع باشند به عنوان مثال:
+```python
+from rubpy import handlers
+
+async def custom_filter(message, result):
+    return message.raw_text
+
+handlers.MessageUpdates(custom_filter)
+```
 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
