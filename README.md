@@ -1,6 +1,6 @@
 <p align="center">
     <a href="github.address">
-        <img src="https://upcdn.io/W142hJk/thumbnail/demo/4mrDXtYPJA.png.crop" alt="Rubpy" width="128">
+        <img src="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png" alt="Rubpy" width="128">
     </a>
     <br>
     <b>Rubika API Framework for Python</b>
