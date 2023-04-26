@@ -16,11 +16,11 @@ from runpy.exceptions import InvalidInput, TooRequests, ...
 - Repeated
 
 <p align="center">
-    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Handling-Updates.md">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Models.md">
         صفحه بعدی
     </a>
   •
-  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Models.md">
+  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Handling-Updates.md">
         صفحه قبلی
     </a>
 </p>
