@@ -24,7 +24,7 @@ asyncio.run(main())
 در کد بالا از کلاس handlers کنترل کننده MessageUpdates را فراخوانی کردیم و جدیدترین پیام ها را دریافت میکنیم، در کد بالا به محض اینکه کسی به شما "سلام" کند ربات به او پاسخ میدهد.
 ## کلاس handlers
 کلاس handlers شامل 5 کلاس است(ممکن است افزایش یابد) که عبارتند از: `ChatUpdates`، `MessageUpdates`، `ShowActivities`، `ShowNotifications`، `RemoveNotifications`
-
+ورودی این کلاس ها models هستند، اگر __any برابر true باشد، عملگر OR بین فیلترها قرار می گیرد، در غیر این صورت روی AND قرار میگیرد.
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
         صفحه بعدی
