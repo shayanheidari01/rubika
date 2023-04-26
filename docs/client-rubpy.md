@@ -10,3 +10,9 @@ async def main():
 
 run(main())
 ```
+# جزئیات
+`class rubpy.Client`
+  کلاینت روبیکاپای، ابزار اصلی برای تعامل با روبیکا است.
+      `Parameters:`
+      - session(`str`) - یک نام برای کلاینت به عنوان مثال: "my_account".
+      - 
