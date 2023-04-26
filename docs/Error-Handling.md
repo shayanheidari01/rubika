@@ -14,3 +14,13 @@ from runpy.exceptions import InvalidInput, TooRequests, ...
 - TooRequests
 - InvaildAuth
 - Repeated
+
+<p align="center">
+    <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
+        صفحه بعدی
+    </a>
+  •
+  <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Authorization.md">
+        صفحه قبلی
+    </a>
+</p>
