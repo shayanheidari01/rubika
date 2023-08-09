@@ -26,32 +26,52 @@
 
 > Elegant, modern and asynchronous Rubika API framework in Python for users and bots
 
-### Accounts
+### Async Accounts
 ```python
 import asyncio
-from rubpy import Client, handlers
+from rubpy import Client, handlers, Message
 
 async def main():
     async with Client(session='rubpy') as client:
         @client.on(handlers.MessageUpdates())
-        async def updates(update):
-            await update.reply('`hello` __from__ **rubpy**')
+        async def updates(message: Message):
+            await message.reply('`hello` __from__ **rubpy**')
         await client.run_until_disconnected()
 
 asyncio.run(main())
 ```
 
-**Another example:**
+**Async Another Example:**
 ```python
 from rubpy import Client
 from asyncio import run
 
 async def main():
     async with Client(session='rubpy') as client:
-        result = await client.send_message('GUID', '`hello` __from__ **rubpy**')
+        result = await client.send_message('me', '`hello` __from__ **rubpy**')
         print(result)
 
 run(main())
+```
+
+### Sync Accounts
+```python
+from rubpy.sync import Client, handlers, Message
+
+with Client(session='rubpy') as client:
+    @client.on(handlers.MessageUpdates())
+    def updates(message: Message):
+        message.reply('`hello` __from__ **rubpy**')
+    client.run_until_disconnected()
+```
+
+**Sync Another Example:**
+```python
+from rubpy import Client
+
+with Client(session='rubpy') as client:
+        result = client.send_message('me', '`hello` __from__ **rubpy**')
+        print(result)
 ```
 
 **Rubpy** is a modern, elegant and asynchronous framework. It enables you to easily interact with the main Rubika API through a user account (custom client) or a bot
