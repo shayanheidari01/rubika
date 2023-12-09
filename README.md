@@ -93,4 +93,5 @@ identity (bot API alternative) using Python.
 pip3 install -U rubpy
 ```
 
-- Thanks to [Milad Heidari](https://github.com/IRMilad/rubika)
+### Thanks to
+- [Milad Heidari](https://github.com/IRMilad/rubika)
