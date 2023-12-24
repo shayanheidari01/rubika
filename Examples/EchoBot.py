@@ -1,15 +1,15 @@
 from rubpy import Client
+from rubpy.types import Updates
 
-app = Client('auth')
+bot = Client(
+    name='name',
+    # auth='auth',
+    # private_key='private_key',
+)
+# اگه auth و private_key رو وارد کنی لاگین نمیکنه و اگه وارد نکنی با شماره لاگین میکنی.
 
-@app.handler
-async def EchoBot(bot, message):
-    if await message.of_user():
-        if await message.is_text:
-            await message.reply(
-                await message.text()
-            )
+@bot.on_message_updates()
+async def updates(message: Updates):
+    await message.reply('`hello` __from__ **rubpy**')
 
-
-# If a new message is received and the message is of text type
-# Copies the textual content of that message and replies to the same message again
+bot.run()
