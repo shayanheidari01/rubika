@@ -7,17 +7,17 @@
 1. کتابخانه را با دستور ```pip install -U  rubpy``` نصب کنید
 2. ویرایشگر کد خود را باز کنید و تیکه کد زیر را در آن وارد نمایید
 ```python
-from rubpy import Client, handlers
-import asyncio
+from rubpy import Client, filters, utils
+from rubpy.types import Updates
 
-async def main():
-    async with Client(session='MyAccount') as client:
-        @client.on(handlers.MessageUpdates())
-        async def updates(update):
-            await update.reply('`hello` __from__ **rubpy**')
-        await client.run_until_disconnected()
+bot = Client(name='rubpy')
 
-asyncio.run(main())
+@bot.on_message_updates(filters.text)
+async def updates(update: Updates):
+    print(update)
+    await update.reply(utils.Code('hello') + utils.Underline('from') + utils.Bold('rubpy'))
+
+bot.run()
 ```
 3. کلمه MyAccount نام نشست ایجاد شده از حساب کاربری شما است، میتوانید تغییر دهید.
 4. فایل را به عنوان ```hello.py``` ذخیره کنید.
