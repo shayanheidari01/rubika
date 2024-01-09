@@ -28,30 +28,31 @@
 
 ### Async Accounts
 ```python
-import asyncio
-from rubpy import Client, handlers, Message
+from rubpy import Client, filters, utils
+from rubpy.types import Updates
 
-async def main():
-    async with Client(session='rubpy') as client:
-        @client.on(handlers.MessageUpdates())
-        async def updates(message: Message):
-            await message.reply('`hello` __from__ **rubpy**')
-        await client.run_until_disconnected()
+bot = Client(name='rubpy')
 
-asyncio.run(main())
+@bot.on_message_updates(filters.text)
+async def updates(update: Updates):
+    print(update)
+    await update.reply(utils.Code('hello') + utils.Underline('from') + utils.Bold('rubpy'))
+
+bot.run()
 ```
 
 **Async Another Example:**
 ```python
 from rubpy import Client
-from asyncio import run
+
+bot = Client(name='rubpy')
 
 async def main():
-    async with Client(session='rubpy') as client:
-        result = await client.send_message('me', '`hello` __from__ **rubpy**')
+    async with bot:
+        result = await bot.send_message('me', '`hello` __from__ **rubpy**')
         print(result)
 
-run(main())
+bot.run(main())
 ```
 
 ### Sync Accounts
