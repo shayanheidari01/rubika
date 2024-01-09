@@ -5,17 +5,17 @@ ___
 1. ابتدا برای ثبت نام باید یک فایل با نام ``login.py`` ایجاد کنید.
 2. با ویرایشگر کد خود، کد زیر را در فایل وارد کنید و ذخیره کنید.
 ```python
-from rubpy import Client, handlers
-import asyncio
+from rubpy import Client, filters, utils
+from rubpy.types import Updates
 
-async def main():
-    async with Client(session='MyAccount') as client:
-        @client.on(handlers.MessageUpdates())
-        async def updates(update):
-            await update.reply('`hello` __from__ **rubpy**')
-        await client.run_until_disconnected()
+bot = Client(name='rubpy')
 
-asyncio.run(main())
+@bot.on_message_updates(filters.text)
+async def updates(update: Updates):
+    print(update)
+    await update.reply(utils.Code('hello') + utils.Underline('from') + utils.Bold('rubpy'))
+
+bot.run()
 ```
 3. حالا با دستور ``python3 login.py`` در ترمینال خود فایل را اجرا کنید.
 4. حالا شما میتوانید عملیات وارد شدن به حساب کاربری خود را کامل کنید. 
