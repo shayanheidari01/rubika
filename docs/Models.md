@@ -1,4 +1,4 @@
-# کلاس models
+# filters
 - شامل 3 کلاس است که عبارتند از: `Operator`، `BaseModels`، `RegexModel`
 ###### می توانید از تمام ویژگی های آپدیت استفاده کنید که مهمترین آنها قبلا نوشته شده است...
 ### مثال ها
@@ -6,44 +6,44 @@
 async def custom_filter(message, result):
     return result
 
-handlers.MessageUpdates('hi' != models.raw_text())
-handlers.MessageUpdates(custom_filter != models.raw_text())
+on_message_updates('hi' != models.raw_text())
+on_message_updates(custom_filter != models.raw_text())
 
-handlers.MessageUpdates(custom_filter == models.time(func=int))
+on_message_updates(custom_filter == models.time(func=int))
 
-handlers.MessageUpdates(models.RegexModel(pattern=r'hi'))
+on_message_updates(filters.RegexModel(pattern=r'hi'))
 ```
 ##### چند فیلتر (AND)
 ```python
-handlers.MessageUpdates(
-    (15 < models.time(func=int) > 10)
+on_message_updates(
+    (15 < filters.time(func=int) > 10)
     &
-    models.RegexModel(pattern=r'hi')
+    filters.RegexModel(pattern=r'hi')
     &
-    models.is_private
+    filters.is_private
 )
 
 # or
 
-handlers.MessageUpdates(
-    15 < models.time(func=int) > 10,
-    models.RegexModel(pattern=r'hi'),
-    models.is_private
+on_message_updates(
+    15 < filters.time(func=int) > 10,
+    filters.RegexModel(pattern=r'hi'),
+    filters.is_private
 )
 ```
 ##### چند فیلتر (OR)
 ```python
-handlers.MessageUpdates(
-    models.is_private
+on_message_updates(
+    filters.is_private
     |
-    (models.author_guid() == 'GUID')
+    (filters.author_guid() == 'GUID')
 )
 
 # or 
 
-handlers.MessageUpdates(
-    models.is_private,
-    models.author_guid() == 'GUID',
+on_message_updates(
+    filters.is_private,
+    filters.author_guid() == 'GUID',
     __any=True
 )
 
