@@ -6,7 +6,7 @@ ___
 هر کنترل کننده با یک رویداد خاص سروکار دارد و به محض اینکه یک به روز رسانی منطبق از روبیکا دریافت شود، تابع callback ثبت شده شما توسط فریمورک فراخوانی می شود و بدنه آن اجرا می شود.
 
 ## استفاده از دکوراتورها
-زیباترین راه برای ثبت یک کنترل کننده پیام، استفاده از دکوراتور  @client.on است.
+زیباترین راه برای ثبت یک کنترل کننده پیام، استفاده از دکوراتور است.
 ```python
 from rubpy import Client
 from rubpy.types import Updates
@@ -19,51 +19,34 @@ async def updates(update: Updates):
 
 bot.run()
 ```
-در کد بالا از کلاس handlers کنترل کننده MessageUpdates را فراخوانی کردیم و جدیدترین پیام ها را دریافت میکنیم، در کد بالا به محض اینکه کسی به شما "سلام" کند ربات به او پاسخ میدهد.
+در کد بالا از کلاس Client کنترل کننده on_message_updates را فراخوانی کردیم و جدیدترین پیام ها را دریافت میکنیم، در کد بالا به محض اینکه کسی به شما "سلام" کند ربات به او پاسخ میدهد.
 ## متدهای هندلر
-کلاس handlers شامل 5 کلاس است(ممکن است افزایش یابد) که عبارتند از: `ChatUpdates`، `MessageUpdates`، `ShowActivities`، `ShowNotifications`، `RemoveNotifications`
+کلاس Client شامل 5 کلاس است(ممکن است افزایش یابد) که عبارتند از: `on_chat_updates`، `on_message_updates`، `on_show_activities`، `on_show_notifications`، `on_remove_notifications`
 
-ورودی این کلاس ها models هستند، اگر __any برابر true باشد، عملگر OR بین فیلترها قرار می گیرد، در غیر این صورت روی AND قرار میگیرد.
-#### از کلاس models میتوانید به عنوان یک فیلتر در کلاس handlers استفاده کنید:
+ورودی این متدها filters هستند، اگر __any برابر true باشد، عملگر OR بین فیلترها قرار می گیرد، در غیر این صورت روی AND قرار میگیرد.
+#### از filters میتوانید به عنوان یک فیلتر در متد استفاده کنید:
 ```python
-from rubpy import models
+from rubpy import filters
 
-@client.on(handlers.MessageUpdates(models.is_group))
+@bot.on_message_updates(filters.text)
 ```
-* در مثال بالا ما از `models.is_group` برای دریافت آپدیت های گروه ها استفاده کرده ایم، این یعنی اگر به روزرسانی جدیدی دریافت کنیم، فقط به روزرسانی های گروه را برای ما دریافت میکند.
+* در مثال بالا ما از `models.text` برای دریافت آپدیت پیام های متنی استفاده کرده ایم، این یعنی اگر به روزرسانی جدیدی دریافت کنیم، فقط به روزرسانی های متنی را برای ما دریافت میکند.
 ### فیلترها می توانند تابع باشند به عنوان مثال:
 ```python
-from rubpy import handlers
-
 async def custom_filter(message, result):
     return message.raw_text
 
-handlers.MessageUpdates(custom_filter)
+@bot.on_message_updates(custom_filter)
 ```
 ## دریافت به‌روزرسانی ها (افزودن handler)
 ```python
-async with Client(session='rubpy') as client:
-    @client.on(handler)
-    async def updates(message: Message):
-        pass
-    @client.on(handler)
-    async def updates(message: Message):
-        pass
-
-# ----- OR -----
-
-async with Client(session='rubika') as client:
-    async def updates(message: Message):
-        pass
-    
-    client.add_handler(updates, handler)
-    
+client.add_handler(updates, handler)
 ```
 ### نکات
 - فیلترها می توانند توابع باشند
 - بین فیلترها می توانید از عملگرهای |, &, !=, ==, >, >=, <, <= استفاده کنید
 - برای استفاده از عملگرها باید فیلتر (models) فراخوانی شود
-- در آینده در مورد models بیشتر صحبت خواهیم کرد
+- در آینده در مورد filters بیشتر صحبت خواهیم کرد
 
 <p align="center">
     <a href="https://github.com/shayanheidari01/rubika/blob/master/docs/Error-Handling.md">
