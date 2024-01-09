@@ -1,10 +1,8 @@
 from rubpy import Client, filters, Rubino
 from rubpy.types import Updates
-from httpx import AsyncClient
 
 bot = Client('bot')
 rubino = Rubino(client=bot)
-httpx = AsyncClient()
 
 @bot.on_message_updates(filters.text)
 async def updates(update: Updates):
