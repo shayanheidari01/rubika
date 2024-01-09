@@ -8,18 +8,16 @@ ___
 ## استفاده از دکوراتورها
 زیباترین راه برای ثبت یک کنترل کننده پیام، استفاده از دکوراتور  @client.on است.
 ```python
-from rubpy import Client, handlers, Message
-import asyncio
+from rubpy import Client
+from rubpy.types import Updates
 
-async def main():
-    async with Client(session='MyAccount') as client:
-        @client.on(handlers.MessageUpdates())
-        async def updates(message: Message):
-            if message.raw_text != None and message.raw_text == 'سلام':
-                await message.reply('`hello` __from__ **rubpy**')
-        await client.run_until_disconnected()
+bot = Client(name='rubpy')
 
-asyncio.run(main())
+@bot.on_message_updates()
+async def updates(update: Updates):
+    print(update)
+
+bot.run()
 ```
 در کد بالا از کلاس handlers کنترل کننده MessageUpdates را فراخوانی کردیم و جدیدترین پیام ها را دریافت میکنیم، در کد بالا به محض اینکه کسی به شما "سلام" کند ربات به او پاسخ میدهد.
 ## کلاس handlers
