@@ -3,11 +3,8 @@ from setuptools import setup, find_packages
 requirements = [
     'aiohttp',
     'pycryptodome',
+    'pydantic==1.10.12',
     'aiofiles',
-    'mutagen',
-    'websocket-client',
-    'requests',
-    'pydantic==1.10.12'
 ]
 
 with open('README.md', encoding='UTF-8') as f:
@@ -15,7 +12,7 @@ with open('README.md', encoding='UTF-8') as f:
 
 setup(
     name = 'rubpy',
-    version = '6.4.9',
+    version = '6.7.6',
     author='Shayan Heidari',
     author_email = 'contact@shayanheidari.info',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',
@@ -25,9 +22,11 @@ setup(
     long_description_content_type = 'text/markdown',
     url = 'https://github.com/shayanheidari01/rubika',
     packages = find_packages(),
+    exclude_package_data = {'': ['*.pyc', '*__pycache__*']},
     install_requires = requirements,
     extras_require={
-        'cv': ['opencv-python']
+        'cv': ['opencv-python'],
+        'pil': ['pillow']
     },
     classifiers=[
         'Programming Language :: Python :: 3.7',
