@@ -12,7 +12,7 @@ with open('README.md', encoding='UTF-8') as f:
 
 setup(
     name = 'rubpy',
-    version = '6.7.6',
+    version = '6.7.7',
     author='Shayan Heidari',
     author_email = 'contact@shayanheidari.info',
     description = 'This is an unofficial library and fastest library for deploying robots on Rubika accounts.',
