@@ -1,6 +1,8 @@
+import rubpy
+
 class GroupPreviewByJoinLink:
     async def group_preview_by_join_link(
-            self,
+            self: "rubpy.Client",
             link: str,
     ):
         if '/' in link:
@@ -8,5 +10,5 @@ class GroupPreviewByJoinLink:
 
         return await self.builder('groupPreviewByJoinLink',
                                   input={
-                                      'link': link,
+                                      'hash_link': link,
                                   })
