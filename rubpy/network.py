@@ -1,7 +1,6 @@
 import asyncio
 import aiohttp
 import rubpy
-import urllib.parse
 import aiofiles
 import json
 import os
@@ -22,9 +21,10 @@ class Network:
                 }
 
     def __init__(self, client: "rubpy.Client") -> None:
-        connector = aiohttp.TCPConnector(verify_ssl=False)
         self.client = client
+        connector = aiohttp.TCPConnector(verify_ssl=False)
         self.json_decoder = json.JSONDecoder().decode
+        self.json_encoder = json.JSONEncoder().encode
         self.session = aiohttp.ClientSession(
             connector=connector,
             headers=self.HEADERS,
@@ -68,54 +68,26 @@ class Network:
                 continue
 
     async def request(self, url: str, data: dict):
-        url = urllib.parse.urlsplit(url)
+        if not isinstance(data, str):
+            data = self.json_encoder(data)
 
-        if not hasattr(self, 'open_session'):
-            if url.scheme == 'https':
-                reader, writer = await asyncio.open_connection(
-                    url.hostname, 443, ssl=True)
-            else:
-                reader, writer = await asyncio.open_connection(
-                    url.hostname, 80)
+        if isinstance(data, str):
+            data = data.encode('utf-8')
 
-            self.open_session = (reader, writer)
+        for _ in range(3):
+            try:
+                async with self.session.post(url=url, data=data, verify_ssl=False) as response:
+                    if response.ok:
+                        return self.json_decoder(await response.text())
 
-        query = (
-            f"POST {url.path or '/'} HTTP/1.0\r\n"
-            f"Host: {url.hostname}\r\n"
-            'user-agent: ' + self.HEADERS['user-agent'] + '\r\n'
-            'origin: https://web.rubika.ir\r\n'
-            'referer: https://web.rubika.ir/\r\n'
-            f"\r\n"
-        )
+            except aiohttp.ServerTimeoutError:
+                print('Rubika server timeout error, try again ({})'.format(_))
 
-        writer.write(query.encode('utf-8') + json.dumps(data).encode('utf-8'))
-        while True:
-            line = await reader.readline()
-            if not line:
-                break
+            except aiohttp.ClientError:
+                print('Client error, try again ({})'.format(_))
 
-            print(line)
-
-            headers = line.decode('utf-8').rstrip()
-            if headers:
-                print(f'HTTP header> {line}')
-
-        # Ignore the body, close the socket
-        writer.close()
-        await writer.wait_closed()
-        # for _ in range(3):
-        #     try:
-        #         async with self.session.request(method='POST', url=url, json=data, verify_ssl=False) as response:
-        #             if response.ok:
-        #                 print(response.raw_headers)
-        #                 return self.json_decoder(await response.text())
-
-        #     except aiohttp.ServerTimeoutError:
-        #         print('Rubika server timeout error, try again ({})'.format(_))
-
-        #     except aiohttp.ClientError:
-        #         print('Client error, try again ({})'.format(_))
+            except Exception as err:
+                print('Unknown Error:', err, '{}'.format(_))
 
     async def send(self, **kwargs):
         api_version: str = str(kwargs.get('api_version', self.client.API_VERSION))
@@ -357,6 +329,7 @@ class Network:
                     data = await response.read()
                     if data:
                         result += data
+
                         if callback:
                             await callback(size, len(result))
 
