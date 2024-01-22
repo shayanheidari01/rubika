@@ -10,5 +10,5 @@ class ChannelPreviewByJoinLink:
 
         return await self.builder('channelPreviewByJoinLink',
                                   input={
-                                      'link': link,
+                                      'hash_link': link,
                                   })
