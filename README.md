@@ -44,35 +44,36 @@ bot.run()
 **Async Another Example:**
 ```python
 from rubpy import Client
-
-bot = Client(name='rubpy')
+import asyncio
 
 async def main():
-    async with bot:
+    async with Client(name='rubpy') as bot:
         result = await bot.send_message('me', '`hello` __from__ **rubpy**')
         print(result)
 
-bot.run(main())
+asyncio.run(main())
 ```
 
 ### Sync Accounts
 ```python
-from rubpy.sync import Client, handlers, Message
+from rubpy import Client
 
-with Client(session='rubpy') as client:
-    @client.on(handlers.MessageUpdates())
-    def updates(message: Message):
-        message.reply('`hello` __from__ **rubpy**')
-    client.run_until_disconnected()
+bot = Client('rubpy')
+
+@bot.on_message_updates()
+def updates(message):
+    message.reply('`hello` __from__ **rubpy**')
+
+bot.run()
 ```
 
 **Sync Another Example:**
 ```python
 from rubpy import Client
 
-with Client(session='rubpy') as client:
-        result = client.send_message('me', '`hello` __from__ **rubpy**')
-        print(result)
+with Client(name='rubpy') as client:
+    result = client.send_message('me', '`hello` __from__ **rubpy**')
+    print(result)
 ```
 
 **Rubpy** is a modern, elegant and asynchronous framework. It enables you to easily interact with the main Rubika API through a user account (custom client) or a bot
@@ -93,6 +94,3 @@ identity (bot API alternative) using Python.
 ``` bash
 pip3 install -U rubpy
 ```
-
-### Thanks to
-- [Milad Heidari](https://github.com/IRMilad/rubika)
