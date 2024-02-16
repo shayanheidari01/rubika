@@ -1,7 +1,6 @@
 from rubpy import Client, filters
 from rubpy.types import Updates
 from rubpy.enums import ParseMode
-from runner import SourceSara
 from requests import Session
 from typing import List, Optional
 from pydantic import BaseModel
