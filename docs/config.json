@@ -1,0 +1,14 @@
+{
+    "name": "روبیکاپای",
+    "methods": [
+      {
+        "name": "send_message",
+        "parameters": ["text", "recipient"]
+      },
+      {
+        "name": "receive_message",
+        "parameters": ["text", "sender"]
+      }
+    ]
+  }
+  
