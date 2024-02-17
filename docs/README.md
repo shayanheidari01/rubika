@@ -1,84 +1,50 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: right;
-            margin: 20px;
+# Documentation
+
+<div id="documentation"></div>
+
+<script>
+    async function fetchAndDisplayDocumentation() {
+        try {
+            const response = await fetch('config.json');
+            const jsonData = await response.json();
+
+            createDocumentation(jsonData);
+        } catch (error) {
+            console.error('Error fetching JSON:', error);
         }
+    }
 
-        h1 {
-            color: #3498db;
-        }
+    function createDocumentation(data) {
+        const documentationDiv = document.getElementById('documentation');
 
-        h2 {
-            color: #2ecc71;
-        }
+        const h1 = document.createElement('h1');
+        h1.textContent = data.name;
+        documentationDiv.appendChild(h1);
 
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
+        data.methods.forEach(method => {
+            const h2 = document.createElement('h2');
+            h2.textContent = method.name;
+            documentationDiv.appendChild(h2);
 
-        li {
-            margin-bottom: 10px;
-        }
-    </style>
-    <title>Documentation</title>
-</head>
-<body>
+            const p = document.createElement('p');
+            p.textContent = `Method ${method.name}.`;
+            documentationDiv.appendChild(p);
 
-    <div id="documentation"></div>
+            if (method.parameters.length > 0) {
+                const h3 = document.createElement('h3');
+                h3.textContent = 'Parameters';
+                documentationDiv.appendChild(h3);
 
-    <script>
-        async function fetchAndDisplayDocumentation() {
-            try {
-                const response = await fetch('http://localhost:3000/');
-                const jsonData = await response.json();
-
-                createDocumentation(jsonData);
-            } catch (error) {
-                console.error('Error fetching JSON:', error);
+                const ul = document.createElement('ul');
+                method.parameters.forEach(parameter => {
+                    const li = document.createElement('li');
+                    li.textContent = parameter;
+                    ul.appendChild(li);
+                });
+                documentationDiv.appendChild(ul);
             }
-        }
+        });
+    }
 
-        function createDocumentation(data) {
-            const documentationDiv = document.getElementById('documentation');
-
-            const h1 = document.createElement('h1');
-            h1.textContent = data.name;
-            documentationDiv.appendChild(h1);
-
-            data.methods.forEach(method => {
-                const h2 = document.createElement('h2');
-                h2.textContent = method.name;
-                documentationDiv.appendChild(h2);
-
-                const p = document.createElement('p');
-                p.textContent = "متد " + method.name + ".";
-                documentationDiv.appendChild(p);
-
-                if (method.parameters.length > 0) {
-                    const h3 = document.createElement('h3');
-                    h3.textContent = "پارامتر‌ها";
-                    documentationDiv.appendChild(h3);
-
-                    const ul = document.createElement('ul');
-                    method.parameters.forEach(parameter => {
-                        const li = document.createElement('li');
-                        li.textContent = parameter;
-                        ul.appendChild(li);
-                    });
-                    documentationDiv.appendChild(ul);
-                }
-            });
-        }
-
-        fetchAndDisplayDocumentation();
-    </script>
-
-</body>
-</html>
+    fetchAndDisplayDocumentation();
+</script>
