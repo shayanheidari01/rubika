@@ -36,7 +36,7 @@
     <script>
         async function fetchAndDisplayDocumentation() {
             try {
-                const response = await fetch('file://config.json');
+                const response = await fetch('config.json');
                 const jsonData = await response.json();
 
                 createDocumentation(jsonData);
