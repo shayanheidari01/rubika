@@ -2,7 +2,7 @@ from rubpy import Client
 
 OBJECT_GUID = '' # Enter the group or channel GUID
 
-with Client('bot') as bot:
+with Client('get_all_members') as bot:
     has_continue = True
     next_start_id = None
     count = 1
