@@ -1,0 +1,23 @@
+{
+  "files": {
+    "main.css": "/static/css/main.cb41db54.css",
+    "main.js": "/static/js/main.200b0860.js",
+    "static/js/705.f19232cd.chunk.js": "/static/js/705.f19232cd.chunk.js",
+    "static/js/3.f5139b25.chunk.js": "/static/js/3.f5139b25.chunk.js",
+    "static/js/931.6a1b419f.chunk.js": "/static/js/931.6a1b419f.chunk.js",
+    "static/js/733.b4e519a4.chunk.js": "/static/js/733.b4e519a4.chunk.js",
+    "static/media/Yekan.ttf": "/static/media/Yekan.012789e6e9f8b9a4929f.ttf",
+    "static/media/Estedad-Medium.woff2": "/static/media/Estedad-Medium.44428fe5a7d5ef017dee.woff2",
+    "static/media/quickstart.md": "/static/media/quickstart.cd13c59ed8b2d35c384d.md",
+    "static/media/setup.md": "/static/media/setup.3cb0706371242d35f482.md",
+    "index.html": "/index.html",
+    "static/media/aboutinstall.md": "/static/media/aboutinstall.9d5b345ad5930f9174fe.md",
+    "static/media/methods.md": "/static/media/methods.52211bb41447572b21d3.md",
+    "main.cb41db54.css.map": "/static/css/main.cb41db54.css.map",
+    "main.200b0860.js.map": "/static/js/main.200b0860.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.cb41db54.css",
+    "static/js/main.200b0860.js"
+  ]
+}
