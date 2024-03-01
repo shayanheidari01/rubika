@@ -9,7 +9,7 @@
         Homepage
     </a>
     •
-    <a href="https://github.com/shayanheidari01/rubika/tree/master/docs">
+    <a href="https://docs.rubpy.site/quickstart">
         Documentation
     </a>
     •
