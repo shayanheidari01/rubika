@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkrubpy=self.webpackChunkrubpy||[]).push([[705],{7705:(e,s,a)=>{e.exports=a.p+"static/media/aboutinstall.9d5b345ad5930f9174fe.md"}}]);
