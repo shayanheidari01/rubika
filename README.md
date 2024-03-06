@@ -9,7 +9,7 @@
         Homepage
     </a>
     •
-    <a href="https://docs.rubpy.site/quickstart">
+    <a href="https://docs.rubpy.site">
         Documentation
     </a>
     •
