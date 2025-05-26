@@ -1,20 +1,24 @@
 from rubpy import Client
 
-OBJECT_GUID = '' # Enter the group or channel GUID
+OBJECT_GUID = ''  # GUID گروه یا کانال موردنظر
 
 with Client('get_all_members') as bot:
     has_continue = True
     next_start_id = None
-    count = 1
+    total_members = 0
 
     while has_continue:
-        result = bot.get_members(OBJECT_GUID, start_id=next_start_id)
-        next_start_id = result.next_start_id
-        has_continue = result.has_continue
-        in_chat_members = result.in_chat_members
+        response = bot.get_members(OBJECT_GUID, start_id=next_start_id)
 
-        for in_chat_member in in_chat_members:
-            print(in_chat_member)
-            count += 1
+        if not response:
+            break  # اگر پاسخ خالی بود، حلقه متوقف شود
 
-    print(count)
+        next_start_id = response.next_start_id
+        has_continue = response.has_continue
+        members = response.in_chat_members or []
+
+        for member in members:
+            print(member)
+            total_members += 1
+
+    print("Total members:", total_members)
