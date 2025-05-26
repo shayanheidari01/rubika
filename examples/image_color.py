@@ -1,6 +1,6 @@
 from rubpy import Client, filters
 from rubpy.types import Updates
-from PIL import Image
+from PIL import Image # pip install -U pillow
 from io import BytesIO
 
 bot = Client('bot')
