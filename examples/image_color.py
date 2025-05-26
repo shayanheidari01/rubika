@@ -5,7 +5,7 @@ from io import BytesIO
 
 bot = Client('bot')
 
-@bot.on_message_updates(filters.is_group, filters.Commands(['rgb', 'RGB']))
+@bot.on_message_updates(filters.is_group, filters.commands(['rgb', 'RGB']))
 def make_image(update: Updates):
     try:
         hex_color = update.command[-1]
