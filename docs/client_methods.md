@@ -6,163 +6,320 @@
 ## فهرست متدها
 
 **Static Methods:**
-• [action_on_join_request](#action_on_join_request)
-• [action_on_message_reaction](#action_on_message_reaction)
-• [action_on_sticker_set](#action_on_sticker_set)
-• [add_address_book](#add_address_book)
-• [add_channel](#add_channel)
-• [add_channel_members](#add_channel_members)
-• [add_group](#add_group)
-• [add_group_members](#add_group_members)
-• [add_handler](#add_handler)
-• [add_to_my_gif_set](#add_to_my_gif_set)
-• [auto_delete_message](#auto_delete_message)
-• [ban_channel_member](#ban_channel_member)
-• [ban_group_member](#ban_group_member)
-• [ban_member](#ban_member)
-• [builder](#builder)
-• [channel_preview_by_join_link](#channel_preview_by_join_link)
-• [check_channel_username](#check_channel_username)
-• [check_user_username](#check_user_username)
-• [connect](#connect)
-• [create_channel_voice_chat](#create_channel_voice_chat)
-• [create_group_voice_chat](#create_group_voice_chat)
-• [create_join_link](#create_join_link)
-• [create_poll](#create_poll)
-• [delete_avatar](#delete_avatar)
-• [delete_chat_history](#delete_chat_history)
-• [delete_contact](#delete_contact)
-• [delete_folder](#delete_folder)
-• [delete_messages](#delete_messages)
-• [delete_no_access_group_chat](#delete_no_access_group_chat)
-• [delete_user_chat](#delete_user_chat)
-• [discard_channel_voice_chat](#discard_channel_voice_chat)
-• [disconnect](#disconnect)
-• [download](#download)
-• [download_profile_picture](#download_profile_picture)
-• [edit_channel_info](#edit_channel_info)
-• [edit_group_info](#edit_group_info)
-• [edit_message](#edit_message)
-• [forward_messages](#forward_messages)
-• [get_abs_objects](#get_abs_objects)
-• [get_avatars](#get_avatars)
-• [get_banned_group_members](#get_banned_group_members)
-• [get_blocked_users](#get_blocked_users)
-• [get_channel_admin_access_list](#get_channel_admin_access_list)
-• [get_channel_admin_members](#get_channel_admin_members)
-• [get_channel_all_members](#get_channel_all_members)
-• [get_channel_info](#get_channel_info)
-• [get_channel_link](#get_channel_link)
-• [get_chats](#get_chats)
-• [get_chats_updates](#get_chats_updates)
-• [get_contacts](#get_contacts)
-• [get_contacts_updates](#get_contacts_updates)
-• [get_folders](#get_folders)
-• [get_group_admin_access_list](#get_group_admin_access_list)
-• [get_group_admin_members](#get_group_admin_members)
-• [get_group_all_members](#get_group_all_members)
-• [get_group_default_access](#get_group_default_access)
-• [get_group_info](#get_group_info)
-• [get_group_link](#get_group_link)
-• [get_group_mention_list](#get_group_mention_list)
-• [get_group_online_count](#get_group_online_count)
-• [get_group_voice_chat_updates](#get_group_voice_chat_updates)
-• [get_info](#get_info)
-• [get_join_links](#get_join_links)
-• [get_join_requests](#get_join_requests)
-• [get_link_from_app_url](#get_link_from_app_url)
-• [get_me](#get_me)
-• [get_members](#get_members)
-• [get_message_url](#get_message_url)
-• [get_messages_by_id](#get_messages_by_id)
-• [get_messages_interval](#get_messages_interval)
-• [get_messages_updates](#get_messages_updates)
-• [get_my_gif_set](#get_my_gif_set)
-• [get_my_sessions](#get_my_sessions)
-• [get_my_sticker_sets](#get_my_sticker_sets)
-• [get_object_by_username](#get_object_by_username)
-• [get_poll_option_voters](#get_poll_option_voters)
-• [get_poll_status](#get_poll_status)
-• [get_privacy_setting](#get_privacy_setting)
-• [get_profile_link_items](#get_profile_link_items)
-• [get_related_objects](#get_related_objects)
-• [get_sticker_set_by_id](#get_sticker_set_by_id)
-• [get_stickers_by_emoji](#get_stickers_by_emoji)
-• [get_stickers_by_set_ids](#get_stickers_by_set_ids)
-• [get_suggested_folders](#get_suggested_folders)
-• [get_transcription](#get_transcription)
-• [get_trend_sticker_sets](#get_trend_sticker_sets)
-• [get_two_passcode_status](#get_two_passcode_status)
-• [get_updates](#get_updates)
-• [get_user_info](#get_user_info)
-• [group_preview_by_join_link](#group_preview_by_join_link)
-• [heartbeat](#heartbeat)
-• [join_channel_action](#join_channel_action)
-• [join_channel_by_link](#join_channel_by_link)
-• [join_chat](#join_chat)
-• [join_group](#join_group)
-• [join_voice_chat](#join_voice_chat)
-• [leave_group](#leave_group)
-• [leave_group_voice_chat](#leave_group_voice_chat)
-• [on_chat_updates](#on_chat_updates)
-• [on_message_updates](#on_message_updates)
-• [on_remove_notifications](#on_remove_notifications)
-• [on_show_activities](#on_show_activities)
-• [on_show_notifications](#on_show_notifications)
-• [reaction](#reaction)
-• [register_device](#register_device)
-• [remove_channel](#remove_channel)
-• [remove_from_my_gif_set](#remove_from_my_gif_set)
-• [remove_group](#remove_group)
-• [remove_handler](#remove_handler)
-• [remove_reaction](#remove_reaction)
-• [report_object](#report_object)
-• [request_send_file](#request_send_file)
-• [run](#run)
-• [search_chat_messages](#search_chat_messages)
-• [search_global_objects](#search_global_objects)
-• [search_stickers](#search_stickers)
-• [seen_channel_messages](#seen_channel_messages)
-• [seen_chats](#seen_chats)
-• [send_chat_activity](#send_chat_activity)
-• [send_code](#send_code)
-• [send_document](#send_document)
-• [send_gif](#send_gif)
-• [send_group_voice_chat_activity](#send_group_voice_chat_activity)
-• [send_message](#send_message)
-• [send_music](#send_music)
-• [send_photo](#send_photo)
-• [send_sticker](#send_sticker)
-• [send_video](#send_video)
-• [send_video_message](#send_video_message)
-• [send_voice](#send_voice)
-• [set_action_chat](#set_action_chat)
-• [set_block_user](#set_block_user)
-• [set_channel_link](#set_channel_link)
-• [set_channel_voice_chat_setting](#set_channel_voice_chat_setting)
-• [set_group_admin](#set_group_admin)
-• [set_group_default_access](#set_group_default_access)
-• [set_group_link](#set_group_link)
-• [set_group_voice_chat_setting](#set_group_voice_chat_setting)
-• [set_pin](#set_pin)
-• [set_pin_message](#set_pin_message)
-• [set_setting](#set_setting)
-• [set_unpin](#set_unpin)
-• [set_voice_chat_state](#set_voice_chat_state)
-• [setup_two_step_verification](#setup_two_step_verification)
-• [sign_in](#sign_in)
-• [speaking](#speaking)
-• [start](#start)
-• [terminate_session](#terminate_session)
-• [transcribe_voice](#transcribe_voice)
-• [update_channel_username](#update_channel_username)
-• [update_profile](#update_profile)
-• [update_username](#update_username)
-• [upload](#upload)
-• [upload_avatar](#upload_avatar)
-• [user_is_admin](#user_is_admin)
-• [voice_chat_player](#voice_chat_player)
-• [vote_poll](#vote_poll)
+
+- [action_on_join_request](#action_on_join_request)
+
+- [action_on_message_reaction](#action_on_message_reaction)
+
+- [action_on_sticker_set](#action_on_sticker_set)
+
+- [add_address_book](#add_address_book)
+
+- [add_channel](#add_channel)
+
+- [add_channel_members](#add_channel_members)
+
+- [add_group](#add_group)
+
+- [add_group_members](#add_group_members)
+
+- [add_handler](#add_handler)
+
+- [add_to_my_gif_set](#add_to_my_gif_set)
+
+- [auto_delete_message](#auto_delete_message)
+
+- [ban_channel_member](#ban_channel_member)
+
+- [ban_group_member](#ban_group_member)
+
+- [ban_member](#ban_member)
+
+- [builder](#builder)
+
+- [channel_preview_by_join_link](#channel_preview_by_join_link)
+
+- [check_channel_username](#check_channel_username)
+
+- [check_user_username](#check_user_username)
+
+- [connect](#connect)
+
+- [create_channel_voice_chat](#create_channel_voice_chat)
+
+- [create_group_voice_chat](#create_group_voice_chat)
+
+- [create_join_link](#create_join_link)
+
+- [create_poll](#create_poll)
+
+- [delete_avatar](#delete_avatar)
+
+- [delete_chat_history](#delete_chat_history)
+
+- [delete_contact](#delete_contact)
+
+- [delete_folder](#delete_folder)
+
+- [delete_messages](#delete_messages)
+
+- [delete_no_access_group_chat](#delete_no_access_group_chat)
+
+- [delete_user_chat](#delete_user_chat)
+
+- [discard_channel_voice_chat](#discard_channel_voice_chat)
+
+- [disconnect](#disconnect)
+
+- [download](#download)
+
+- [download_profile_picture](#download_profile_picture)
+
+- [edit_channel_info](#edit_channel_info)
+
+- [edit_group_info](#edit_group_info)
+
+- [edit_message](#edit_message)
+
+- [forward_messages](#forward_messages)
+
+- [get_abs_objects](#get_abs_objects)
+
+- [get_avatars](#get_avatars)
+
+- [get_banned_group_members](#get_banned_group_members)
+
+- [get_blocked_users](#get_blocked_users)
+
+- [get_channel_admin_access_list](#get_channel_admin_access_list)
+
+- [get_channel_admin_members](#get_channel_admin_members)
+
+- [get_channel_all_members](#get_channel_all_members)
+
+- [get_channel_info](#get_channel_info)
+
+- [get_channel_link](#get_channel_link)
+
+- [get_chats](#get_chats)
+
+- [get_chats_updates](#get_chats_updates)
+
+- [get_contacts](#get_contacts)
+
+- [get_contacts_updates](#get_contacts_updates)
+
+- [get_folders](#get_folders)
+
+- [get_group_admin_access_list](#get_group_admin_access_list)
+
+- [get_group_admin_members](#get_group_admin_members)
+
+- [get_group_all_members](#get_group_all_members)
+
+- [get_group_default_access](#get_group_default_access)
+
+- [get_group_info](#get_group_info)
+
+- [get_group_link](#get_group_link)
+
+- [get_group_mention_list](#get_group_mention_list)
+
+- [get_group_online_count](#get_group_online_count)
+
+- [get_group_voice_chat_updates](#get_group_voice_chat_updates)
+
+- [get_info](#get_info)
+
+- [get_join_links](#get_join_links)
+
+- [get_join_requests](#get_join_requests)
+
+- [get_link_from_app_url](#get_link_from_app_url)
+
+- [get_me](#get_me)
+
+- [get_members](#get_members)
+
+- [get_message_url](#get_message_url)
+
+- [get_messages_by_id](#get_messages_by_id)
+
+- [get_messages_interval](#get_messages_interval)
+
+- [get_messages_updates](#get_messages_updates)
+
+- [get_my_gif_set](#get_my_gif_set)
+
+- [get_my_sessions](#get_my_sessions)
+
+- [get_my_sticker_sets](#get_my_sticker_sets)
+
+- [get_object_by_username](#get_object_by_username)
+
+- [get_poll_option_voters](#get_poll_option_voters)
+
+- [get_poll_status](#get_poll_status)
+
+- [get_privacy_setting](#get_privacy_setting)
+
+- [get_profile_link_items](#get_profile_link_items)
+
+- [get_related_objects](#get_related_objects)
+
+- [get_sticker_set_by_id](#get_sticker_set_by_id)
+
+- [get_stickers_by_emoji](#get_stickers_by_emoji)
+
+- [get_stickers_by_set_ids](#get_stickers_by_set_ids)
+
+- [get_suggested_folders](#get_suggested_folders)
+
+- [get_transcription](#get_transcription)
+
+- [get_trend_sticker_sets](#get_trend_sticker_sets)
+
+- [get_two_passcode_status](#get_two_passcode_status)
+
+- [get_updates](#get_updates)
+
+- [get_user_info](#get_user_info)
+
+- [group_preview_by_join_link](#group_preview_by_join_link)
+
+- [heartbeat](#heartbeat)
+
+- [join_channel_action](#join_channel_action)
+
+- [join_channel_by_link](#join_channel_by_link)
+
+- [join_chat](#join_chat)
+
+- [join_group](#join_group)
+
+- [join_voice_chat](#join_voice_chat)
+
+- [leave_group](#leave_group)
+
+- [leave_group_voice_chat](#leave_group_voice_chat)
+
+- [on_chat_updates](#on_chat_updates)
+
+- [on_message_updates](#on_message_updates)
+
+- [on_remove_notifications](#on_remove_notifications)
+
+- [on_show_activities](#on_show_activities)
+
+- [on_show_notifications](#on_show_notifications)
+
+- [reaction](#reaction)
+
+- [register_device](#register_device)
+
+- [remove_channel](#remove_channel)
+
+- [remove_from_my_gif_set](#remove_from_my_gif_set)
+
+- [remove_group](#remove_group)
+
+- [remove_handler](#remove_handler)
+
+- [remove_reaction](#remove_reaction)
+
+- [report_object](#report_object)
+
+- [request_send_file](#request_send_file)
+
+- [run](#run)
+
+- [search_chat_messages](#search_chat_messages)
+
+- [search_global_objects](#search_global_objects)
+
+- [search_stickers](#search_stickers)
+
+- [seen_channel_messages](#seen_channel_messages)
+
+- [seen_chats](#seen_chats)
+
+- [send_chat_activity](#send_chat_activity)
+
+- [send_code](#send_code)
+
+- [send_document](#send_document)
+
+- [send_gif](#send_gif)
+
+- [send_group_voice_chat_activity](#send_group_voice_chat_activity)
+
+- [send_message](#send_message)
+
+- [send_music](#send_music)
+
+- [send_photo](#send_photo)
+
+- [send_sticker](#send_sticker)
+
+- [send_video](#send_video)
+
+- [send_video_message](#send_video_message)
+
+- [send_voice](#send_voice)
+
+- [set_action_chat](#set_action_chat)
+
+- [set_block_user](#set_block_user)
+
+- [set_channel_link](#set_channel_link)
+
+- [set_channel_voice_chat_setting](#set_channel_voice_chat_setting)
+
+- [set_group_admin](#set_group_admin)
+
+- [set_group_default_access](#set_group_default_access)
+
+- [set_group_link](#set_group_link)
+
+- [set_group_voice_chat_setting](#set_group_voice_chat_setting)
+
+- [set_pin](#set_pin)
+
+- [set_pin_message](#set_pin_message)
+
+- [set_setting](#set_setting)
+
+- [set_unpin](#set_unpin)
+
+- [set_voice_chat_state](#set_voice_chat_state)
+
+- [setup_two_step_verification](#setup_two_step_verification)
+
+- [sign_in](#sign_in)
+
+- [speaking](#speaking)
+
+- [start](#start)
+
+- [terminate_session](#terminate_session)
+
+- [transcribe_voice](#transcribe_voice)
+
+- [update_channel_username](#update_channel_username)
+
+- [update_profile](#update_profile)
+
+- [update_username](#update_username)
+
+- [upload](#upload)
+
+- [upload_avatar](#upload_avatar)
+
+- [user_is_admin](#user_is_admin)
+
+- [voice_chat_player](#voice_chat_player)
+
+- [vote_poll](#vote_poll)
 
 ---
 
@@ -1160,12 +1317,12 @@ Returns:
 
 ---
 <a name="get_contacts_updates"></a>
-### `get_contacts_updates(self: 'rubpy.Client', state: Union[str, int, NoneType] = 1748353778) -> rubpy.types.update.Update`
+### `get_contacts_updates(self: 'rubpy.Client', state: Union[str, int, NoneType] = 1748353902) -> rubpy.types.update.Update`
 
 **نوع متد:** Static
 
 ```python
-get_contacts_updates(self: 'rubpy.Client', state: Union[str, int, NoneType] = 1748353778) -> rubpy.types.update.Update
+get_contacts_updates(self: 'rubpy.Client', state: Union[str, int, NoneType] = 1748353902) -> rubpy.types.update.Update
 ```
 
 Get updates related to contacts.
@@ -1180,12 +1337,12 @@ Returns:
 
 ---
 <a name="get_folders"></a>
-### `get_folders(self: 'rubpy.Client', last_state: Union[int, str] = 1748353778) -> rubpy.types.update.Update`
+### `get_folders(self: 'rubpy.Client', last_state: Union[int, str] = 1748353902) -> rubpy.types.update.Update`
 
 **نوع متد:** Static
 
 ```python
-get_folders(self: 'rubpy.Client', last_state: Union[int, str] = 1748353778) -> rubpy.types.update.Update
+get_folders(self: 'rubpy.Client', last_state: Union[int, str] = 1748353902) -> rubpy.types.update.Update
 ```
 
 Get a list of folders.
@@ -1529,12 +1686,12 @@ Returns:
 
 ---
 <a name="get_messages_updates"></a>
-### `get_messages_updates(self: 'rubpy.Client', object_guid: str, state: int = 1748353778) -> rubpy.types.update.Update`
+### `get_messages_updates(self: 'rubpy.Client', object_guid: str, state: int = 1748353902) -> rubpy.types.update.Update`
 
 **نوع متد:** Static
 
 ```python
-get_messages_updates(self: 'rubpy.Client', object_guid: str, state: int = 1748353778) -> rubpy.types.update.Update
+get_messages_updates(self: 'rubpy.Client', object_guid: str, state: int = 1748353902) -> rubpy.types.update.Update
 ```
 
 Get message updates for a specific object.
