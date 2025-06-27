@@ -1,32 +1,27 @@
 <p align="center">
-    <a href="github.address">
-        <img src="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png" alt="Rubpy" width="128">
-    </a>
-    <br>
-    <b>Rubika API Framework for Python</b>
-    <br>
-    <a href="https://github.com/shayanheidari01/rubika">
-        Homepage
-    </a>
-    •
-    <a href="https://docs.rubpy.site">
-        Documentation
-    </a>
-    •
-    <a href="https://pypi.org/project/rubpy/#history">
-        Releases
-    </a>
-    •
-    <a href="https://t.me/rubika_library">
-        News
-    </a>
+  <a href="https://github.com/shayanheidari01/rubika">
+    <img src="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png" width="128" alt="Rubpy Logo" />
+  </a>
+  <br><br>
+  <strong><font size="+2">Rubpy</font></strong><br>
+  <em>Asynchronous & elegant Python framework for the Rubika API</em>
+  <br><br>
+  <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
+  <a href="https://docs.rubpy.site">📘 Documentation</a> •
+  <a href="https://pypi.org/project/rubpy/#history">📦 Releases</a> •
+  <a href="https://t.me/rubika_library">🗞 News</a>
 </p>
 
-## Rubpy
+---
 
-> Elegant, modern and asynchronous Rubika API framework in Python for users and bots
+## 🌟 Rubpy
 
-### Async Accounts
+> **Modern. Elegant. Asynchronous.**  
+> A clean Pythonic interface to interact with Rubika's API — for both **users** and **bots**.
+
+---
+
+### 🚀 Async Example
 ```python
 from rubpy import Client, filters, utils
 from rubpy.types import Updates
@@ -41,7 +36,7 @@ async def updates(update: Updates):
 bot.run()
 ```
 
-**Async Another Example:**
+**Minimal Async:**
 ```python
 from rubpy import Client
 import asyncio
@@ -54,7 +49,9 @@ async def main():
 asyncio.run(main())
 ```
 
-### Sync Accounts
+---
+
+### ⚡ Sync Example
 ```python
 from rubpy import Client
 
@@ -67,7 +64,7 @@ def updates(message):
 bot.run()
 ```
 
-**Sync Another Example:**
+**Minimal Sync:**
 ```python
 from rubpy import Client
 
@@ -76,21 +73,29 @@ with Client(name='rubpy') as client:
     print(result)
 ```
 
-**Rubpy** is a modern, elegant and asynchronous framework. It enables you to easily interact with the main Rubika API through a user account (custom client) or a bot
-identity (bot API alternative) using Python.
+---
 
+### ✨ Why Rubpy?
 
-### Key Features
+- 📦 **Ready** — Install with pip and start instantly
+- 🧠 **Easy** — Clean, intuitive, and beginner-friendly
+- 💅 **Elegant** — Beautifully abstracted low-level details
+- 🚀 **Fast** — Powered by high-performance `pycryptodome`
+- 🔁 **Async First** — Full async design, with sync support
+- 💪 **Powerful** — Everything the official client can do — and more
 
-- **Ready**: Install Rubpy with pip and start building your applications right away.
-- **Easy**: Makes the Rubika API simple and intuitive, while still allowing advanced usages.
-- **Elegant**: Low-level details are abstracted and re-presented in a more convenient way.
-- **Fast**: Boosted up by pycryptodome, a high-performance cryptography library written in C.
-- **Async**: Fully asynchronous (also usable synchronously if wanted, for convenience).
-- **Powerful**: Full access to Rubika's API to execute any official client action and more.
+---
 
-### Installing
+### 📦 Installation
 
-``` bash
-pip3 install -U rubpy
+```bash
+pip install -U rubpy
 ```
+
+---
+
+### 📣 Stay Connected
+
+- [Telegram Channel](https://t.me/rubika_library)
+- [Project Homepage](https://github.com/shayanheidari01/rubika)
+- [Documentation](https://docs.rubpy.site)
