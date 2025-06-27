@@ -23,15 +23,16 @@
 
 ### 🚀 Async Example
 ```python
-from rubpy import Client, filters, utils
-from rubpy.types import Updates
+from rubpy import Client, filters
+from rubpy.types import Update
 
 bot = Client(name='rubpy')
 
 @bot.on_message_updates(filters.text)
-async def updates(update: Updates):
+async def updates(update: Update):
     print(update)
-    await update.reply(utils.Code('hello') + utils.Underline('from') + utils.Bold('rubpy'))
+    await update.reply('`hello` __from__ **rubpy**')
+  
 
 bot.run()
 ```
