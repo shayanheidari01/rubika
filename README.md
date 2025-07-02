@@ -7,7 +7,7 @@
   <em>Asynchronous & elegant Python framework for the Rubika API</em>
   <br><br>
   <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
-  <a href="https://docs.rubpy.site">📘 Documentation</a> •
+  <a href="https://github.com/shayanheidari01/rubika/tree/master/docs">📘 Documentation</a> •
   <a href="https://pypi.org/project/rubpy/#history">📦 Releases</a> •
   <a href="https://t.me/rubikapy">🗞 News</a>
 </p>
