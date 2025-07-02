@@ -9,7 +9,7 @@
   <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
   <a href="https://docs.rubpy.site">📘 Documentation</a> •
   <a href="https://pypi.org/project/rubpy/#history">📦 Releases</a> •
-  <a href="https://t.me/rubika_library">🗞 News</a>
+  <a href="https://t.me/rubikapy">🗞 News</a>
 </p>
 
 ---
@@ -97,6 +97,5 @@ pip install -U rubpy
 
 ### 📣 Stay Connected
 
-- [Telegram Channel](https://t.me/rubika_library)
+- [Telegram Channel](https://t.me/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)
-- [Documentation](https://docs.rubpy.site)
