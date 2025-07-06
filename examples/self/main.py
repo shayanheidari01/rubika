@@ -629,7 +629,7 @@ async def new_message(update: Update):
             "/clean_answers - Clear all predefined answers.\n"
             "/set_language <fa|en> - Set the bot language (Persian or English).\n"
             "/ai <text> - Get a response from AI based on the provided text.\n\n",
-            "Powered by Shayan Heidari:\n"
+            "Powered by Shayan Heidari:\nhttps://github.com/shayanheidari01/rubika/tree/master/examples/self"
         )
         await update.edit(format_message(help_text, auto_bold, auto_italic))
 
