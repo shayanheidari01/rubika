@@ -186,18 +186,23 @@ async def set_user_language(user_guid: str, language: str):
 # Get setting from database
 async def get_setting(key: str) -> bool:
     async with AsyncSessionLocal() as session:
-        setting = await session.get(Setting, key)
+        result = await session.execute(
+            select(Setting).where(Setting.key == key)
+        )
+        setting = result.scalar_one_or_none()
         return setting.value if setting else False
 
 # Set setting in database
 async def set_setting(key: str, value: bool):
     async with AsyncSessionLocal() as session:
-        setting = await session.get(Setting, key)
+        result = await session.execute(
+            select(Setting).where(Setting.key == key)
+        )
+        setting = result.scalar_one_or_none()
         if setting:
             setting.value = value
         else:
-            setting = Setting(key=key, value=value)
-            session.add(setting)
+            session.add(Setting(key=key, value=value))
         await session.commit()
 
 # Get user info from database
@@ -236,6 +241,7 @@ async def new_message(update: Update):
     templates = MESSAGE_TEMPLATES[lang]
     
     auto_edit_text = await get_setting('auto_edit_text')
+    print(auto_edit_text)
     auto_bold = await get_setting('auto_bold')
     auto_italic = await get_setting('auto_italic')
     typing = await get_setting('typing')
