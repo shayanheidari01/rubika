@@ -4,4 +4,4 @@ sqlalchemy
 TranslatorX
 googlesearch-python
 persiantools
-aiosqlite
+aiofiles
