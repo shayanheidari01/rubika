@@ -200,11 +200,17 @@ class Network:
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             break
 
-            except aiohttp.ClientError:
-                continue
+            except aiohttp.ServerTimeoutError:
+                print("Websocket connection lost. Reconnecting...")
+                await asyncio.sleep(5)  # wait before reconnecting
 
-            except Exception:
-                continue
+            except TimeoutError:
+                print("Websocket connection lost. Reconnecting...")
+                await asyncio.sleep(5)  # wait before reconnecting
+
+            except aiohttp.ClientError:
+                print("Websocket connection lost. Reconnecting...")
+                await asyncio.sleep(5)  # wait before reconnecting
 
     async def keep_socket(self, ws):
         while True:
