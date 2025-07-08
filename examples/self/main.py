@@ -212,11 +212,19 @@ async def set_user_info(info: dict):
 # تابع کمکی برای ارسال پیام فرمت‌شده
 async def send_formatted_message(update: Update, message: str, bold: bool, italic: bool, auto_edit_text: bool = False):
     if auto_edit_text: 
+        original = message  # نسخه ثابت پیام اولیه
         output = ''
-        for char in message:
+        for char in original:
             output += char
-            message = format_message(output, bold, italic)
-            await update.edit(message)
+            formatted = format_message(
+                f"{output.strip()}...┃" if char != original[-1] else output.strip(),
+                bold,
+                italic
+            )
+            try:
+                await update.edit(formatted)
+            except:
+                pass
             await asyncio.sleep(0.1)
     else:
         await update.edit(format_message(message, bold, italic))
@@ -482,8 +490,7 @@ async def new_message(update: Update):
             if answer:
                 await send_formatted_message(update, answer.answer, auto_bold, auto_italic)
                 return
-        if auto_edit_text:
-            await send_formatted_message(update, update.text.strip(), auto_bold, auto_italic, auto_edit_text)
+        await send_formatted_message(update, update.text.strip(), auto_bold, auto_italic, auto_edit_text)
         return
 
     command_handlers = {
