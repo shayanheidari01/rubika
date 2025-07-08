@@ -169,13 +169,14 @@ class SendMessage:
             result = await self.builder('sendMessage', input=input)
 
         else:
-            chunks = [text[i:i+4200] for i in range(0, len(text), 4200)]
-            if not chunks:
-                result = await self.builder('sendMessage', input=input)
-            else:
-                for chunk in chunks:
-                    input['text'] = chunk.strip()
+            if 'text' in input:
+                chunks = [input['text'][i:i+4200] for i in range(0, len(input['text']), 4200)]
+                if not chunks:
                     result = await self.builder('sendMessage', input=input)
+                else:
+                    for chunk in chunks:
+                        input['text'] = chunk.strip()
+                        result = await self.builder('sendMessage', input=input)
 
         # Schedule auto-delete if specified
         if isinstance(auto_delete, (int, float)):
