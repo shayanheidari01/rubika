@@ -1,20 +1,24 @@
-from random import random
+import aiofiles
+import aiohttp
+import inspect
 import os
 from typing import Dict, Union
+from random import random
 
-from .. import exceptions
+from . import thumbnail
 from ..types import Update
+from .. import exceptions
 import rubpy
 
 class Rubino:
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
-        'app_version': '4.4.6',
+        'app_version': '4.4.9',
         'platform': 'PWA',
         'package': 'web.rubika.ir',
     }
 
-    def __init__(self, client: 'rubpy.Client') -> None:
+    def __init__(self, client: "rubpy.Client") -> None:
         self.client = client
         self.url = 'https://rubino1.iranlms.ir/'
 
@@ -36,7 +40,7 @@ class Rubino:
         if result.get('status') == 'OK':
             return Update(result.get('data'))
         else:
-            raise exceptions.ErrorAction(result.get('status_det'))
+            raise exceptions(result.get('status'))(result.get('status_det')) #exceptions.ErrorAction(result.get('status_det'))
 
     async def _follow_unfollow_helper(self, f_type: str, followee_id: str, profile_id: str) -> dict:
         return await self._execute_request(
@@ -92,8 +96,6 @@ class Rubino:
     async def view(self, post_id: str, post_profile_id: str) -> dict:
         return await self._execute_request('addPostViewCount', {'post_id': post_id, 'post_profile_id': post_profile_id})
 
-    # ... (previous code)
-
     async def get_comments(self, post_id: str, profile_id: str, post_profile_id: str,
                            limit: int = 50, sort: str = 'FromMax', equal: bool = False) -> dict:
         return await self._execute_request('getComments', {
@@ -131,12 +133,12 @@ class Rubino:
         })
 
     async def request_upload_file(self, profile_id: str, file_name: str,
-                                  file_size: int, file_type: str) -> dict:
+                                  file_size: int, file_type: str) -> Update:
         return await self._execute_request('requestUploadFile', {
-            'file_name': file_name.split('/')[-1],
-            'file_size': file_size,
+            'file_name': file_name,
+            'file_size': str(file_size),
             'file_type': file_type,
-            'profile_id': profile_id
+            'profile_id': profile_id,
         })
 
     async def get_profile_highlights(self, profile_id: str, target_profile_id: str,
@@ -225,43 +227,150 @@ class Rubino:
     async def remove_page(self, profile_id: str, record_id: str) -> dict:
         return await self._execute_request('removeRecord', {'model': 'Profile', 'record_id': record_id, 'profile_id': profile_id})
 
-    async def upload_file(self, file: str, profile_id: str, file_type: str) -> dict:
-        filename, filesize = file.split('/')[-1], os.path.getsize(file)
-        result = await self.request_upload_file(profile_id, filename, filesize, file_type)
-        
-        byte_file = open(file, 'rb').read()
-        headers = {
-            'auth': self.client.auth,
-            'file-id': result['data']['file_id'],
-            'chunk-size': str(len(byte_file)),
-            'total-part': str(1),
-            'part-number': str(1),
-            'hash-file-request': result['data']['hash_file_request'],
-        }
+    async def upload_file(self, file, profile_id: str, file_type: str, file_name: str = None, chunk: int = 1048576,
+                          callback=None, *args, **kwargs):
+        """
+        Upload a file to Rubika.
 
-        async with self.client.connection.session.post(result.server_url, data=byte_file, headers=headers) as result:
-            if result.ok:
-                result = await result.json()
-                return Update(result.get('data')), result
+        Parameters:
+        - file: File path or bytes.
+        - mime: MIME type of the file.
+        - file_name: Name of the file.
+        - chunk: Chunk size for uploading.
+        - callback: Progress callback.
 
-# ... (continue with any other methods you have)
+        Returns:
+        Results object.
+        """
+        if isinstance(file, str):
+            if not os.path.exists(file):
+                raise ValueError('File not found in the given path')
 
+            if file_name is None:
+                file_name = os.path.basename(file)
 
-    async def add_post(self, profile_id: str, file: str, caption: str = None, file_type: str = 'Picture') -> dict:
-        result = await self.upload_file(file, profile_id, file_type)
-        return await self._execute_request('addPost', {
+            async with aiofiles.open(file, 'rb+') as file:
+                file = await file.read()
+
+        elif not isinstance(file, bytes):
+            raise TypeError('File argument must be a file path or bytes')
+
+        if file_name is None:
+            raise ValueError('File name is not set')
+
+        result = await self.request_upload_file(profile_id, file_name, len(file), file_type)
+
+        id = result.file_id
+        index = 0
+        count_retry = 0
+        max_retring = 3
+        total = int(len(file) / chunk + 1)
+        upload_url = result.server_url
+        hash_file_request = result.hash_file_request
+
+        while index < total:
+            if count_retry == max_retring:
+                break
+
+            data = file[index * chunk: index * chunk + chunk]
+            try:
+                response = await self.client.connection.session.post(
+                    upload_url,
+                    headers={
+                        'auth': self.client.auth,
+                        'file-id': id,
+                        'total-part': str(total),
+                        'part-number': str(index + 1),
+                        'chunk-size': str(len(data)),
+                        'hash-file-request': hash_file_request
+                    },
+                    data=data,
+                    proxy=self.client.proxy,
+                )
+                response = await response.json()
+
+                if response.get('status') != 'OK':
+                    result = await self.request_upload_file(profile_id, file_name, len(file), file_type)
+                    id = result.file_id
+                    index = 0
+                    total = int(len(file) / chunk + 1)
+                    upload_url = result.server_url
+                    hash_file_request = result.hash_file_request
+                    count_retry += 1
+
+                if callable(callback):
+                    try:
+                        if inspect.iscoroutinefunction(callback):
+                            await callback(len(file), index * chunk)
+
+                        else:
+                            callback(len(file), index * chunk)
+
+                    except exceptions.CancelledError:
+                        return None
+
+                    except Exception:
+                        pass
+
+                index += 1
+
+            except Exception:
+                pass
+
+        status = response['status']
+        status_det = response['status_det']
+
+        if status == 'OK' and status_det == 'OK':
+            response.update(result.original_update)
+            return Update(response)
+
+        raise exceptions(status_det)(response, request=response)
+
+    async def add_post(self, profile_id: str, post: str, post_type: str, caption: str = None, file_name: str = None):
+        if isinstance(post, str):
+            if not os.path.exists(post):
+                raise ValueError('File not found in the given path')
+
+            if file_name is None:
+                file_name = os.path.basename(post)
+
+            async with aiofiles.open(post, 'rb+') as post:
+                post = await post.read()
+
+        elif not isinstance(post, bytes):
+            raise TypeError('File argument must be a file path or bytes')
+
+        data = {
             'rnd': int(random() * 1e6 + 1),
             'width': 720,
             'height': 720,
             'caption': caption,
-            'file_id': result[1]['file_id'],
-            'post_type': file_type,
+            'post_type': post_type,
             'profile_id': profile_id,
-            'hash_file_receive': result[0]['hash_file_receive'],
-            'thumbnail_file_id': result[1]['file_id'],
-            'thumbnail_hash_file_receive': result[0]['hash_file_receive'],
             'is_multi_file': False,
-        })
+        }
 
-    async def add_picture(self, profile_id: str, file):
-        pass
+        result = await self.upload_file(post, profile_id, post_type, file_name)
+        data['file_id'] = result.file_id
+        data['hash_file_receive'] = result.hash_file_receive
+        data['thumbnail_file_id'] = result.file_id
+        data['thumbnail_hash_file_receive'] = result.hash_file_receive
+
+        if post_type == 'Video':
+            thumb = thumbnail.MediaThumbnail.from_video(post)
+
+            if isinstance(thumb, thumbnail.ResultMedia):
+                result_upload_thumb = await self.upload_file(thumb.image, profile_id, 'Picture', 'thumbnail.jpg')
+                data['thumbnail_file_id'] = result_upload_thumb.file_id
+                data['thumbnail_hash_file_receive'] = result_upload_thumb.hash_file_receive
+                data['snapshot_file_id'] = result_upload_thumb.file_id
+                data['snapshot_hash_file_receive'] = result_upload_thumb.hash_file_receive
+                data['duration'] = str(thumb.seconds)
+
+        return await self._execute_request(method='addPost', data=data)
+
+    async def add_picture(self, profile_id: str, picture: str, caption: str = None, file_name: str = None):
+        return await self.add_post(profile_id=profile_id, post=picture, post_type='Picture', caption=caption, file_name=file_name)
+
+    async def add_video(self, profile_id: str, video: str, caption: str = None, file_name: str = None):
+        return await self.add_post(profile_id=profile_id, post=video, post_type='Video', caption=caption, file_name=file_name)

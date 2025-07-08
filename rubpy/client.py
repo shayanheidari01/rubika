@@ -4,13 +4,13 @@ from .methods import Methods
 from typing import Optional, Union, Literal
 from . import __name__ as logger_name
 import logging
-import re
+#import re
 
 
 class Client(Methods):
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
-        'app_version': '4.4.6',
+        'app_version': '4.4.9',
         'platform': 'Web',
         'package': 'web.rubika.ir',
         }
@@ -106,6 +106,10 @@ class Client(Methods):
 
         if parse_mode not in (None, 'html', 'markdown', 'mk'):
             raise ValueError('The `parse_mode` argument can only be in `("html", "markdown", "mk")`.')
+        elif parse_mode is not None:
+            parse_mode = parse_mode.lower()
+        else:
+            parse_mode = 'markdown'
 
         if not isinstance(logger, logging.Logger):
             logger = logging.getLogger(logger_name)

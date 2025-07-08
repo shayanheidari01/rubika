@@ -42,6 +42,7 @@ class SendMessage:
         thumb: bool = True,
         auto_delete: Optional[Union[int, float]] = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Union[Update, dict]] = None,
         *args, **kwargs,
     ) -> rubpy.types.Update:
         """
@@ -75,6 +76,7 @@ class SendMessage:
         # Process text content and parse mode
         if isinstance(text, str):
             input['text'] = text.strip()
+            parse_mode = parse_mode or self.parse_mode
             if isinstance(parse_mode, str):
                 input.update(
                     self.markdown.to_metadata(
@@ -119,7 +121,7 @@ class SendMessage:
                 elif type == 'Image':
                     thumb = thumbnail.MediaThumbnail.from_image(file_inline)
 
-            if not hasattr(thumb, 'image'):
+            if thumb is not None and not hasattr(thumb, 'image'):
                 type = 'File'
                 thumb = None
 

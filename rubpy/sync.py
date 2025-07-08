@@ -5,6 +5,7 @@ import threading
 
 from rubpy import types
 from rubpy.methods import Methods
+from rubpy.rubino import Rubino
 
 def async_to_sync(obj, name):
     """
@@ -101,6 +102,9 @@ def wrap_types_methods():
 
 # Wrap all relevant methods in the Client's Methods class
 wrap_methods(Methods)
+
+# Wrap all relevant methods in the Rubino Client's Methods class
+wrap_methods(Rubino)
 
 # Wrap types' bound methods
 wrap_types_methods()

@@ -43,19 +43,20 @@ class Builder:
                                             tmp_session=tmp_session,
                                             encrypt=encrypt,
                                             input=input)
-        data_enc = result.get('data_enc')
-        if data_enc:
-            result = Crypto.decrypt(data_enc,
-                                    key=self.key)
+        if result is not None:
+            data_enc = result.get('data_enc')
+            if data_enc is not None:
+                result = Crypto.decrypt(data_enc,
+                                        key=self.key)
 
-        status = result['status']
-        status_det = result['status_det']
+            status = result['status']
+            status_det = result['status_det']
 
-        if status == 'OK' and status_det == 'OK':
-            if dict:
-                return result.get('data')
+            if status == 'OK' and status_det == 'OK':
+                if dict:
+                    return result.get('data')
 
-            result['data']['_client'] = self
-            return Update(result['data'])
+                result['data']['_client'] = self
+                return Update(result['data'])
 
-        raise exceptions(status_det)(result, request=None)
+            raise exceptions(status_det)(result, request=None)

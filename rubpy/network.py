@@ -29,6 +29,7 @@ class Network:
     HEADERS = {
         'origin': 'https://web.rubika.ir',
         'referer': 'https://web.rubika.ir/',
+        'content-type': 'application/json',
         'connection': 'keep-alive',
     }
 
@@ -371,7 +372,7 @@ class Network:
                     try:
                         if inspect.iscoroutinefunction(callback):
                             await callback(len(file), index * chunk)
-                        
+
                         else:
                             callback(len(file), index * chunk)
 
@@ -446,15 +447,17 @@ class Network:
                 response = await session.post('/GetFile.ashx', headers=headers, proxy=self.client.proxy)
                 if response.ok:
                     data = await response.read()
-                    if data:
-                        result += data
+                    if not data:
+                        break
 
-                        if callable(callback):
-                            if inspect.iscoroutinefunction(callback):
-                                await callback(size, len(result))
+                    result += data
 
-                            else:
-                                callback(size, len(result))
+                    if callable(callback):
+                        if inspect.iscoroutinefunction(callback):
+                            await callback(size, len(result))
+
+                        else:
+                            callback(size, len(result))
 
                 # Check for the end of the file
                 if len(result) >= size:

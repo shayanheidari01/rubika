@@ -159,38 +159,45 @@ class MediaThumbnail:
         - ResultMedia: ResultMedia object containing the thumbnail and metadata.
         """
         if VideoFileClip is not None:
-            file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.rp-temp', dir=DEFAULT_TEMP_PATH, delete=False)
-            file.write(video)
-            file_name = file.name
-            file.close()
-            os.chmod(file_name, 0o777)
-            capture = VideoFileClip(file_name)
-            width, height = capture.size
-            seconds = capture.duration * 1000
-            image = capture.get_frame(0)
-            capture.close()
-            os.remove(file_name)
-            return ResultMedia(image, width, height, seconds)
+            try:
+                with tempfile.NamedTemporaryFile(mode='wb+', suffix='.mp4', dir=DEFAULT_TEMP_PATH, delete=False) as file:
+                    file.write(video)
+                    file_name = file.name
 
-        # Check if OpenCV is available
+                capture = VideoFileClip(file_name)
+                width, height = capture.size
+                seconds = int(capture.duration)
+                image = capture.get_frame(seconds / 2)  # Extract frame from the middle of the video
+                capture.close()
+                os.remove(file_name)
+                return ResultMedia(image, width, height, seconds)
+            except Exception as e:
+                print(f"Error processing video with moviepy: {e}")
+                os.remove(file_name)
+                return None
+
+        # Continue with the OpenCV approach if moviepy is not available
         if cv2 is None:
             warnings.warn('OpenCV not found, video processing disabled')
             return None
 
-        # Write video content to a temporary file
-        with tempfile.NamedTemporaryFile(mode='wb+', suffix='.rp-temp', dir=DEFAULT_TEMP_PATH) as file:
+        with tempfile.NamedTemporaryFile(mode='wb+', suffix='.mp4', dir=DEFAULT_TEMP_PATH) as file:
             file.write(video)
 
             # Read the video using OpenCV
             capture = cv2.VideoCapture(file.name)
+            total_frames = int(capture.get(cv2.CAP_PROP_FRAME_COUNT))
+            middle_frame_index = total_frames // 2
+            capture.set(cv2.CAP_PROP_POS_FRAMES, middle_frame_index)
             status, image = capture.read()
 
             # If successful, calculate video duration and create ResultMedia object
             if status is True:
                 fps = capture.get(cv2.CAP_PROP_FPS)
-                frames = capture.get(cv2.CAP_PROP_FRAME_COUNT)
-                seconds = int(frames / fps) * 1000
+                seconds = int(total_frames / fps) * 1000
                 width = image.shape[1]
                 height = image.shape[0]
 
                 return ResultMedia(image, width, height, seconds)
+
+        return None

@@ -40,13 +40,14 @@ async def get_browser(user_agent, lang_code, app_version, *args, **kwargs):
             'token_type': 'Web',
             'app_version': f'WB_{app_version}',
             'system_version': system_version,
-            'device_model': device_model.title(),
+            'device_model': kwargs.get('device_model', device_model.title()),
             'device_hash': device_hash + ''.join(re.findall(r'\d+', user_agent))}
 
 
 class RegisterDevice:
-    async def register_device(self: "rubpy.Client"):
+    async def register_device(self: "rubpy.Client", *args, **kwargs):
         return await self.builder(name='registerDevice',
                                  input=await get_browser(self.user_agent,
                                                          self.lang_code,
-                                                         self.DEFAULT_PLATFORM.get('app_version')))
+                                                         self.DEFAULT_PLATFORM.get('app_version'),
+                                                         *args, **kwargs))

@@ -83,7 +83,7 @@ class Start:
                         phone_number=result.user.phone,
                         private_key=self.private_key)
 
-                    await self.register_device()
+                    await self.register_device(device_model=self.name)
                     break
 
         return self
