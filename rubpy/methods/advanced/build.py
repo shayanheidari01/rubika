@@ -46,7 +46,7 @@ class Builder:
         data_enc = result.get('data_enc')
         if data_enc:
             result = Crypto.decrypt(data_enc,
-                                key=self.key)
+                                    key=self.key)
 
         status = result['status']
         status_det = result['status_det']
