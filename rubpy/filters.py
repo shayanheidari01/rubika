@@ -11,26 +11,25 @@ __models__ = [
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
     'raw_text', 'original_update', 'object_guid', 'author_guid', 'time', 'reply_message_id']
 
-def create(name, __base, authorise: list = [], exception: bool = True, *args, **kwargs):
-        result = None
-        if name in authorise:
+def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
+    result = None
+    if name in authorize:
+        result = name
+    else:
+        proposal = difflib.get_close_matches(name, authorize, n=1)
+        if proposal:
+            result = proposal[0]
+            caller = inspect.getframeinfo(inspect.stack()[2][0])
+            warnings.warn(
+                f'{caller.filename}:{caller.lineno}: Do you mean'
+                f' "{name}", "{result}"? Correct it.')
+
+    if result is not None or not exception:
+        if result is None:
             result = name
+        return type(result, base, {'__name__': result, **kwargs})
 
-        else:
-            proposal = difflib.get_close_matches(name, authorise, n=1)
-            if proposal:
-                result = proposal[0]
-                caller = inspect.getframeinfo(inspect.stack()[2][0])
-                warnings.warn(
-                    f'{caller.filename}:{caller.lineno}: do you mean'
-                    f' "{name}", "{result}"? correct it')
-
-        if result is not None or not exception:
-            if result is None:
-                result = name
-            return type(result, __base, {'__name__': result, **kwargs})
-
-        raise AttributeError(f'module has no attribute ({name})')
+    raise AttributeError(f'Module has no attribute ({name})')
 
 
 class Operator:
@@ -87,7 +86,6 @@ class BaseModel:
         return self.insert(Operator(value, Operator.Greatere))
 
     async def build(self, update):
-        # get key
         result = getattr(update, self.__class__.__name__, None)
         if callable(self.func):
             if update.is_async(self.func):
@@ -98,7 +96,6 @@ class BaseModel:
         for filter in self.filters:
             value = filter.value
 
-            # if the comparison was with a function
             if callable(value):
                 if update.is_async(value):
                     value = await value(update, result)
@@ -113,25 +110,18 @@ class BaseModel:
 
             if filter == Operator.Or:
                 result = result or value
-
             elif filter == Operator.And:
                 result = result and value
-
             elif filter == Operator.Less:
                 result = result < value
-
             elif filter == Operator.Lesse:
                 result = result <= value
-
             elif filter == Operator.Equal:
                 result = result == value
-
             elif filter == Operator.Greater:
                 result = result > value
-
             elif filter == Operator.Greatere:
                 result = result >= value
-
             elif filter == Operator.Inequality:
                 result = result != value
 
@@ -170,15 +160,7 @@ class Models:
     def __getattr__(self, name):
         if name in __all__:
             return globals()[name]
-        return create(name, (BaseModel,), authorize=__models__, exception=False)
-
-    # async def text(self):
-    #     print('call text')
-    #     return create('text', (BaseModel,), exception=False)
-
-    # async def text(self, *args, **kwargs):
-    #     print('called.')
-    #     return Operator('text', Operator.Equal)
+        return create_model(name, (BaseModel,), authorize=__models__, exception=False)
 
 sys.modules[__name__] = Models(__name__)
 

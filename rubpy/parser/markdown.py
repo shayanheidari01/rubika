@@ -1,3 +1,4 @@
+import markdownify
 import re
 
 MARKDOWN_RE = (
@@ -7,6 +8,9 @@ MARKDOWN_RE = (
 class Markdown:
     def __init__(self) -> None:
         self.pattern = re.compile(MARKDOWN_RE)
+
+    def to_markdown(self, text: str) -> str:
+        return markdownify.markdownify(html=text).strip()
 
     def to_metadata(self, text: str) -> dict:
         meta_data_parts = []

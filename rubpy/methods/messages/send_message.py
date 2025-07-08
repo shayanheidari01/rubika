@@ -1,4 +1,5 @@
-from ...types import Results
+from ...types import Results, SocketResults
+from ...enums import ParseMode
 from ..utilities import thumbnail
 from typing import Optional, Union
 from aiofiles import open as aiopen
@@ -8,20 +9,29 @@ from os import path
 from random import random
 import rubpy
 import aiohttp
+import mimetypes
 
+
+async def get_mime_from_url(session: "aiohttp.ClientSession", url: str):
+    async with session.head(url) as response:
+        content_type = response.content_type
+        if content_type:
+            return mimetypes.guess_extension(content_type.split(';')[0])
 
 class SendMessage:
-    async def send_message(self: "rubpy.Client",
-                           object_guid: str,
-                           text: Optional[str] = None,
-                           reply_to_message_id: Optional[str] = None,
-                           file_inline: Optional[Union[Path, bytes]] = None,
-                           sticker: Optional[dict] = None,
-                           type: str = 'File',
-                           is_spoil: bool = False,
-                           thumb: bool = True,
-                           auto_delete: Optional[int] = None,
-                           parse_mode: Optional[str] = None, *args, **kwargs):
+    async def send_message(
+            self: "rubpy.Client",
+            object_guid: str,
+            text: Optional[str] = None,
+            reply_to_message_id: Optional[str] = None,
+            file_inline: Optional[Union[Path, bytes]] = None,
+            sticker: Optional[dict] = None,
+            type: str = 'File',
+            is_spoil: bool = False,
+            thumb: bool = True,
+            auto_delete: Optional[int] = None,
+            parse_mode: Optional[str] = None, *args, **kwargs,
+    ):
         """_send message_
 
         Args:
@@ -52,6 +62,8 @@ class SendMessage:
                 if value is thumbnail.Thumbnail, to set custom
                 Defaults to True.
         """
+        parse_mode = parse_mode or self.parse_mode
+
         if object_guid.lower() in ('me', 'cloud', 'self'):
             object_guid = self.guid
 
@@ -64,25 +76,31 @@ class SendMessage:
         if isinstance(text, str):
             input['text'] = text.strip()
 
-            markdown = self.markdown.to_metadata(text)
-            if 'metadata' in markdown.keys():
-                input['metadata'] = markdown.get('metadata')
-                input['text'] = markdown.get('text')
+            if isinstance(parse_mode, str):
+                if parse_mode == 'html':
+                    markdown = self.markdown.to_metadata(self.markdown.to_markdown(text))
+
+                else:
+                    markdown = self.markdown.to_metadata(text)
+
+                if 'metadata' in markdown.keys():
+                    input['metadata'] = markdown.get('metadata')
+                    input['text'] = markdown.get('text')
 
         if isinstance(sticker, dict):
             input['sticker'] = sticker
 
         if file_inline:
-            if not isinstance(file_inline, Results):
+            if not isinstance(file_inline, (Results, dict, SocketResults)):
                 if isinstance(file_inline, str):
                     if file_inline.startswith('http'):
                         async with aiohttp.ClientSession(headers={'user-agent': self.user_agent}) as cs:
+                            mime = await get_mime_from_url(session=cs, url=file_inline)
+                            kwargs['file_name'] = kwargs.get('file_name',
+                                                             ''.join([str(input['rnd']), mime if mime else ''.join(['.', type])]))
+
                             async with cs.get(file_inline) as result:
-                                if result.ok:
-                                    file_name = file_inline.split('/')[-1]
-                                    file_inline = await result.read()
-                                    kwargs['file_name'] = kwargs.get('file_name',
-                                                                     file_name if '.' in file_name else file_name+'.'+type)
+                                file_inline = await result.read()
 
                     else:
                         async with aiopen(file_inline, 'rb') as file:
@@ -124,7 +142,11 @@ class SendMessage:
 
         if file_inline:
             file_inline['is_spoil'] = bool(is_spoil)
-            input['file_inline'] = file_inline.to_dict()
+            if not isinstance(file_inline, dict):
+                input['file_inline'] = file_inline.to_dict()
+            
+            else:
+                input['file_inline'] = file_inline
 
         result = await self.builder('sendMessage', input=input)
 

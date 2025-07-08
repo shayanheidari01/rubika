@@ -28,7 +28,8 @@ class Client(Methods):
                  user_agent: Optional[str] = None or USER_AGENT,
                  timeout: Optional[Union[str, int]] = 20,
                  lang_code: Optional[str] = 'fa',
-                 parse_mode: Optional[str] = 'All',
+                 parse_mode: Optional[str] = None,
+                 proxy: str = None,
                  display_welcome: bool = True,
     ) -> None:
         super().__init__()
@@ -59,8 +60,8 @@ class Client(Methods):
             raise TypeError('The given session must be a '
                             'str or [rubpy.sessions.StringSession]')
 
-        if parse_mode not in ('All', 'html', 'markdown', 'mk'):
-            raise ValueError('The `parse_mode` argument can only be in `("All", "html", "markdown", "mk")`.')
+        if parse_mode not in (None, 'html', 'markdown', 'mk'):
+            raise ValueError('The `parse_mode` argument can only be in `("html", "markdown", "mk")`.')
 
         self.DEFAULT_PLATFORM['lang_code'] = lang_code
         self.name = name
@@ -74,6 +75,7 @@ class Client(Methods):
         self.timeout = timeout
         self.session = session
         self.parse_mode = parse_mode
+        self.proxy = proxy
         self.markdown = Markdown()
         self.database = None
         self.decode_auth = None
@@ -91,7 +93,7 @@ class Client(Methods):
             return self.disconnect()
 
         except Exception:
-            pass
+            exit(0)
 
     async def __aenter__(self):
         return await self.start()
@@ -101,4 +103,4 @@ class Client(Methods):
             return await self.disconnect()
 
         except Exception:
-            pass
+            exit(0)

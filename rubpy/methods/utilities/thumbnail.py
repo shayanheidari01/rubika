@@ -1,8 +1,15 @@
-import base64
-import typing
 import tempfile
 import warnings
+import base64
+import typing
 import io
+from pathlib import Path
+
+DEFAULT_TEMP_PATH = r'./temps'
+path = Path(DEFAULT_TEMP_PATH)
+
+if not path.exists():
+    path.mkdir(parents=True)
 
 try:
     import cv2
@@ -93,7 +100,7 @@ class MediaThumbnail:
             return None
 
         # Write video content to a temporary file
-        with tempfile.NamedTemporaryFile(mode='wb+', suffix='.mp4') as file:
+        with tempfile.NamedTemporaryFile(mode='wb+', suffix='.rp-temp', dir=DEFAULT_TEMP_PATH) as file:
             file.write(video)
 
             # Read the video using OpenCV

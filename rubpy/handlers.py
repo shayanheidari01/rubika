@@ -3,10 +3,11 @@ import difflib
 import inspect
 import warnings
 import asyncio
+from typing import Type
 from .types import SocketResults
 
 
-__handlers__ = [
+AUTHORIZED_HANDLERS = [
     'ChatUpdates',
     'MessageUpdates',
     'ShowActivities',
@@ -14,63 +15,55 @@ __handlers__ = [
     'RemoveNotifications'
 ]
 
-def create(name, __base, authorise: list = [], exception: bool = True, *args, **kwargs):
-        result = None
-        if name in authorise:
+def create_handler(name, base, authorized_handlers: list = [], exception: bool = True, *args, **kwargs):
+    result = None
+
+    if name in authorized_handlers:
+        result = name
+    else:
+        proposal = difflib.get_close_matches(name, authorized_handlers, n=1)
+        if proposal:
+            result = proposal[0]
+            caller = inspect.getframeinfo(inspect.stack()[2][0])
+            warnings.warn(
+                f'{caller.filename}:{caller.lineno}: Do you mean'
+                f' "{name}", "{result}"? Please correct it.')
+
+    if result is not None or not exception:
+        if result is None:
             result = name
+        return type(result, base, {'__name__': result, **kwargs})
 
-        else:
-            proposal = difflib.get_close_matches(name, authorise, n=1)
-            if proposal:
-                result = proposal[0]
-                caller = inspect.getframeinfo(inspect.stack()[2][0])
-                warnings.warn(
-                    f'{caller.filename}:{caller.lineno}: do you mean'
-                    f' "{name}", "{result}"? correct it')
-
-        if result is not None or not exception:
-            if result is None:
-                result = name
-            return type(result, __base, {'__name__': result, **kwargs})
-
-        raise AttributeError(f'module has no attribute ({name})')
+    raise AttributeError(f'Module has no attribute ({name})')
 
 
 class BaseHandlers(SocketResults):
     __name__ = 'CustomHandlers'
 
-    def __init__(self, *models, __any: bool = False, **kwargs) -> None:
+    def __init__(self, *models, any_handler: bool = False, **kwargs) -> None:
         self.__models = models
-        self.__any = __any
+        self.__any_handler = any_handler
 
     def is_async(self, value, *args, **kwargs):
-        result = False
-        if asyncio.iscoroutinefunction(value):
-            result = True
-
-        elif asyncio.iscoroutinefunction(value.__call__):
-            result = True
-
-        return result
+        return asyncio.iscoroutinefunction(value) or asyncio.iscoroutinefunction(value.__call__)
 
     async def __call__(self, update: dict, *args, **kwargs) -> bool:
         self.original_update = update
+
         if self.__models:
-            for filter in self.__models:
-                if callable(filter):
-                    # if BaseModels is not called
-                    if isinstance(filter, type):
-                        filter = filter(func=None)
+            for handler_filter in self.__models:
+                if callable(handler_filter):
+                    # If BaseModels is not called
+                    if isinstance(handler_filter, type):
+                        handler_filter = handler_filter(func=None)
 
-                    if self.is_async(filter):
-                        status = await filter(self, result=None)
-
+                    if self.is_async(handler_filter):
+                        status = await handler_filter(self, result=None)
                     else:
-                        status = filter(self, result=None)
+                        status = handler_filter(self, result=None)
 
-                    if status and self.__any:
+                    if status and self.__any_handler:
                         return True
-
                     elif not status:
                         return False
 
@@ -85,12 +78,18 @@ class Handlers:
         return BaseHandlers in value.__bases__
 
     def __dir__(self):
-        return sorted(__handlers__)
+        return sorted(AUTHORIZED_HANDLERS)
 
     def __call__(self, name, *args, **kwargs):
         return self.__getattr__(name)(*args, **kwargs)
 
     def __getattr__(self, name):
-        return create(name, (BaseHandlers,), __handlers__)
+        return create_handler(name, (BaseHandlers,), AUTHORIZED_HANDLERS)
 
 sys.modules[__name__] = Handlers(__name__)
+
+ChatUpdates: Type[BaseHandlers]
+MessageUpdates: Type[BaseHandlers]
+ShowActivities: Type[BaseHandlers]
+ShowNotifications: Type[BaseHandlers]
+RemoveNotifications: Type[BaseHandlers]

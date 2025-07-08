@@ -6,8 +6,18 @@ import threading
 from rubpy import types
 from rubpy.methods import Methods
 
-
 def async_to_sync(obj, name):
+    """
+    Wrap an asynchronous function or asynchronous generator method
+    to make it synchronous.
+
+    Parameters:
+    - obj: Object containing the method.
+    - name: Name of the method to wrap.
+
+    Returns:
+    Wrapped synchronous function or generator.
+    """
     function = getattr(obj, name)
     main_loop = asyncio.get_event_loop()
 
@@ -66,23 +76,31 @@ def async_to_sync(obj, name):
 
     setattr(obj, name, async_to_sync_wrap)
 
+def wrap_methods(source):
+    """
+    Wrap asynchronous methods in a class to make them synchronous.
 
-def wrap(source):
+    Parameters:
+    - source: Class containing asynchronous methods.
+    """
     for name in dir(source):
         method = getattr(source, name)
 
-        if not name.startswith("_"):
-            if inspect.iscoroutinefunction(method) or inspect.isasyncgenfunction(method):
-                async_to_sync(source, name)
+        if not name.startswith("_") and (inspect.iscoroutinefunction(method) or inspect.isasyncgenfunction(method)):
+            async_to_sync(source, name)
 
+def wrap_types_methods():
+    """
+    Wrap asynchronous methods in types' classes to make them synchronous.
+    """
+    for class_name in dir(types):
+        cls = getattr(types, class_name)
 
-# Wrap all Client's relevant methods
-wrap(Methods)
+        if inspect.isclass(cls):
+            wrap_methods(cls)
+
+# Wrap all relevant methods in the Client's Methods class
+wrap_methods(Methods)
 
 # Wrap types' bound methods
-for class_name in dir(types):
-
-    cls = getattr(types, class_name)
-
-    if inspect.isclass(cls):
-        wrap(cls)
+wrap_types_methods()
