@@ -15,7 +15,7 @@ __models__ = [
     'text', 'original_update', 'object_guid', 'author_guid',
     'time', 'reply_message_id', 'is_me', 'is_forward', 'is_text',
     'music', 'file', 'photo', 'sticker', 'video', 'voice',
-    'contact', 'location', 'poll', 'gif']
+    'contact', 'location', 'poll', 'gif', 'is_event']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
     """
@@ -376,3 +376,4 @@ location: Type[BaseModel]
 poll: Type[BaseModel]
 gif: Type[BaseModel]
 sticker: Type[BaseModel]
+is_event: Type[BaseModel]

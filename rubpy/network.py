@@ -60,6 +60,7 @@ class Network:
 
         self.api_url = None
         self.wss_url = None
+        self.ws = None
 
     async def close(self):
         """
@@ -187,9 +188,11 @@ class Network:
         """
         Receive updates from the Rubika WebSocket.
         """
+        asyncio.create_task(self.keep_socket())
         while True:
             try:
                 async with self.session.ws_connect(self.wss_url, verify_ssl=False, proxy=self.client.proxy, receive_timeout=5) as ws:
+                    self.ws = ws
                     await ws.send_json(dict(method='handShake', auth=self.client.auth, api_version='6', data=''))
 
                     async for msg in ws:
@@ -212,11 +215,11 @@ class Network:
                 print("Websocket connection lost. Reconnecting...")
                 await asyncio.sleep(5)  # wait before reconnecting
 
-    async def keep_socket(self, ws):
+    async def keep_socket(self):
         while True:
             try:
-                await asyncio.sleep(5)
-                await ws.send_json({})
+                await asyncio.sleep(10)
+                await self.ws.send_json({})
                 await self.client.get_chats_updates()
 
             except Exception:
