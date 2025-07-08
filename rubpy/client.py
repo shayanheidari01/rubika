@@ -134,7 +134,7 @@ class Client(Methods):
             return self.disconnect()
 
         except Exception:
-            exit(0)
+            pass
 
     async def __aenter__(self):
         return await self.start()
@@ -144,4 +144,4 @@ class Client(Methods):
             return await self.disconnect()
 
         except Exception:
-            exit(0)
+            pass

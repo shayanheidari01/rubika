@@ -7,9 +7,9 @@ import rubpy
 import json
 import os
 
+from .types import Update
 from .crypto import Crypto
 from . import exceptions
-from .types import Results
 
 
 def capitalize(text: str):
@@ -179,7 +179,6 @@ class Network:
         return await self.request(url, data=data)
 
     async def handel_update(self, name, update):
-        #handlers = self.client.handlers.copy()
         for func, handler in self.client.handlers.items():
             try:
                 # if handler is empty filters
@@ -194,10 +193,10 @@ class Network:
                     continue
 
                 if not inspect.iscoroutinefunction(func):
-                    threading.Thread(target=func, args=(handler,)).start()
+                    threading.Thread(target=func, args=(Update(handler.to_dict()),)).start()
 
                 else:
-                    asyncio.create_task(func(handler))
+                    asyncio.create_task(func(Update(handler.to_dict())))
 
             except exceptions.StopHandler:
                 break
@@ -395,7 +394,7 @@ class Network:
                 'access_hash_rec': result['data']['access_hash_rec']
             }
 
-            return Results(result)
+            return Update(result)
 
         raise exceptions(status_det)(result, request=result)
 

@@ -1,6 +1,6 @@
 from ...crypto import Crypto
 from ... import exceptions
-from ...types import Results
+from ...types import Updates
 from typing import Union
 import rubpy
 
@@ -12,7 +12,7 @@ class Builder:
         encrypt: bool = True,
         dict: bool = False,
         input: dict = None, *args, **kwargs,
-    ) -> Union[Results, dict]:
+    ) -> Union[Updates, dict]:
         """
         Build and send a request to the Rubika API.
 
@@ -61,8 +61,8 @@ class Builder:
                     return result.get('data')
 
                 # Attach the RubPy client instance to the result data
-                result['data']['_client'] = self
-                return Results(result['data'])
+                result['data']['client'] = self
+                return Updates(result['data'])
 
             # Raise an exception based on the status details
             raise exceptions(status_det)(result, request=None)

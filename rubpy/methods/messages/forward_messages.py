@@ -1,9 +1,10 @@
 from typing import Union
-
+from random import random
+import rubpy
 
 class ForwardMessages:
     async def forward_messages(
-            self,
+            self: "rubpy.Client",
             from_object_guid: str,
             to_object_guid: str,
             message_ids: Union[str, int, list],
@@ -16,4 +17,5 @@ class ForwardMessages:
                                       'from_object_guid': from_object_guid,
                                       'to_object_guid': to_object_guid,
                                       'message_ids': message_ids,
+                                      'rnd': int(random() * 1e6 + 1),
                                   })

@@ -1,4 +1,4 @@
-from ...types import Results, SocketResults
+from ...types import Update
 from ...enums import ParseMode
 from ..utilities import thumbnail
 from typing import Optional, Union
@@ -91,7 +91,7 @@ class SendMessage:
             input['sticker'] = sticker
 
         if file_inline:
-            if not isinstance(file_inline, (Results, dict, SocketResults)):
+            if not isinstance(file_inline, (Update, dict)):
                 if isinstance(file_inline, str):
                     if file_inline.startswith('http'):
                         async with aiohttp.ClientSession(headers={'user-agent': self.user_agent}) as cs:

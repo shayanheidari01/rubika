@@ -3,7 +3,7 @@ import os
 from typing import Dict, Union
 
 from .. import exceptions
-from ..types import Results
+from ..types import Update
 import rubpy
 
 class Rubino:
@@ -24,7 +24,7 @@ class Rubino:
     async def __aexit__(self, *args, **kwargs):
         return
 
-    async def _execute_request(self, method: str, data: Dict[str, Union[int, str, bool]]) -> Results:
+    async def _execute_request(self, method: str, data: Dict[str, Union[int, str, bool]]) -> Update:
         result = await self.client.connection.send(
             api_version='0',
             input=data,
@@ -34,7 +34,7 @@ class Rubino:
         )
 
         if result.get('status') == 'OK':
-            return Results(result.get('data'))
+            return Update(result.get('data'))
         else:
             raise exceptions.ErrorAction(result.get('status_det'))
 
@@ -242,7 +242,7 @@ class Rubino:
         async with self.client.connection.session.post(result.server_url, data=byte_file, headers=headers) as result:
             if result.ok:
                 result = await result.json()
-                return Results(result.get('data')), result
+                return Update(result.get('data')), result
 
 # ... (continue with any other methods you have)
 

@@ -1,11 +1,10 @@
-import sys
 import difflib
 import inspect
-import warnings
+#import warnings
 import asyncio
+import sys
 from typing import Type
-from .types import SocketResults
-
+from .types import Update
 
 AUTHORIZED_HANDLERS = [
     'ChatUpdates',
@@ -16,28 +15,15 @@ AUTHORIZED_HANDLERS = [
 ]
 
 def create_handler(name, base, authorized_handlers: list = [], exception: bool = True, *args, **kwargs):
-    result = None
-
-    if name in authorized_handlers:
-        result = name
-    else:
-        proposal = difflib.get_close_matches(name, authorized_handlers, n=1)
-        if proposal:
-            result = proposal[0]
-            caller = inspect.getframeinfo(inspect.stack()[2][0])
-            warnings.warn(
-                f'{caller.filename}:{caller.lineno}: Do you mean'
-                f' "{name}", "{result}"? Please correct it.')
+    result = name if name in authorized_handlers else difflib.get_close_matches(name, authorized_handlers, n=1)[0] if authorized_handlers else None
 
     if result is not None or not exception:
-        if result is None:
-            result = name
-        return type(result, base, {'__name__': result, **kwargs})
+        return type(result, base, {'__name__': result, **kwargs}) if result is not None else None
 
-    raise AttributeError(f'Module has no attribute ({name})')
+    caller = inspect.getframeinfo(inspect.stack()[2][0])
+    raise AttributeError(f'{caller.filename}:{caller.lineno}: Module has no attribute ({name})')
 
-
-class BaseHandlers(SocketResults):
+class BaseHandlers(Update):
     __name__ = 'CustomHandlers'
 
     def __init__(self, *models, any_handler: bool = False, **kwargs) -> None:
@@ -53,14 +39,8 @@ class BaseHandlers(SocketResults):
         if self.__models:
             for handler_filter in self.__models:
                 if callable(handler_filter):
-                    # If BaseModels is not called
-                    if isinstance(handler_filter, type):
-                        handler_filter = handler_filter(func=None)
-
-                    if self.is_async(handler_filter):
-                        status = await handler_filter(self, result=None)
-                    else:
-                        status = handler_filter(self, result=None)
+                    handler_filter = handler_filter(func=None) if isinstance(handler_filter, type) else handler_filter
+                    status = await handler_filter(self, result=None) if self.is_async(handler_filter) else handler_filter(self, result=None)
 
                     if status and self.__any_handler:
                         return True
@@ -68,7 +48,6 @@ class BaseHandlers(SocketResults):
                         return False
 
         return True
-
 
 class Handlers:
     def __init__(self, name, *args, **kwargs) -> None:
@@ -87,9 +66,12 @@ class Handlers:
         return create_handler(name, (BaseHandlers,), AUTHORIZED_HANDLERS)
 
 sys.modules[__name__] = Handlers(__name__)
-
 ChatUpdates: Type[BaseHandlers]
-MessageUpdates: Type[BaseHandlers]
+#MessageUpdates: Type[BaseHandlers]
 ShowActivities: Type[BaseHandlers]
 ShowNotifications: Type[BaseHandlers]
 RemoveNotifications: Type[BaseHandlers]
+
+# class MessageUpdates:
+#     async def __call__(self, *args: difflib.Any, **kwds: difflib.Any) -> difflib.Any:
+#         pass

@@ -175,7 +175,7 @@ class Commands(BaseModel):
     async def __call__(self, update, *args, **kwargs) -> bool:
         username = ""
         text = update.raw_text
-        update.command = None
+        update['command'] = None
 
         if not text:
             return False
@@ -198,7 +198,7 @@ class Commands(BaseModel):
                 # between the quotes, group(3) is unquoted, whitespace-split text
 
                 # Remove the escape character from the arguments
-                update.command = [cmd] + [
+                update['command'] = [cmd] + [
                     re.sub(r"\\([\"'])", r"\1", m.group(2) or m.group(3) or "")
                     for m in self.command_re.finditer(without_command)
                 ]
