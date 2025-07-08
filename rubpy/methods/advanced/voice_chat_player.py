@@ -3,6 +3,7 @@ import time
 import asyncio
 import pathlib
 import logging
+from typing import Union, NoneType
 
 try:
     import aiortc
@@ -103,7 +104,7 @@ class VoiceChatPlayer:
         self: "rubpy.Client",
         chat_guid: str,
         media: pathlib.Path
-    ) -> VoiceChatConnection | None:
+    ) -> Union[VoiceChatConnection, NoneType]:
         if aiortc is None:
             self.logger.error("aiortc is not available.")
             return None
