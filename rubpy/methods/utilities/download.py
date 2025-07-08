@@ -37,6 +37,7 @@ class Download:
             file_inline.size,
             chunk=chunk_size,
             callback=callback,
+            max_retries=self.max_retries,
             *args,
             **kwargs,
         )

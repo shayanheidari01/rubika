@@ -10,9 +10,9 @@ class Client(Methods):
 
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
-        'app_version': '4.4.20',
-        'platform': 'Web',
-        'package': 'web.rubika.ir',
+        'app_version': '2.4.6',
+        'platform': 'PWA',
+        'package': 'm.rubika.ir',
     }
 
     USER_AGENT = (
@@ -38,6 +38,7 @@ class Client(Methods):
         logger: Optional[logging.Logger] = None,
         display_welcome: bool = False,
         platform: Literal['Web', 'Android'] = 'Web',
+        max_retries: int = 5
     ) -> None:
         """
         مقداردهی اولیه کلاینت روبیکا.
@@ -134,6 +135,7 @@ class Client(Methods):
         self.key = None
         self.handlers = {}
         self.DEFAULT_PLATFORM['lang_code'] = lang_code
+        self.max_retries = max_retries
 
         # حذف پیام خوش‌آمدگویی برای بهینه‌سازی
         if display_welcome:

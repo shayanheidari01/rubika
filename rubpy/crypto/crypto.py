@@ -11,8 +11,6 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from string import ascii_lowercase, ascii_uppercase
 
-TIME_BUG_RE = re.compile(r',\s*("(?:[^"\\]|\\.)*"\s*:[^,{}\[\]]*?[}\]])')
-
 
 class Crypto:
     AES_IV = b'\x00' * 16
@@ -98,12 +96,7 @@ class Crypto:
         """
         aes = AES.new(key.encode(), AES.MODE_CBC, cls.AES_IV)
         dec = aes.decrypt(base64.urlsafe_b64decode(data.encode('UTF-8')))
-        try:
-            return json.loads(unpad(dec, AES.block_size).decode('UTF-8'))
-
-        except json.JSONDecodeError:
-            result_re = TIME_BUG_RE.sub(r'null,\1', unpad(dec, AES.block_size).decode('UTF-8'))
-            return json.loads(result_re)
+        return json.loads(unpad(dec, AES.block_size).decode('UTF-8'))
 
     @classmethod
     def encrypt(cls, data: str, key: str):

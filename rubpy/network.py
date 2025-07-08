@@ -1,11 +1,11 @@
 import threading
 import asyncio
+from typing import Callable, Dict, Optional, Union
 import aiohttp
 import aiofiles
 import inspect
 import rubpy
 import os
-import uuid
 import logging
 from .types import Update
 from .crypto import Crypto
@@ -25,20 +25,21 @@ def capitalize(text: str) -> str:
 
 class Network:
     HEADERS = {
-        'origin': 'https://web.rubika.ir',
-        'referer': 'https://web.rubika.ir/',
+        'origin': 'https://m.rubika.ir',
+        'referer': 'https://m.rubika.ir/',
         'content-type': 'application/json',
         'connection': 'keep-alive'
     }
 
     def __init__(self, client: "rubpy.Client") -> None:
         """
-        مقداردهی اولیه کلاس Network.
+        Network class initializition.
 
-        پارامترها:
-        - client: نمونه‌ای از rubpy.Client.
+        Parameters:
+        - client: Instance of rubpy.Client.
         """
         self.client = client
+        self.max_retries = client.max_retries
         self.logger = logging.getLogger(__name__)
         self.headers = self.HEADERS.copy()
         self.headers['user-agent'] = client.user_agent
@@ -64,44 +65,79 @@ class Network:
 
     async def close(self) -> None:
         """
-        بستن ClientSession از aiohttp.
+        Close the aiphttp.ClientSession
         """
         if self.session and not self.session.closed:
             await self.session.close()
 
     async def get_dcs(self, max_retries: int = 3, backoff: float = 1.0) -> bool:
         """
-        دریافت URLهای API و WebSocket با مکانیزم بازآزمایی.
+        Retrieves API and WebSocket URLs with retry and exponential backoff.
 
-        خروجی:
-        True در صورت موفقیت.
+        This method fetches the data center configuration from Rubika's endpoint,
+        sets the API and WebSocket URLs on the client instance, and handles network
+        or server errors with retry logic.
+
+        Args:
+            max_retries (int, optional): Maximum number of retry attempts. Defaults to 3.
+            backoff (float, optional): Base delay in seconds for exponential backoff. Defaults to 1.0.
+
+        Returns:
+            bool: True if the data center configuration was successfully retrieved.
+
+        Raises:
+            NetworkError: If all retry attempts fail to fetch the data centers.
         """
+        url = 'https://getdcmess.iranlms.ir/'
         for attempt in range(max_retries):
             try:
-                async with self.session.get('https://getdcmess.iranlms.ir/', proxy=self.client.proxy) as response:
+                async with self.session.get(url, proxy=self.client.proxy) as response:
                     response.raise_for_status()
-                    data = (await response.json()).get('data')
-                    self.api_url = f"{data['API'][data['default_api']]}/"
-                    self.wss_url = data['socket'][data['default_socket']]
-                    return True
+                    json_data = await response.json()
+                    data = json_data.get('data', {})
+                    api_list = data.get('API', {})
+                    socket_list = data.get('socket', {})
+
+                    self.api_url = f"{api_list.get(data.get('default_api'))}/"
+                    self.wss_url = socket_list.get(data.get('default_socket'))
+
+                    if self.api_url and self.wss_url:
+                        return True
+                    else:
+                        raise ValueError("Incomplete data received from server.")
+
             except Exception as e:
-                self.logger.warning(f"خطا در دریافت Data Centers، تلاش {attempt + 1}/{max_retries}: {e}")
+                self.logger.warning(f"Failed to retrieve Data Centers (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(backoff * (2 ** attempt))
-        raise exceptions.NetworkError("دریافت Data Centers ناموفق بود")
 
-    async def request(self, url: str, data: dict, max_retries: int = 3, backoff: float = 1.0) -> dict:
+        raise exceptions.NetworkError("Failed to fetch Data Centers after multiple attempts.")
+
+    async def request(
+        self,
+        url: str,
+        data: Dict,
+        max_retries: int = 3,
+        backoff: float = 1.0
+    ) -> Dict:
         """
-        ارسال درخواست HTTP POST با بازآزمایی.
+        Sends an HTTP POST request with retry logic and exponential backoff.
 
-        پارامترها:
-        - url: آدرس endpoint API.
-        - data: داده‌های ارسالی.
-        - max_retries: حداکثر تعداد تلاش‌ها.
-        - backoff: تأخیر پایه برای بازآزمایی.
+        This method attempts to send a POST request to the specified URL using the
+        provided JSON data. If the request fails due to network issues or server errors,
+        it retries up to `max_retries` times with a growing delay.
 
-        خروجی:
-        پاسخ JSON-decoded.
+        Args:
+            url (str): The target API endpoint.
+            data (dict): The JSON-serializable payload to send.
+            max_retries (int, optional): Maximum number of retry attempts. Defaults to 3.
+            backoff (float, optional): Base delay in seconds for exponential backoff. Defaults to 1.0.
+
+        Returns:
+            dict: The parsed JSON response from the server.
+
+        Raises:
+            NetworkError: If the request fails after all retry attempts.
         """
         for attempt in range(max_retries):
             try:
@@ -109,20 +145,23 @@ class Network:
                     response.raise_for_status()
                     return await response.json()
             except Exception as e:
-                self.logger.warning(f"خطا در درخواست، تلاش {attempt + 1}/{max_retries}: {e}")
+                self.logger.warning(
+                    f"Request to {url} failed (attempt {attempt + 1}/{max_retries}): {e}"
+                )
                 if attempt < max_retries - 1:
                     await asyncio.sleep(backoff * (2 ** attempt))
-        raise exceptions.NetworkError(f"درخواست به {url} پس از {max_retries} تلاش ناموفق بود")
+
+        raise exceptions.NetworkError(f"Request to {url} failed after {max_retries} attempts.")
 
     async def send(self, **kwargs) -> dict:
         """
-        ارسال درخواست به API روبیکا.
+        Send request to Rubika's API
 
-        پارامترها:
-        - kwargs: پارامترهای درخواست.
+        Parameters:
+        - kwargs: Request parameters
 
-        خروجی:
-        پاسخ JSON-decoded.
+        Returns:
+        - JSON-decoded response.
         """
         api_version = str(kwargs.get('api_version', self.client.API_VERSION))
         auth = kwargs.get('auth', self.client.auth)
@@ -143,20 +182,35 @@ class Network:
                 data['data_enc'] = Crypto.encrypt(data_enc, key=self.client.key)
                 if not tmp_session:
                     data['sign'] = Crypto.sign(self.client.import_key, data['data_enc'])
-            return await self.request(url, data)
+            return await self.request(url, data, max_retries=self.max_retries)
 
         elif api_version == '0':
             data.update({'auth': auth, 'client': client, 'data': input_data, 'method': method})
         elif api_version == '4':
             data.update({'client': client, 'method': method})
         elif api_version == 'bot':
-            return await self.request(f"{self.bot_api_url}{method}", input_data)
+            return await self.request(f"{self.bot_api_url}{method}", input_data, max_retries=self.max_retries)
 
-        return await self.request(url, data)
+        return await self.request(url, data, max_retries=self.max_retries)
 
     async def handle_update(self, name: str, update: dict) -> None:
         """
-        مدیریت آپدیت‌ها برای handlerهای ثبت‌شده.
+        Dispatches incoming updates to the registered handlers.
+
+        This method iterates over all registered client handlers and invokes the one
+        whose name matches the incoming update type. Handlers can be coroutine functions
+        or regular functions (executed in a background thread). If a handler raises
+        `StopHandler`, it halts further processing of that update.
+
+        Args:
+            name (str): The name/type of the incoming update (e.g. "message", "chat").
+            update (dict): The update payload received from the server.
+
+        Returns:
+            None
+
+        Logs:
+            - Errors during handler execution, including traceback.
         """
         for func, handler in self.client.handlers.items():
             try:
@@ -169,7 +223,7 @@ class Network:
                 if not await handler(update=update):
                     continue
 
-                update_obj = Update(handler.original_update)
+                update_obj = Update(update.copy())
                 if not inspect.iscoroutinefunction(func):
                     threading.Thread(target=func, args=(update_obj,)).start()
                 else:
@@ -177,101 +231,189 @@ class Network:
             except exceptions.StopHandler:
                 break
             except Exception as e:
-                self.logger.error(f"خطا در handler برای {name}: {e}", extra={'data': update}, exc_info=True)
+                self.logger.error(
+                    f"Error in handler for '{name}': {e}",
+                    extra={'data': update},
+                    exc_info=True
+                )
+                #self.logger.error(f"خطا در handler برای {name}: {e}", extra={'data': update}, exc_info=True)
 
     async def get_updates(self) -> None:
         """
-        دریافت آپدیت‌ها از WebSocket روبیکا با منطق اتصال مجدد.
+        Continuously listens for updates from Rubika's WebSocket API,
+        maintaining connection with automatic reconnection logic.
+
+        This coroutine establishes a persistent WebSocket connection to Rubika,
+        performs handshake authentication, and listens for incoming messages.
+        If the connection drops or times out, it waits briefly and reconnects.
+        It also launches a background task to keep the socket alive.
+
+        Returns:
+            None
+
+        Logs:
+            - Warning on connection failures or errors during communication.
         """
         asyncio.create_task(self.keep_socket())
+
         while True:
             try:
-                async with self.session.ws_connect(self.wss_url, proxy=self.client.proxy, receive_timeout=5) as ws:
+                async with self.session.ws_connect(
+                    self.wss_url,
+                    proxy=self.client.proxy
+                ) as ws:
                     self.ws = ws
-                    await ws.send_json({'method': 'handShake', 'auth': self.client.auth, 'api_version': '6', 'data': ''})
+
+                    # Send initial handshake
+                    await ws.send_json({
+                        'method': 'handShake',
+                        'auth': self.client.auth,
+                        'api_version': '6',
+                        'data': ''
+                    })
+
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             asyncio.create_task(self.handle_text_message(msg.json()))
                         elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
+                            self.logger.warning("WebSocket closed or errored; reconnecting...")
                             break
+
             except (aiohttp.ServerTimeoutError, TimeoutError, aiohttp.ClientError) as e:
-                self.logger.warning(f"اتصال WebSocket قطع شد: {e}. تلاش برای اتصال مجدد...")
-                await asyncio.sleep(5)
+                self.logger.warning(f"WebSocket connection lost: {e}. Retrying in 3 seconds...")
+                await asyncio.sleep(3)
 
     async def keep_socket(self) -> None:
         """
-        حفظ اتصال WebSocket با ارسال پینگ‌های دوره‌ای.
+        Maintains the WebSocket connection by periodically sending pings
+        and checking for chat updates.
+
+        This coroutine runs indefinitely, sending an empty JSON object
+        to the server every 10 seconds to keep the connection alive. If the
+        WebSocket is closed or an exception occurs, it logs a warning and retries.
+
+        Returns:
+            None
+
+        Logs:
+            - Warning if the connection check or ping fails.
         """
         while True:
             try:
                 await asyncio.sleep(10)
+
                 if self.ws and not self.ws.closed:
                     await self.ws.send_json({})
                     await self.client.get_chats_updates()
+                else:
+                    self.logger.warning("WebSocket is not connected or already closed.")
             except Exception as e:
-                self.logger.warning(f"خطا در حفظ اتصال WebSocket: {e}")
-                continue
+                self.logger.warning(f"Exception while keeping WebSocket alive: {e}", exc_info=True)
 
-    async def handle_text_message(self, msg_data: dict) -> None:
+    async def handle_text_message(self, msg_data: Dict) -> None:
         """
-        مدیریت پیام‌های متنی دریافت‌شده از WebSocket.
+        Handles incoming text messages received via WebSocket.
 
-        پارامترها:
-        - msg_data: داده JSON تجزیه‌شده.
+        This method decrypts the incoming `data_enc` field using the client's key,
+        extracts updates, and dispatches them asynchronously to the appropriate handler(s).
+
+        Args:
+            msg_data (dict): Parsed JSON dictionary received from the WebSocket.
+
+        Returns:
+            None
+
+        Logs:
+            - Debug message if `data_enc` is missing.
+            - Error message if decryption or handling fails.
         """
-        if not (data_enc := msg_data.get('data_enc')):
-            self.logger.debug("کلید data_enc یافت نشد", extra={'data': msg_data})
+        data_enc = msg_data.get('data_enc')
+        if not data_enc:
+            self.logger.debug("Missing 'data_enc' key in message", extra={'data': msg_data})
             return
 
         try:
             decrypted_data = Crypto.decrypt(data_enc, key=self.client.key)
             user_guid = decrypted_data.pop('user_guid')
+
             tasks = [
                 self.handle_update(name, {**update, 'client': self.client, 'user_guid': user_guid})
-                for name, package in decrypted_data.items()
-                if isinstance(package, list)
-                for update in package
+                for name, updates in decrypted_data.items()
+                if isinstance(updates, list)
+                for update in updates
             ]
+
             await asyncio.gather(*tasks)
         except Exception as e:
-            self.logger.error(f"خطا در مدیریت WebSocket: {e}", extra={'data': msg_data}, exc_info=True)
+            self.logger.error("Exception while handling WebSocket message",
+                            extra={'data': msg_data},
+                            exc_info=True)
 
-    async def upload_file(self, file, mime: str = None, file_name: str = None, chunk: int = 1048576,
-                         callback=None, max_retries: int = 3, backoff: float = 1.0) -> Update:
+    async def upload_file(
+        self,
+        file: Union[str, bytes],
+        mime: Optional[str] = None,
+        file_name: Optional[str] = None,
+        chunk: int = 1048576,
+        callback: Optional[Callable[[int, int], Union[None, asyncio.Future]]] = None,
+        max_retries: int = 3,
+        backoff: float = 1.0,
+        *args, **kwargs
+    ) -> Update:
         """
-        آپلود فایل به روبیکا با منطق بازآزمایی.
+        Uploads a file to Rubika with chunked transfer and retry logic.
 
-        پارامترها:
-        - file: مسیر فایل یا بایت‌ها.
-        - mime: نوع MIME فایل.
-        - file_name: نام فایل.
-        - chunk: اندازه قطعه برای آپلود.
-        - callback: callback برای پیشرفت.
-        - max_retries: حداکثر تعداد تلاش‌ها.
-        - backoff: تأخیر پایه برای بازآزمایی.
+        Supports both file path and raw bytes input. Uploads in chunks and
+        provides progress updates via optional callback. If the server requests
+        reinitialization (e.g. due to expired upload credentials), it automatically
+        resets and resumes the process.
 
-        خروجی:
-        شیء Update با متادیتای فایل.
+        Args:
+            file (str or bytes): File path or bytes to upload.
+            mime (str, optional): MIME type of the file. Defaults to file extension.
+            file_name (str, optional): Name of the file to assign. Required for bytes input.
+            chunk (int, optional): Chunk size in bytes. Defaults to 1MB.
+            callback (callable, optional): Function or coroutine for progress reporting.
+                Called with (total_size, uploaded_bytes).
+            max_retries (int, optional): Max retry attempts per chunk. Defaults to 3.
+            backoff (float, optional): Initial delay (in seconds) for exponential retry backoff. Defaults to 1.0.
+
+        Returns:
+            Update: An object containing metadata about the uploaded file (dc_id, file_id, size, mime, etc.).
+
+        Raises:
+            ValueError: If file path is invalid or file_name is missing for bytes input.
+            TypeError: If the file argument is neither str nor bytes.
+            Exception: If the upload fails after retries.
         """
         if isinstance(file, str):
             if not os.path.exists(file):
-                raise ValueError('فایل در مسیر مشخص‌شده یافت نشد')
+                raise ValueError("File not found at the given path.")
             file_name = file_name or os.path.basename(file)
             file_size = os.path.getsize(file)
         elif isinstance(file, bytes):
             if not file_name:
-                raise ValueError('نام فایل مشخص نشده است')
+                raise ValueError("file_name must be specified when uploading from bytes.")
             file_size = len(file)
         else:
-            raise TypeError('فایل باید مسیر یا بایت باشد')
+            raise TypeError("file must be a file path (str) or raw bytes.")
 
         mime = mime or file_name.split('.')[-1]
 
-        result = await self.client.request_send_file(file_name, file_size, mime)
-        file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
-        total_parts = (file_size + chunk - 1) // chunk
+        async def handle_callback(total: int, current: int):
+            if not callable(callback):
+                return
+            try:
+                if inspect.iscoroutinefunction(callback):
+                    await callback(total, current)
+                else:
+                    callback(total, current)
+            except exceptions.CancelledError:
+                return None
+            except Exception as e:
+                self.logger.error(f"Callback error: {e}")
 
-        async def upload_chunk(data, part_number):
+        async def upload_chunk(data: bytes, part_number: int) -> dict:
             for attempt in range(max_retries):
                 try:
                     async with self.session.post(
@@ -289,86 +431,91 @@ class Network:
                     ) as response:
                         return await response.json()
                 except Exception as e:
-                    self.logger.warning(f"خطا در آپلود قطعه {part_number}، تلاش {attempt + 1}/{max_retries}: {e}")
+                    self.logger.warning(
+                        f"Error uploading chunk {part_number} (attempt {attempt + 1}/{max_retries}): {e}")
                     if attempt < max_retries - 1:
                         await asyncio.sleep(backoff * (2 ** attempt))
                     else:
                         raise
 
+        # Initial request to get upload metadata
+        result = await self.client.request_send_file(file_name, file_size, mime)
+        file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
+        total_parts = (file_size + chunk - 1) // chunk
+
         index = 0
-        if isinstance(file, str):
-            async with aiofiles.open(file, 'rb') as f:
-                while index < total_parts:
+        while index < total_parts:
+            if isinstance(file, str):
+                async with aiofiles.open(file, 'rb') as f:
                     await f.seek(index * chunk)
                     data = await f.read(chunk)
-                    result = await upload_chunk(data, index + 1)
-                    if result.get('status') == 'ERROR_TRY_AGAIN':
-                        result = await self.client.request_send_file(file_name, file_size, mime)
-                        file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
-                        index = 0
-                        continue
-                    if callable(callback):
-                        try:
-                            if inspect.iscoroutinefunction(callback):
-                                await callback(file_size, (index + 1) * chunk)
-                            else:
-                                callback(file_size, (index + 1) * chunk)
-                        except exceptions.CancelledError:
-                            return None
-                        except Exception as e:
-                            self.logger.error(f"خطا در callback: {e}")
-                    index += 1
-        else:
-            while index < total_parts:
+            else:
                 data = file[index * chunk:(index + 1) * chunk]
-                result = await upload_chunk(data, index + 1)
-                if result.get('status') == 'ERROR_TRY_AGAIN':
-                    result = await self.client.request_send_file(file_name, file_size, mime)
-                    file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
-                    index = 0
-                    continue
-                if callable(callback):
-                    try:
-                        if inspect.iscoroutinefunction(callback):
-                            await callback(file_size, (index + 1) * chunk)
-                        else:
-                            callback(file_size, (index + 1) * chunk)
-                    except exceptions.CancelledError:
-                        return None
-                    except Exception as e:
-                        self.logger.error(f"خطا در callback: {e}")
-                index += 1
 
-        if result['status'] == 'OK' and result['status_det'] == 'OK':
+            upload_result = await upload_chunk(data, index + 1)
+
+            if upload_result.get('status') == 'ERROR_TRY_AGAIN':
+                self.logger.warning("Server requested reinitialization. Restarting upload.")
+                result = await self.client.request_send_file(file_name, file_size, mime)
+                file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
+                index = 0
+                continue
+
+            await handle_callback(file_size, min((index + 1) * chunk, file_size))
+            index += 1
+
+        if upload_result.get('status') == 'OK' and upload_result.get('status_det') == 'OK':
             return Update({
                 'mime': mime,
                 'size': file_size,
                 'dc_id': dc_id,
                 'file_id': file_id,
                 'file_name': file_name,
-                'access_hash_rec': result['data']['access_hash_rec']
+                'access_hash_rec': upload_result['data']['access_hash_rec']
             })
-        raise exceptions(result['status_det'])(result)
 
-    async def download(self, dc_id: int, file_id: int, access_hash: str, size: int, chunk: int = 131072,
-                      callback=None, gather: bool = False, save_as: str = None, max_retries: int = 3, backoff: float = 1.0) -> bytes:
+        raise exceptions(upload_result.get('status_det'))(upload_result)
+
+    async def download(
+        self,
+        dc_id: int,
+        file_id: int,
+        access_hash: str,
+        size: int,
+        chunk: int = 131072,
+        callback: Optional[Callable[[int, int], Union[None, asyncio.Future]]] = None,
+        gather: bool = False,
+        save_as: Optional[str] = None,
+        max_retries: int = 3,
+        backoff: float = 1.0,
+        *args, **kwargs
+    ) -> Union[bytes, str]:
         """
-        دانلود فایل از روبیکا.
+        Download a file from Rubika using its file ID and access hash.
 
-        پارامترها:
-        - dc_id: شناسه مرکز داده.
-        - file_id: شناسه فایل.
-        - access_hash: هش دسترسی فایل.
-        - size: اندازه کل فایل.
-        - chunk: اندازه قطعه برای دانلود.
-        - callback: callback برای پیشرفت.
-        - gather: استفاده از asyncio.gather برای دانلود همزمان.
-        - save_as: مسیر ذخیره فایل (در صورت مشخص بودن).
-        - max_retries: حداکثر تعداد تلاش‌ها.
-        - backoff: تأخیر پایه برای بازآزمایی.
+        This function supports downloading files either to memory (as bytes)
+        or saving directly to disk. It also supports parallel downloading using
+        asyncio.gather and provides retry logic with exponential backoff.
 
-        خروجی:
-        محتوای فایل دانلودشده (بایت) یا مسیر فایل ذخیره‌شده.
+        Args:
+            dc_id (int): Data center ID.
+            file_id (int): Unique identifier of the file.
+            access_hash (str): Access hash associated with the file.
+            size (int): Total size of the file in bytes.
+            chunk (int, optional): Size of each download chunk in bytes. Defaults to 131072 (128 KB).
+            callback (callable, optional): A function or coroutine called with (total_size, downloaded_size)
+                to report progress.
+            gather (bool, optional): If True, downloads chunks in parallel using asyncio.gather. Defaults to False.
+            save_as (str, optional): If specified, path to save the downloaded file. If None, returns file content.
+            max_retries (int, optional): Maximum number of retry attempts for each chunk. Defaults to 3.
+            backoff (float, optional): Base delay (in seconds) for exponential backoff. Defaults to 1.0.
+
+        Returns:
+            bytes or str: The downloaded file content as bytes (if `save_as` is None),
+                        or the path to the saved file (if `save_as` is specified).
+
+        Raises:
+            None explicitly, but logs warnings and errors internally on failed retries or callback exceptions.
         """
         headers = {
             'auth': self.client.auth,
@@ -378,73 +525,59 @@ class Network:
         }
         base_url = f'https://messenger{dc_id}.iranlms.ir'
 
-        async def fetch_chunk(session, start_index, last_index):
-            chunk_headers = headers.copy()
-            chunk_headers.update({'start-index': str(start_index), 'last-index': str(last_index)})
+        async def fetch_chunk(session, start: int, end: int) -> bytes:
+            chunk_headers = {**headers, 'start-index': str(start), 'last-index': str(end)}
             for attempt in range(max_retries):
                 try:
-                    async with session.post('/GetFile.ashx', headers=chunk_headers, proxy=self.client.proxy) as response:
-                        if response.status != 200:
-                            self.logger.warning(f"دانلود ناموفق با وضعیت {response.status}")
-                            return b''
-                        return await response.read()
+                    async with session.post('/GetFile.ashx', headers=chunk_headers, proxy=self.client.proxy) as resp:
+                        if resp.status == 200:
+                            return await resp.read()
+                        self.logger.warning(f"Download failed with status {resp.status}")
                 except Exception as e:
-                    self.logger.warning(f"خطا در دانلود قطعه {start_index}-{last_index}، تلاش {attempt + 1}/{max_retries}: {e}")
-                    if attempt < max_retries - 1:
-                        await asyncio.sleep(backoff * (2 ** attempt))
-                    else:
-                        return b''
+                    self.logger.warning(f"Error downloading chunk {start}-{end} (Attempt {attempt+1}): {e}")
+                await asyncio.sleep(backoff * (2 ** attempt))
+            return b''
+
+        async def handle_callback(total: int, current: int):
+            if not callable(callback):
+                return
+            try:
+                if inspect.iscoroutinefunction(callback):
+                    await callback(total, current)
+                else:
+                    callback(total, current)
+            except Exception as e:
+                self.logger.error(f"Callback error: {e}")
 
         async with aiohttp.ClientSession(base_url=base_url, connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
             if save_as:
                 async with aiofiles.open(save_as, 'wb') as f:
-                    start_index = 0
-                    while start_index < size:
-                        last_index = min(start_index + chunk, size) - 1
-                        data = await fetch_chunk(session, start_index, last_index)
+                    for start in range(0, size, chunk):
+                        end = min(start + chunk, size) - 1
+                        data = await fetch_chunk(session, start, end)
                         if not data:
                             break
                         await f.write(data)
-                        start_index = last_index + 1
-                        if callable(callback):
-                            try:
-                                if inspect.iscoroutinefunction(callback):
-                                    await callback(size, start_index)
-                                else:
-                                    callback(size, start_index)
-                            except Exception as e:
-                                self.logger.error(f"خطا در callback: {e}")
+                        await handle_callback(size, end + 1)
                 return save_as
+
+            elif gather:
+                tasks = [
+                    fetch_chunk(session, start, min(start + chunk, size) - 1)
+                    for start in range(0, size, chunk)
+                ]
+                chunks = await asyncio.gather(*tasks)
+                result = b''.join(filter(None, chunks))
+                await handle_callback(size, len(result))
+                return result
+
             else:
-                if gather:
-                    tasks = [fetch_chunk(session, start, min(start + chunk, size) - 1) for start in range(0, size, chunk)]
-                    chunks = await asyncio.gather(*tasks)
-                    result = b''.join(filter(None, chunks))
-                    if callable(callback):
-                        try:
-                            if inspect.iscoroutinefunction(callback):
-                                await callback(size, len(result))
-                            else:
-                                callback(size, len(result))
-                        except Exception as e:
-                            self.logger.error(f"خطا در callback: {e}")
-                    return result
-                else:
-                    result = b''
-                    start_index = 0
-                    while start_index < size:
-                        last_index = min(start_index + chunk, size) - 1
-                        data = await fetch_chunk(session, start_index, last_index)
-                        if not data:
-                            break
-                        result += data
-                        start_index = last_index + 1
-                        if callable(callback):
-                            try:
-                                if inspect.iscoroutinefunction(callback):
-                                    await callback(size, len(result))
-                                else:
-                                    callback(size, len(result))
-                            except Exception as e:
-                                self.logger.error(f"خطا در callback: {e}")
-                    return result
+                result = bytearray()
+                for start in range(0, size, chunk):
+                    end = min(start + chunk, size) - 1
+                    data = await fetch_chunk(session, start, end)
+                    if not data:
+                        break
+                    result.extend(data)
+                    await handle_callback(size, len(result))
+                return bytes(result)

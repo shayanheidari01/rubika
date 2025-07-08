@@ -9,4 +9,9 @@ class GetUpdates:
         - rubpy.types.Update: An Update object containing information about the updates.
         """
 
-        return await self.connection.get_updates()
+        while True:
+            try:
+                return await self.connection.get_updates()
+
+            except Exception:
+                pass

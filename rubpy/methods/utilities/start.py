@@ -3,7 +3,22 @@ from ...crypto import Crypto
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 import rubpy
+import re
 
+def convert_farsi_digits(text):
+    return text.translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789"))
+
+def normalize_phone_number(phone: str) -> str | None:
+    phone = convert_farsi_digits(phone)
+    phone = phone.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+
+    # پترن کامل: تشخیص شماره داخلی و بین‌المللی (تا ۱۵ رقم طبق استاندارد ITU-T E.164)
+    pattern = re.compile(r"^(?:\+|00)?(\d{7,15})$")
+
+    match = pattern.match(phone)
+    if match:
+        return match.group(1) if phone.startswith("00") else f"{match.group(1)}"
+    return None
 
 class Start:
     async def start(self: "rubpy.Client", phone_number: str = None):
@@ -37,14 +52,10 @@ class Start:
                     else:
                         phone_number = input('Phone Number: ')
 
-            if phone_number.startswith('0'):
-                phone_number = '98{}'.format(phone_number[1:])
-            elif phone_number.startswith('+98'):
-                phone_number = phone_number[1:]
-            elif phone_number.startswith('0098'):
-                phone_number = phone_number[2:]
-
-            result = await self.send_code(phone_number=phone_number)
+            phone_number = normalize_phone_number(phone_number)
+            phone_number = f'98{phone_number[1:]}' if phone_number.startswith('0') else phone_number
+            print(phone_number)
+            result = await self.send_code(phone_number=phone_number, send_type='SMS')
 
             if result.status == 'SendPassKey':
                 while True:

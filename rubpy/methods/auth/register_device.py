@@ -49,8 +49,8 @@ async def get_browser(user_agent, lang_code, app_version, *args, **kwargs):
         return {
             'token': '',
             'lang_code': lang_code,
-            'token_type': 'Web',
-            'app_version': f'WB_{app_version}',
+            'token_type': 'Firebase',
+            'app_version': f'PW_{app_version}',
             'system_version': system_version,
             'device_model': kwargs.get('device_model', device_model.title()),
             'device_hash': device_hash + ''.join(re.findall(r'\d+', user_agent))}
@@ -62,7 +62,7 @@ class RegisterDevice:
                                  input=await get_browser(self.user_agent,
                                                          self.lang_code,
                                                          self.DEFAULT_PLATFORM.get('app_version'),
-                                                         *args, **kwargs) if self.DEFAULT_PLATFORM['platform'] == 'Web' else await get_android(self.user_agent,
+                                                         *args, **kwargs) if self.DEFAULT_PLATFORM['platform'] == 'PWA' else await get_android(self.user_agent,
                                                          self.lang_code,
                                                          self.DEFAULT_PLATFORM.get('app_version'),
                                                          *args, **kwargs))

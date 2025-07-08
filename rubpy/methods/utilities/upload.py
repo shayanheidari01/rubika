@@ -24,4 +24,4 @@ class UploadFile:
         Returns:
         - The result of the file upload operation.
         """
-        return await self.connection.upload_file(file=file, *args, **kwargs)
+        return await self.connection.upload_file(file=file, *args, **kwargs, max_retries=self.max_retries)

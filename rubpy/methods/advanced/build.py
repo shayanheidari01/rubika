@@ -27,7 +27,7 @@ class Builder:
             - Union[rubpy.types.Update, dict]: Result of the API call.
         """
         if not self.connection.api_url:
-            await self.connection.get_dcs()
+            await self.connection.get_dcs(max_retries=self.max_retries)
 
         if self.auth is None:
             self.auth = Crypto.secret(length=32)

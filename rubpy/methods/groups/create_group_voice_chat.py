@@ -16,5 +16,5 @@ class CreateGroupVoiceChat:
         """
         return await self.builder('createGroupVoiceChat',
                                   input={
-                                      'group_guid': group_guid,
+                                      'chat_guid': group_guid,
                                   })
