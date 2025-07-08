@@ -170,7 +170,7 @@ class MediaThumbnail:
                 image = capture.get_frame(seconds / 2)  # Extract frame from the middle of the video
                 capture.close()
                 os.remove(file_name)
-                return ResultMedia(image, width, height, seconds)
+                return ResultMedia(image, width, height, seconds * 1000)
             except Exception as e:
                 print(f"Error processing video with moviepy: {e}")
                 os.remove(file_name)

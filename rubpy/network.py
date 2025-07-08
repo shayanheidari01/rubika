@@ -229,6 +229,19 @@ class Network:
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             break
 
+            except aiohttp.ClientError:
+                continue
+
+            except Exception:
+                continue
+
+    async def keep_socket(self, ws):
+        while True:
+            try:
+                await asyncio.sleep(10.0)
+                await ws.send_json({})
+                await self.client.get_chats_updates()
+
             except Exception:
                 continue
 

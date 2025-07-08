@@ -1,4 +1,6 @@
-class MessageMediaType:
+from enum import Enum
+
+class MessageMediaType(str, Enum):
     """Message media type"""
 
     AUDIO = 'Music'
@@ -30,3 +32,6 @@ class MessageMediaType:
 
     POLL = 'Poll'
     "Poll media"
+
+    GIF = 'Gif'
+    "Gif media"

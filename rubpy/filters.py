@@ -13,7 +13,9 @@ __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
     'text', 'original_update', 'object_guid', 'author_guid',
-    'time', 'reply_message_id', 'is_me', 'is_forward', 'is_text']
+    'time', 'reply_message_id', 'is_me', 'is_forward', 'is_text',
+    'music', 'file', 'photo', 'sticker', 'video', 'voice',
+    'contact', 'location', 'poll', 'gif']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
     """
@@ -149,82 +151,6 @@ class BaseModel:
     async def __call__(self, update, *args, **kwargs):
         return await self.build(update)
 
-class commands(BaseModel):
-    """
-    Filter for commands in text messages.
-    """
-    def __init__(
-            self,
-            commands: Union[str, List[str]],
-            prefixes: Union[str, List[str]] = "/",
-            case_sensitive: bool = False, *args, **kwargs,
-    ) -> None:
-        """Filter Commands, i.e.: text messages starting with "/" or any other custom prefix.
-
-        Parameters:
-            commands (``str`` | ``list``):
-                The command or list of commands as string the filter should look for.
-                Examples: "start", ["start", "help", "settings"]. When a message text containing
-                a command arrives, the command itself and its arguments will be stored in the *command*
-                field of the :obj:`~pyrogram.types.Message`.
-
-            prefixes (``str`` | ``list``, *optional*):
-                A prefix or a list of prefixes as string the filter should look for.
-                Defaults to "/" (slash). Examples: ".", "!", ["/", "!", "."], list(".:!").
-                Pass None or "" (empty string) to allow commands with no prefix at all.
-
-            case_sensitive (``bool``, *optional*):
-                Pass True if you want your command(s) to be case sensitive. Defaults to False.
-                Examples: when True, command="Start" would trigger /Start but not /start.
-        """
-
-        super().__init__(*args, **kwargs)
-        self.command_re = re.compile(r"([\"'])(.*?)(?<!\\)\1|(\S+)")
-        commands = commands if isinstance(commands, list) else [commands]
-        commands = {c if case_sensitive else c.lower() for c in commands}
-
-        prefixes = [] if prefixes is None else prefixes
-        prefixes = prefixes if isinstance(prefixes, list) else [prefixes]
-        prefixes = set(prefixes) if prefixes else {""}
-
-        self.commands = commands
-        self.prefixes = prefixes
-        self.case_sensitive = case_sensitive
-
-    async def __call__(self, update, *args, **kwargs) -> bool:
-        username = ""
-        text = update.text
-        update['command'] = None
-
-        if not text:
-            return False
-
-        for prefix in self.prefixes:
-            if not text.startswith(prefix):
-                continue
-
-            without_prefix = text[len(prefix):]
-
-            for cmd in self.commands:
-                if not re.match(rf"^(?:{cmd}(?:@?{username})?)(?:\s|$)", without_prefix,
-                                flags=re.IGNORECASE if not self.case_sensitive else 0):
-                    continue
-
-                without_command = re.sub(rf"{cmd}(?:@?{username})?\s?", "", without_prefix, count=1,
-                                         flags=re.IGNORECASE if not self.case_sensitive else 0)
-
-                # match.groups are 1-indexed, group(1) is the quote, group(2) is the text
-                # between the quotes, group(3) is unquoted, whitespace-split text
-
-                # Remove the escape character from the arguments
-                update['command'] = [cmd] + [
-                    re.sub(r"\\([\"'])", r"\1", m.group(2) or m.group(3) or "")
-                    for m in self.command_re.finditer(without_command)
-                ]
-
-                return True
-
-        return False
 
 class Commands(BaseModel):
     """
@@ -440,3 +366,13 @@ is_me: Type[BaseModel]
 is_forward: Type[BaseModel]
 is_event: Type[BaseModel]
 is_text: Type[BaseModel]
+music: Type[BaseModel]
+file: Type[BaseModel]
+photo: Type[BaseModel]
+video: Type[BaseModel]
+voice: Type[BaseModel]
+contact: Type[BaseModel]
+location: Type[BaseModel]
+poll: Type[BaseModel]
+gif: Type[BaseModel]
+sticker: Type[BaseModel]
