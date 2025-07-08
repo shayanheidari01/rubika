@@ -4,7 +4,8 @@ from .methods import Methods
 from typing import Optional, Union, Literal
 from . import __name__ as logger_name
 import logging
-#import re
+import rubpy
+import time
 
 
 class Client(Methods):
@@ -136,6 +137,11 @@ class Client(Methods):
         self.guid = None
         self.key = None
         self.handlers = {}
+
+        if self.display_welcome:
+            for char in rubpy.__welcome__:
+                print(char, sep='', end='', flush=True)
+                time.sleep(0.01)
 
     def __enter__(self) -> "Client":
         return self.start()

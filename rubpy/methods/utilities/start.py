@@ -2,7 +2,6 @@ from ... import exceptions
 from ...crypto import Crypto
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
-import asyncio
 import rubpy
 
 
@@ -17,11 +16,6 @@ class Start:
         Returns:
         - The initialized client.
         """
-        if self.display_welcome:
-            for char in rubpy.__welcome__:
-                print(char, sep='', end='', flush=True)
-                await asyncio.sleep(0.01)
-
         if not hasattr(self, 'connection'):
             await self.connect()
 

@@ -29,6 +29,9 @@ class Rubino:
         return
 
     async def _execute_request(self, method: str, data: Dict[str, Union[int, str, bool]]) -> Update:
+        if not hasattr(self.client, 'connection'):
+            await self.client.connect()
+
         result = await self.client.connection.send(
             api_version='0',
             input=data,
@@ -230,18 +233,18 @@ class Rubino:
     async def upload_file(self, file, profile_id: str, file_type: str, file_name: str = None, chunk: int = 1048576,
                           callback=None, *args, **kwargs):
         """
-        Upload a file to Rubika.
+         Upload a file to Rubino.
 
-        Parameters:
-        - file: File path or bytes.
-        - mime: MIME type of the file.
-        - file_name: Name of the file.
-        - chunk: Chunk size for uploading.
-        - callback: Progress callback.
+         Parameters:
+         - file: File path or bytes.
+         - mime: MIME type of the file.
+         - file_name: Name of the file.
+         - chunk: Chunk size for uploading.
+         - callback: Progress callback.
 
-        Returns:
-        Results object.
-        """
+         Returns:
+         Results object.
+         """
         if isinstance(file, str):
             if not os.path.exists(file):
                 raise ValueError('File not found in the given path')
@@ -249,7 +252,7 @@ class Rubino:
             if file_name is None:
                 file_name = os.path.basename(file)
 
-            async with aiofiles.open(file, 'rb+') as file:
+            async with aiofiles.open(file, 'rb') as file:
                 file = await file.read()
 
         elif not isinstance(file, bytes):
@@ -262,20 +265,15 @@ class Rubino:
 
         id = result.file_id
         index = 0
-        count_retry = 0
-        max_retring = 3
         total = int(len(file) / chunk + 1)
         upload_url = result.server_url
         hash_file_request = result.hash_file_request
 
         while index < total:
-            if count_retry == max_retring:
-                break
-
             data = file[index * chunk: index * chunk + chunk]
             try:
                 response = await self.client.connection.session.post(
-                    upload_url,
+                    url=upload_url,
                     headers={
                         'auth': self.client.auth,
                         'file-id': id,
@@ -288,15 +286,16 @@ class Rubino:
                     proxy=self.client.proxy,
                 )
                 response = await response.json()
+                self.client.logger.info(rf'UploadFile({file_name}) | Rubino | response={response}')
 
-                if response.get('status') != 'OK':
+                if response.get('status') == 'ERROR_TRY_AGAIN':
                     result = await self.request_upload_file(profile_id, file_name, len(file), file_type)
                     id = result.file_id
                     index = 0
                     total = int(len(file) / chunk + 1)
                     upload_url = result.server_url
                     hash_file_request = result.hash_file_request
-                    count_retry += 1
+                    continue
 
                 if callable(callback):
                     try:
@@ -315,16 +314,117 @@ class Rubino:
                 index += 1
 
             except Exception:
-                pass
+                self.client.logger.error(
+                    f'UploadFile({file_name}) | Messenger | raised an exception',
+                    extra={'data': self.url}, exc_info=True)
 
         status = response['status']
         status_det = response['status_det']
-
+    
         if status == 'OK' and status_det == 'OK':
             response.update(result.original_update)
             return Update(response)
 
         raise exceptions(status_det)(response, request=response)
+
+    # async def upload_file(self, file, profile_id: str, file_type: str, file_name: str = None, chunk: int = 1048576,
+    #                       callback=None, *args, **kwargs):
+    #     """
+    #     Upload a file to Rubika.
+
+    #     Parameters:
+    #     - file: File path or bytes.
+    #     - mime: MIME type of the file.
+    #     - file_name: Name of the file.
+    #     - chunk: Chunk size for uploading.
+    #     - callback: Progress callback.
+
+    #     Returns:
+    #     Results object.
+    #     """
+    #     if isinstance(file, str):
+    #         if not os.path.exists(file):
+    #             raise ValueError('File not found in the given path')
+
+    #         if file_name is None:
+    #             file_name = os.path.basename(file)
+
+    #         async with aiofiles.open(file, 'rb+') as file:
+    #             file = await file.read()
+
+    #     elif not isinstance(file, bytes):
+    #         raise TypeError('File argument must be a file path or bytes')
+
+    #     if file_name is None:
+    #         raise ValueError('File name is not set')
+
+    #     result = await self.request_upload_file(profile_id, file_name, len(file), file_type)
+
+    #     id = result.file_id
+    #     index = 0
+    #     count_retry = 0
+    #     max_retring = 3
+    #     total = int(len(file) / chunk + 1)
+    #     upload_url = result.server_url
+    #     hash_file_request = result.hash_file_request
+
+    #     while index < total:
+    #         if count_retry == max_retring:
+    #             break
+
+    #         data = file[index * chunk: index * chunk + chunk]
+    #         try:
+    #             response = await self.client.connection.session.post(
+    #                 upload_url,
+    #                 headers={
+    #                     'auth': self.client.auth,
+    #                     'file-id': id,
+    #                     'total-part': str(total),
+    #                     'part-number': str(index + 1),
+    #                     'chunk-size': str(len(data)),
+    #                     'hash-file-request': hash_file_request
+    #                 },
+    #                 data=data,
+    #                 proxy=self.client.proxy,
+    #             )
+    #             response = await response.json()
+
+    #             if response.get('status') != 'OK':
+    #                 result = await self.request_upload_file(profile_id, file_name, len(file), file_type)
+    #                 id = result.file_id
+    #                 index = 0
+    #                 total = int(len(file) / chunk + 1)
+    #                 upload_url = result.server_url
+    #                 hash_file_request = result.hash_file_request
+    #                 count_retry += 1
+
+    #             if callable(callback):
+    #                 try:
+    #                     if inspect.iscoroutinefunction(callback):
+    #                         await callback(len(file), index * chunk)
+
+    #                     else:
+    #                         callback(len(file), index * chunk)
+
+    #                 except exceptions.CancelledError:
+    #                     return None
+
+    #                 except Exception:
+    #                     pass
+
+    #             index += 1
+
+    #         except Exception:
+    #             pass
+
+    #     status = response['status']
+    #     status_det = response['status_det']
+
+    #     if status == 'OK' and status_det == 'OK':
+    #         response.update(result.original_update)
+    #         return Update(response)
+
+    #     raise exceptions(status_det)(response, request=response)
 
     async def add_post(self, profile_id: str, post: str, post_type: str, caption: str = None, file_name: str = None):
         if isinstance(post, str):

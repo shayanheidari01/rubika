@@ -1,23 +1,26 @@
 import markdownify
 import re
 
-MARKDOWN_RE = re.compile(r'\*\*(.*?)\*\*|`(.*?)`|__(.*?)__|--(.*?)--|~~(.*?)~~|\|\|(.*?)\|\||\[(.*?)\]\((\S+)\)')
+MARKDOWN_RE = re.compile(r'```(.*?)```|\*\*(.*?)\*\*|`(.*?)`|__(.*?)__|--(.*?)--|~~(.*?)~~|\|\|(.*?)\|\||\[(.*?)\]\((\S+)\)',
+                         flags=re.DOTALL)
 
 def get_repl(group: str):
-    if group.startswith('**'):
+    if group.startswith('```'):
         return r'\1'
-    elif group.startswith('```'):
+    elif group.startswith('**'):
         return r'\2'
-    elif group.startswith('__'):
+    elif group.startswith('`'):
         return r'\3'
-    elif group.startswith('--'):
+    elif group.startswith('__'):
         return r'\4'
-    elif group.startswith('~~'):
+    elif group.startswith('--'):
         return r'\5'
-    elif group.startswith('||'):
+    elif group.startswith('~~'):
         return r'\6'
-    else:
+    elif group.startswith('||'):
         return r'\7'
+    else:
+        return r'\8'
 
 
 class Markdown:
@@ -47,7 +50,6 @@ class Markdown:
             - Dict[str, Any]: Dictionary containing 'text' and 'metadata' keys.
         """
         meta_data_parts = []
-        text = text.replace('```', '')
 
         while True:
             for find in MARKDOWN_RE.finditer(text):
@@ -55,7 +57,13 @@ class Markdown:
                 span = find.span()
                 text: str = MARKDOWN_RE.sub(get_repl(group), text, count=1)
 
-                if group.startswith('**'):
+                if group.startswith('```'):
+                    delim_and_language = group[group.find('```'):].split('\n')[0]
+                    language = delim_and_language[len('```'):]
+                    meta_data_parts.append({'type': 'Pre', 'language': language, 'from_index': span[0], 'length': len(group) - 6})
+                    break
+
+                elif group.startswith('**'):
                     meta_data_parts.append({'type': 'Bold', 'from_index': span[0], 'length': len(group) - 4})
                     break
 
@@ -80,7 +88,7 @@ class Markdown:
                     break
 
                 else:
-                    length, url = len(find.group(7)), find.group(8)
+                    length, url = len(find.group(8)), find.group(9)
 
                     if url.startswith('u'):
                         mention_text_object_type = 'User'

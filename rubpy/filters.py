@@ -6,8 +6,8 @@ import sys
 import re
 
 # List of public elements to be exported
-__all__ = ['Operator', 'BaseModel', 'RegexModel',
-           'AuthorGuids', 'ObjectGuids', 'Commands']
+__all__ = ['Operator', 'BaseModel', 'author_guids', 'object_guids', 'commands', 'regex',
+           'AuthorGuids', 'ObjectGuids', 'Commands', 'RegexModel']
 # List of models for internal use
 __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
@@ -152,14 +152,14 @@ class BaseModel:
         return await self.build(update)
 
 
-class Commands(BaseModel):
+class commands(BaseModel):
     """
     Filter for commands in text messages.
     """
     def __init__(
             self,
             commands: Union[str, List[str]],
-            prefixes: Union[str, List[str]] = "/",
+            prefixes: Union[str, List[str]] = '/',
             case_sensitive: bool = False, *args, **kwargs,
     ) -> None:
         """Filter Commands, i.e.: text messages starting with "/" or any other custom prefix.
@@ -245,20 +245,6 @@ class regex(BaseModel):
         update.pattern_match = self.pattern.match(update.text)
         return bool(update.pattern_match)
 
-class RegexModel(BaseModel):
-    """
-    Filter for matching text using regular expressions.
-    """
-    def __init__(self, pattern: Pattern, *args, **kwargs) -> None:
-        self.pattern = re.compile(pattern)
-        super().__init__(*args, **kwargs)
-
-    async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.text is None:
-            return False
-
-        update.pattern_match = self.pattern.match(update.text)
-        return bool(update.pattern_match)
 
 class object_guids(BaseModel):
     """
@@ -276,31 +262,8 @@ class object_guids(BaseModel):
                 self.object_guids.append(arg)
 
     async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.object_guid is None:
-            return False
+        return update.object_guid is not None and update.object_guid in self.object_guids
 
-        return update.object_guid in self.object_guids
-
-class ObjectGuids(BaseModel):
-    """
-    Filter based on object GUIDs.
-    """
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.object_guids = []
-        for arg in args:
-            if isinstance(arg, list):
-                self.object_guids.extend(arg)
-            elif isinstance(arg, tuple):
-                self.object_guids.extend(list(arg))
-            else:
-                self.object_guids.append(arg)
-
-    async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.object_guid is None:
-            return False
-
-        return update.object_guid in self.object_guids
 
 class author_guids(BaseModel):
     """
@@ -318,10 +281,8 @@ class author_guids(BaseModel):
                 self.author_guids.append(arg)
 
     async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.author_guid is None:
-            return False
+        return update.author_guid is not None and update.author_guid in self.author_guids
 
-        return update.author_guid in self.author_guids
 
 class Models:
     """
@@ -377,3 +338,4 @@ poll: Type[BaseModel]
 gif: Type[BaseModel]
 sticker: Type[BaseModel]
 is_event: Type[BaseModel]
+AuthorGuids, ObjectGuids, Commands, RegexModel = author_guids, object_guids, commands, regex
