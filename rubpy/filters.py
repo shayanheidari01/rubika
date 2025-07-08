@@ -149,6 +149,83 @@ class BaseModel:
     async def __call__(self, update, *args, **kwargs):
         return await self.build(update)
 
+class commands(BaseModel):
+    """
+    Filter for commands in text messages.
+    """
+    def __init__(
+            self,
+            commands: Union[str, List[str]],
+            prefixes: Union[str, List[str]] = "/",
+            case_sensitive: bool = False, *args, **kwargs,
+    ) -> None:
+        """Filter Commands, i.e.: text messages starting with "/" or any other custom prefix.
+
+        Parameters:
+            commands (``str`` | ``list``):
+                The command or list of commands as string the filter should look for.
+                Examples: "start", ["start", "help", "settings"]. When a message text containing
+                a command arrives, the command itself and its arguments will be stored in the *command*
+                field of the :obj:`~pyrogram.types.Message`.
+
+            prefixes (``str`` | ``list``, *optional*):
+                A prefix or a list of prefixes as string the filter should look for.
+                Defaults to "/" (slash). Examples: ".", "!", ["/", "!", "."], list(".:!").
+                Pass None or "" (empty string) to allow commands with no prefix at all.
+
+            case_sensitive (``bool``, *optional*):
+                Pass True if you want your command(s) to be case sensitive. Defaults to False.
+                Examples: when True, command="Start" would trigger /Start but not /start.
+        """
+
+        super().__init__(*args, **kwargs)
+        self.command_re = re.compile(r"([\"'])(.*?)(?<!\\)\1|(\S+)")
+        commands = commands if isinstance(commands, list) else [commands]
+        commands = {c if case_sensitive else c.lower() for c in commands}
+
+        prefixes = [] if prefixes is None else prefixes
+        prefixes = prefixes if isinstance(prefixes, list) else [prefixes]
+        prefixes = set(prefixes) if prefixes else {""}
+
+        self.commands = commands
+        self.prefixes = prefixes
+        self.case_sensitive = case_sensitive
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        username = ""
+        text = update.text
+        update['command'] = None
+
+        if not text:
+            return False
+
+        for prefix in self.prefixes:
+            if not text.startswith(prefix):
+                continue
+
+            without_prefix = text[len(prefix):]
+
+            for cmd in self.commands:
+                if not re.match(rf"^(?:{cmd}(?:@?{username})?)(?:\s|$)", without_prefix,
+                                flags=re.IGNORECASE if not self.case_sensitive else 0):
+                    continue
+
+                without_command = re.sub(rf"{cmd}(?:@?{username})?\s?", "", without_prefix, count=1,
+                                         flags=re.IGNORECASE if not self.case_sensitive else 0)
+
+                # match.groups are 1-indexed, group(1) is the quote, group(2) is the text
+                # between the quotes, group(3) is unquoted, whitespace-split text
+
+                # Remove the escape character from the arguments
+                update['command'] = [cmd] + [
+                    re.sub(r"\\([\"'])", r"\1", m.group(2) or m.group(3) or "")
+                    for m in self.command_re.finditer(without_command)
+                ]
+
+                return True
+
+        return False
+
 class Commands(BaseModel):
     """
     Filter for commands in text messages.
@@ -226,6 +303,21 @@ class Commands(BaseModel):
 
         return False
 
+class regex(BaseModel):
+    """
+    Filter for matching text using regular expressions.
+    """
+    def __init__(self, pattern: Pattern, *args, **kwargs) -> None:
+        self.pattern = re.compile(pattern)
+        super().__init__(*args, **kwargs)
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        if update.text is None:
+            return False
+
+        update.pattern_match = self.pattern.match(update.text)
+        return bool(update.pattern_match)
+
 class RegexModel(BaseModel):
     """
     Filter for matching text using regular expressions.
@@ -240,6 +332,27 @@ class RegexModel(BaseModel):
 
         update.pattern_match = self.pattern.match(update.text)
         return bool(update.pattern_match)
+
+class object_guids(BaseModel):
+    """
+    Filter based on object GUIDs.
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.object_guids = []
+        for arg in args:
+            if isinstance(arg, list):
+                self.object_guids.extend(arg)
+            elif isinstance(arg, tuple):
+                self.object_guids.extend(list(arg))
+            else:
+                self.object_guids.append(arg)
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        if update.object_guid is None:
+            return False
+
+        return update.object_guid in self.object_guids
 
 class ObjectGuids(BaseModel):
     """
@@ -261,6 +374,27 @@ class ObjectGuids(BaseModel):
             return False
 
         return update.object_guid in self.object_guids
+
+class author_guids(BaseModel):
+    """
+    Filter based on author GUIDs.
+    """
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.author_guids = []
+        for arg in args:
+            if isinstance(arg, list):
+                self.author_guids.extend(arg)
+            elif isinstance(arg, tuple):
+                self.author_guids.extend(list(arg))
+            else:
+                self.author_guids.append(arg)
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        if update.author_guid is None:
+            return False
+
+        return update.author_guid in self.author_guids
 
 class AuthorGuids(BaseModel):
     """
