@@ -83,13 +83,20 @@ class Markdown:
                     else:
                         mention_text_object_type = 'hyperlink'
 
-                    # Simplify by removing the unnecessary 'mention_type' variable
-                    meta_data_parts.append({
-                        'from_index': from_index,
-                        'length': length,
-                        'mention_text_object_guid': mention_text_object_guid,
-                        'mention_text_object_type': mention_text_object_type
-                    })
+                    meta_data_part = dict(
+                        from_index=from_index,
+                        length=length,
+                        type='Link' if mention_text_object_type == 'hyperlink' else 'MentionText',
+                    )
+
+                    if mention_text_object_type == 'hyperlink':
+                        meta_data_part['link'] = dict(type=mention_text_object_type, hyperlink_data=dict(url=mention_text_object_guid))
+
+                    else:
+                        meta_data_part['mention_text_object_guid'] = mention_text_object_guid
+                        meta_data_part['mention_text_object_type'] = mention_text_object_type
+
+                    meta_data_parts.append(meta_data_part)
                     break
 
             else:
