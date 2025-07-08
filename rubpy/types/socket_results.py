@@ -1,11 +1,13 @@
 from json import dumps
-from typing import Literal, Union
+from typing import Literal, Union, Type
 from pathlib import Path
 import rubpy
 thumbnail = None
 
 
 class SocketResults:
+    command: Type[Union[list, None]]
+
     def __str__(self) -> str:
         return self.jsonify(indent=2)
 
@@ -111,18 +113,11 @@ class SocketResults:
 
     @property
     def object_guid(self):
-        try:
-            return self.find_keys(keys=['group_guid', 'object_guid', 'channel_guid'])
-        except AttributeError:
-            pass
+        return self.find_keys(keys=['group_guid', 'object_guid', 'channel_guid'])
 
     @property
     def author_guid(self):
-        try:
-            return self.author_object_guid
-
-        except AttributeError:
-            pass
+        return self.author_object_guid
 
     @property
     def text(self):

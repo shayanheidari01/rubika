@@ -1,15 +1,17 @@
-from typing import Type
+from typing import Callable, Union, List, Pattern, Type
 import difflib
 import inspect
 import warnings
 import sys
 import re
 
-__all__ = ['Operator', 'BaseModel', 'RegexModel']
+__all__ = ['Operator', 'BaseModel', 'RegexModel',
+           'AuthorGuids', 'ObjectGuids', 'Commands']
 __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
-    'raw_text', 'original_update', 'object_guid', 'author_guid', 'time', 'reply_message_id']
+    'raw_text', 'original_update', 'object_guid', 'author_guid',
+    'time', 'reply_message_id']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
     result = None
@@ -131,6 +133,81 @@ class BaseModel:
         return await self.build(update)
 
 
+class Commands(BaseModel):
+    def __init__(
+            self,
+            commands: Union[str, List[str]],
+            prefixes: Union[str, List[str]] = "/",
+            case_sensitive: bool = False, *args, **kwargs,
+    ) -> None:
+        """Filter Commands, i.e.: text messages starting with "/" or any other custom prefix.
+
+        Parameters:
+            commands (``str`` | ``list``):
+                The command or list of commands as string the filter should look for.
+                Examples: "start", ["start", "help", "settings"]. When a message text containing
+                a command arrives, the command itself and its arguments will be stored in the *command*
+                field of the :obj:`~pyrogram.types.Message`.
+
+            prefixes (``str`` | ``list``, *optional*):
+                A prefix or a list of prefixes as string the filter should look for.
+                Defaults to "/" (slash). Examples: ".", "!", ["/", "!", "."], list(".:!").
+                Pass None or "" (empty string) to allow commands with no prefix at all.
+
+            case_sensitive (``bool``, *optional*):
+                Pass True if you want your command(s) to be case sensitive. Defaults to False.
+                Examples: when True, command="Start" would trigger /Start but not /start.
+        """
+
+        super().__init__(*args, **kwargs)
+        self.command_re = re.compile(r"([\"'])(.*?)(?<!\\)\1|(\S+)")
+        commands = commands if isinstance(commands, list) else [commands]
+        commands = {c if case_sensitive else c.lower() for c in commands}
+
+        prefixes = [] if prefixes is None else prefixes
+        prefixes = prefixes if isinstance(prefixes, list) else [prefixes]
+        prefixes = set(prefixes) if prefixes else {""}
+
+        self.commands = commands
+        self.prefixes = prefixes
+        self.case_sensitive = case_sensitive
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        username = ""
+        text = update.raw_text
+        update.command = None
+
+        if not text:
+            return False
+
+        for prefix in self.prefixes:
+            if not text.startswith(prefix):
+                continue
+
+            without_prefix = text[len(prefix):]
+
+            for cmd in self.commands:
+                if not re.match(rf"^(?:{cmd}(?:@?{username})?)(?:\s|$)", without_prefix,
+                                flags=re.IGNORECASE if not self.case_sensitive else 0):
+                    continue
+
+                without_command = re.sub(rf"{cmd}(?:@?{username})?\s?", "", without_prefix, count=1,
+                                         flags=re.IGNORECASE if not self.case_sensitive else 0)
+
+                # match.groups are 1-indexed, group(1) is the quote, group(2) is the text
+                # between the quotes, group(3) is unquoted, whitespace-split text
+
+                # Remove the escape character from the arguments
+                update.command = [cmd] + [
+                    re.sub(r"\\([\"'])", r"\1", m.group(2) or m.group(3) or "")
+                    for m in self.command_re.finditer(without_command)
+                ]
+
+                return True
+
+        return False
+
+
 class RegexModel(BaseModel):
     def __init__(self, pattern: str, *args, **kwargs) -> None:
         self.pattern = re.compile(pattern)
@@ -142,6 +219,44 @@ class RegexModel(BaseModel):
 
         update.pattern_match = self.pattern.match(update.raw_text)
         return bool(update.pattern_match)
+
+
+class ObjectGuids(BaseModel):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.object_guids = []
+        for arg in args:
+            if isinstance(arg, list):
+                self.object_guids.extend(arg)
+            elif isinstance(arg, tuple):
+                self.object_guids.extend(list(arg))
+            else:
+                self.object_guids.append(arg)
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        if update.object_guid is None:
+            return False
+
+        return update.object_guid in self.object_guids
+
+
+class AuthorGuids(BaseModel):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.author_guids = []
+        for arg in args:
+            if isinstance(arg, list):
+                self.author_guids.extend(arg)
+            elif isinstance(arg, tuple):
+                self.author_guids.extend(list(arg))
+            else:
+                self.author_guids.append(arg)
+
+    async def __call__(self, update, *args, **kwargs) -> bool:
+        if update.author_guid is None:
+            return False
+
+        return update.author_guid in self.author_guids
 
 
 class Models:

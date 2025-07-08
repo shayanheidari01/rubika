@@ -222,30 +222,7 @@ class Network:
 
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
-                            try:
-                                result = msg.json()
-                                if not result.get('data_enc'):
-                                    self.client.logger.debug(
-                                        'the data_enc key was not found',
-                                        extra={'data': result})
-                                    continue
-
-                                result = Crypto.decrypt(result['data_enc'],
-                                                        key=self.client.key)
-                                user_guid = result.pop('user_guid')
-                                for name, package in result.items():
-                                    if not isinstance(package, list):
-                                        continue
-
-                                    for update in package:
-                                        update['client'] = self.client
-                                        update['user_guid'] = user_guid
-                                        asyncio.create_task(self.handel_update(name, update))
-
-                            except Exception:
-                                self.client.logger.error(
-                                    'websocket raised an exception',
-                                    extra={'data': self.wss_url}, exc_info=True)
+                            asyncio.create_task(self.handle_text_message(msg.json()))
 
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             break
@@ -257,6 +234,40 @@ class Network:
 
             except Exception:
                 continue
+
+    async def handle_text_message(self, msg_data: dict):
+        """
+        Handle text messages received from the Rubika WebSocket.
+
+        Parameters:
+        - msg_data: Parsed JSON data from the WebSocket message.
+        """
+        try:
+            if not msg_data.get('data_enc'):
+                self.client.logger.debug(
+                    'the data_enc key was not found',
+                    extra={'data': msg_data})
+                return
+
+            decrypted_data = Crypto.decrypt(msg_data['data_enc'], key=self.client.key)
+            user_guid = decrypted_data.pop('user_guid')
+
+            tasks = []
+            for name, package in decrypted_data.items():
+                if not isinstance(package, list):
+                    continue
+
+                for update in package:
+                    update['client'] = self.client
+                    update['user_guid'] = user_guid
+                    tasks.append(self.handel_update(name, update))
+
+            await asyncio.gather(*tasks)
+
+        except Exception:
+            self.client.logger.error(
+                'websocket raised an exception',
+                extra={'data': self.wss_url}, exc_info=True)
 
     async def send_json_to_ws(self, ws: aiohttp.ClientWebSocketResponse, data=False):
         """
@@ -394,7 +405,7 @@ class Network:
             file_id: int,
             access_hash: str,
             size: int,
-            chunk=131072,
+            chunk: int=131072,
             callback=None,
     ) -> bytes:
         """
