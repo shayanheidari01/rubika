@@ -4,7 +4,6 @@ import aiohttp
 import aiofiles
 import inspect
 import rubpy
-import json
 import os
 
 from .types import Update
@@ -50,8 +49,6 @@ class Network:
             self.client.DEFAULT_PLATFORM['app_version'] = '3.6.4'
 
         connector = aiohttp.TCPConnector(verify_ssl=False)
-        self.json_decoder = json.JSONDecoder().decode
-        self.json_encoder = json.JSONEncoder().encode
         self.session = aiohttp.ClientSession(
             connector=connector,
             headers=self.HEADERS,
@@ -77,30 +74,16 @@ class Network:
         Returns:
         True if successful.
         """
-        try_count = 0
-
         while True:
             try:
-                async with self.session.get('https://getdcmess.iranlms.ir/', proxy=self.client.proxy, verify_ssl=False) as response:
-                    if not response.ok:
-                        continue
-
+                response = await self.session.get('https://getdcmess.iranlms.ir/', proxy=self.client.proxy, verify_ssl=False)
+                if response.ok is True:
                     response = (await response.json()).get('data')
+                    self.api_url = response.get('API').get(response.get('default_api')) + '/'
+                    self.wss_url = response.get('socket').get(response.get('default_socket'))
+                    return True
 
-                self.api_url = response.get('API').get(response.get('default_api')) + '/'
-                self.wss_url = response.get('socket').get(response.get('default_socket'))
-                return True
-
-            except aiohttp.ServerTimeoutError:
-                try_count += 1
-                self.client.logger.error('Client timeout error', extra={'data': try_count})
-                await asyncio.sleep(try_count)
-                continue
-
-            except aiohttp.ClientConnectionError:
-                try_count += 1
-                self.client.logger.error('Client connection error', extra={'data': try_count})
-                await asyncio.sleep(try_count)
+            except Exception:
                 continue
 
     async def request(self, url: str, data: dict):
@@ -114,26 +97,14 @@ class Network:
         Returns:
         JSON-decoded response.
         """
-        if not isinstance(data, str):
-            data = self.json_encoder(data)
-
-        if isinstance(data, str):
-            data = data.encode('utf-8')
-
         for _ in range(3):
             try:
-                async with self.session.post(url=url, data=data, proxy=self.client.proxy, verify_ssl=False) as response:
-                    if response.ok:
-                        return self.json_decoder(await response.text())
+                response = await self.session.post(url=url, json=data, proxy=self.client.proxy, verify_ssl=False)
+                if response.ok is True:
+                    return await response.json()
 
-            except aiohttp.ServerTimeoutError:
-                print('Rubika server timeout error, try again ({})'.format(_))
-
-            except aiohttp.ClientError:
-                print('Client error, try again ({})'.format(_))
-
-            except Exception as err:
-                print('Unknown Error:', err, '{}'.format(_))
+            except Exception:
+                continue
 
     async def send(self, **kwargs):
         """
@@ -218,7 +189,7 @@ class Network:
         """
         while True:
             try:
-                async with self.session.ws_connect(self.wss_url, verify_ssl=False, proxy=self.client.proxy, heartbeat=30) as ws:
+                async with self.session.ws_connect(self.wss_url, verify_ssl=False, proxy=self.client.proxy, receive_timeout=5) as ws:
                     await ws.send_json(dict(method='handShake', auth=self.client.auth, api_version='6', data=''))
 
                     async for msg in ws:
@@ -238,7 +209,7 @@ class Network:
     async def keep_socket(self, ws):
         while True:
             try:
-                await asyncio.sleep(10.0)
+                await asyncio.sleep(5)
                 await ws.send_json({})
                 await self.client.get_chats_updates()
 
@@ -370,7 +341,7 @@ class Network:
             except Exception:
                 self.client.logger.error(
                     f'UploadFile({file_name}) | Messenger | raised an exception',
-                    extra={'data': upload_url}, exc_info=True)
+                    extra={'data': self.wss_url}, exc_info=True)
 
         status = result['status']
         status_det = result['status_det']
@@ -395,7 +366,7 @@ class Network:
             file_id: int,
             access_hash: str,
             size: int,
-            chunk: int=1054768,
+            chunk: int=131072,
             callback=None,
     ) -> bytes:
         """
@@ -410,7 +381,7 @@ class Network:
         - callback: Progress callback.
 
         Returns:
-            - Downloaded file content.
+        Downloaded file content.
         """
         start_index = 0
         result = b''
