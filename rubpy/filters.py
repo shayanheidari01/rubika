@@ -1,12 +1,14 @@
-from typing import Callable, Union, List, Pattern, Type
+from typing import Union, List, Pattern, Type
 import difflib
 import inspect
 import warnings
 import sys
 import re
 
+# List of public elements to be exported
 __all__ = ['Operator', 'BaseModel', 'RegexModel',
            'AuthorGuids', 'ObjectGuids', 'Commands']
+# List of models for internal use
 __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
@@ -14,6 +16,17 @@ __models__ = [
     'time', 'reply_message_id']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
+    """
+    Create a model dynamically based on the given name and base class.
+
+    :param name: Name of the model.
+    :param base: Base class for the model.
+    :param authorize: List of authorized model names.
+    :param exception: Whether to raise an exception if the model is not authorized.
+    :param args: Additional positional arguments.
+    :param kwargs: Additional keyword arguments.
+    :return: Dynamically created model class.
+    """
     result = None
     if name in authorize:
         result = name
@@ -33,8 +46,10 @@ def create_model(name, base, authorize: list = [], exception: bool = True, *args
 
     raise AttributeError(f'Module has no attribute ({name})')
 
-
 class Operator:
+    """
+    Class representing operators used in filtering models.
+    """
     Or = 'OR'
     And = 'AND'
     Less = 'Less'
@@ -51,8 +66,10 @@ class Operator:
     def __eq__(self, value) -> bool:
         return self.operator == value
 
-
 class BaseModel:
+    """
+    Base class for custom models.
+    """
     def __init__(self, func=None, filters=[], *args, **kwargs) -> None:
         self.func = func
         if not isinstance(filters, list):
@@ -132,8 +149,10 @@ class BaseModel:
     async def __call__(self, update, *args, **kwargs):
         return await self.build(update)
 
-
 class Commands(BaseModel):
+    """
+    Filter for commands in text messages.
+    """
     def __init__(
             self,
             commands: Union[str, List[str]],
@@ -207,9 +226,11 @@ class Commands(BaseModel):
 
         return False
 
-
 class RegexModel(BaseModel):
-    def __init__(self, pattern: str, *args, **kwargs) -> None:
+    """
+    Filter for matching text using regular expressions.
+    """
+    def __init__(self, pattern: Pattern, *args, **kwargs) -> None:
         self.pattern = re.compile(pattern)
         super().__init__(*args, **kwargs)
 
@@ -220,8 +241,10 @@ class RegexModel(BaseModel):
         update.pattern_match = self.pattern.match(update.text)
         return bool(update.pattern_match)
 
-
 class ObjectGuids(BaseModel):
+    """
+    Filter based on object GUIDs.
+    """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.object_guids = []
@@ -239,8 +262,10 @@ class ObjectGuids(BaseModel):
 
         return update.object_guid in self.object_guids
 
-
 class AuthorGuids(BaseModel):
+    """
+    Filter based on author GUIDs.
+    """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.author_guids = []
@@ -258,8 +283,10 @@ class AuthorGuids(BaseModel):
 
         return update.author_guid in self.author_guids
 
-
 class Models:
+    """
+    Class to handle and create specific models.
+    """
     def __init__(self, name, *args, **kwargs) -> None:
         self.__name__ = name
 
@@ -277,8 +304,10 @@ class Models:
             return globals()[name]
         return create_model(name, (BaseModel,), authorize=__models__, exception=False)
 
+# Replace the current module with an instance of Models
 sys.modules[__name__] = Models(__name__)
 
+# Define specific model types
 is_pinned: Type[BaseModel]
 is_mute: Type[BaseModel]
 count_unseen: Type[BaseModel]

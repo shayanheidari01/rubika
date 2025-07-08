@@ -37,37 +37,37 @@ class Client(Methods):
     ) -> None:
         """Client
             Args:
-                name (`str` | `rubpy.sessions.StringSession`):
+                - name (`str` | `rubpy.sessions.StringSession`):
                     The file name of the session file that is used
                     if there is a string Given (may be a complete path)
                     or it could be a string session
                     [rubpy.sessions.StringSession]
                 
-                auth (`str`, optional): To set up auth
-                private_key (`str`, optional): To set up private key
-                bot_token (`str`, optional): To set up bot token
-                phone_number (`str`, optional): To set up phone number
+                - auth (`str`, optional): To set up auth
+                - private_key (`str`, optional): To set up private key
+                - bot_token (`str`, optional): To set up bot token
+                - phone_number (`str`, optional): To set up phone number
 
-                proxy (`str`, optional):
+                - proxy (`str`, optional):
                     To set up a proxy, example:
                         proxy='http://127.0.0.1:80'
 
-                parse_mode (`bool`, optional):
+                - parse_mode (`bool`, optional):
                     To set the parse mode `` default( `None` ) ``
 
-                user_agent (`str`, optional):
+                - user_agent (`str`, optional):
                     Client uses the web version, You can set the usr-user_agent
 
-                timeout (`int` | `float`, optional):
+                - timeout (`int` | `float`, optional):
                     To set the timeout `` default( `20 seconds` )``
 
-                logger (`logging.Logger`, optional):
+                - logger (`logging.Logger`, optional):
                     Logger base for use.
 
-                lang_code(`str`, optional):
+                - lang_code(`str`, optional):
                     To set the lang_code `` default( `fa` ) ``
 
-                display_welcome (`bool`, optional):
+                - display_welcome (`bool`, optional):
                     To set the display welcome `` default( `True` ) ``
         """
         super().__init__()

@@ -1,17 +1,33 @@
 from typing import Optional
 import rubpy
+from rubpy.types import Update
 
 class EditChannelInfo:
     async def edit_channel_info(
             self: "rubpy.Client",
             channel_guid: str,
-            title: Optional[str]=None,
-            description: Optional[str]=None,
-            channel_type: Optional[str]=None,
-            sign_messages: Optional[str]=None,
-            chat_reaction_setting: Optional[dict]=None,
-            chat_history_for_new_members: Optional[str]=None,
-    ):
+            title: Optional[str] = None,
+            description: Optional[str] = None,
+            channel_type: Optional[str] = None,
+            sign_messages: Optional[str] = None,
+            chat_reaction_setting: Optional[dict] = None,
+            chat_history_for_new_members: Optional[str] = None,
+    ) -> Update:
+        """
+        Edit information of a channel.
+
+        Parameters:
+        - channel_guid (str): The GUID of the channel.
+        - title (str, optional): The new title of the channel.
+        - description (str, optional): The new description of the channel.
+        - channel_type (str, optional): The new type of the channel.
+        - sign_messages (str, optional): Whether to sign messages in the channel.
+        - chat_reaction_setting (dict, optional): The new chat reaction setting.
+        - chat_history_for_new_members (str, optional): The chat history visibility for new members.
+
+        Returns:
+        rubpy.types.Update: The result of the API call.
+        """
         updated_parameters = []
         input = {
             'channel_guid': channel_guid,
@@ -45,5 +61,4 @@ class EditChannelInfo:
             updated_parameters.append('chat_history_for_new_members')
 
         input['updated_parameters'] = updated_parameters
-        return await self.builder('editChannelInfo',
-                                  input=input)
+        return await self.builder('editChannelInfo', input=input)

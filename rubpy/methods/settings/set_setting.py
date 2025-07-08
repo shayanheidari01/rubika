@@ -1,8 +1,16 @@
-from typing import Optional
 import rubpy
 
-
 class SetSetting:
+    """
+    Provides a method to set various privacy settings for the user.
+
+    Methods:
+    - set_setting: Set various privacy settings for the user.
+
+    Attributes:
+    - self (rubpy.Client): The rubpy client instance.
+    """
+
     async def set_setting(
             self: "rubpy.Client",
             show_my_last_online: str = None,
@@ -10,7 +18,20 @@ class SetSetting:
             show_my_profile_photo: str = None,
             link_forward_message: str = None,
             can_join_chat_by: str = None,
-    ):
+    ) -> rubpy.types.Update:
+        """
+        Set various privacy settings for the user.
+
+        Parameters:
+        - show_my_last_online (Optional[str]): Privacy setting for showing last online status.
+        - show_my_phone_number (Optional[str]): Privacy setting for showing phone number.
+        - show_my_profile_photo (Optional[str]): Privacy setting for showing profile photo.
+        - link_forward_message (Optional[str]): Privacy setting for link forwarding messages.
+        - can_join_chat_by (Optional[str]): Privacy setting for who can join chats.
+
+        Returns:
+        - rubpy.types.Update: The updated privacy settings.
+        """
         input = {}
         updated_parameters = []
 
@@ -51,4 +72,4 @@ class SetSetting:
 
         input['updated_parameters'] = updated_parameters
 
-        return await self.builder(name='SetSetting', input=input)
+        return await self.builder(name='SetSetting', input=input)  # type: ignore

@@ -8,6 +8,15 @@ import rubpy
 
 class Start:
     async def start(self: "rubpy.Client", phone_number: str = None):
+        """
+        Start the RubPy client, handling user registration if necessary.
+
+        Args:
+        - phone_number (str): The phone number to use for starting the client.
+
+        Returns:
+        - The initialized client.
+        """
         if self.display_welcome:
             for char in rubpy.__welcome__:
                 print(char, sep='', end='', flush=True)

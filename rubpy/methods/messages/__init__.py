@@ -9,7 +9,7 @@ from .get_poll_option_voters import GetPollOptionVoters
 from .get_poll_status import GetPollStatus
 from .request_send_file import RequestSendFile
 from .send_message import SendMessage
-from .send_document import SendDocmuent
+from .send_document import SendDocument
 from .send_gif import SendGif
 from .send_music import SendMusic
 from .send_video import SendVideo
@@ -40,7 +40,7 @@ class Messages(
         SendMessage,
         SetPinMessage,
         VotePoll,
-        SendDocmuent,
+        SendDocument,
         SendGif,
         SendMusic,
         SendVideo,

@@ -1,6 +1,7 @@
+import rubpy
+
 from typing import Union, Optional
 from pathlib import Path
-import rubpy
 
 class SendVideo:
     async def send_video(
@@ -11,21 +12,21 @@ class SendVideo:
             reply_to_message_id: Optional[str] = None,
             is_spoil: bool = False,
             auto_delete: Optional[int] = None, *args, **kwargs,
-    ):
+    ) -> "rubpy.types.Update":
         """
         Send a video.
 
         Args:
-            object_guid (str):
+            - object_guid (str):
                 The GUID of the recipient.
 
-            video (Path, bytes):
-                The photo data.
+            - video (Union[Path, bytes]):
+                The video data.
 
-            caption (str, optional):
+            - caption (str, optional):
                 The caption for the video. Defaults to None.
 
-            reply_to_message_id (str, optional):
+            - reply_to_message_id (str, optional):
                 The ID of the message to which this is a reply. Defaults to None.
         """
 

@@ -10,9 +10,27 @@ class Markdown:
         self.pattern = re.compile(MARKDOWN_RE)
 
     def to_markdown(self, text: str) -> str:
+        """
+        Convert HTML to Markdown.
+
+        Args:
+            - text (str): HTML text.
+
+        Returns:
+            - str: Markdown text.
+        """
         return markdownify.markdownify(html=text).strip()
 
     def to_metadata(self, text: str) -> dict:
+        """
+        Extract metadata from Markdown text.
+
+        Args:
+            - text (str): Markdown text.
+
+        Returns:
+            - Dict[str, Any]: Dictionary containing 'text' and 'metadata' keys.
+        """
         meta_data_parts = []
 
         while True:

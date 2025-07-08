@@ -12,6 +12,7 @@ from .stickers import Stickers
 from .channels import Channels
 from .extras import Exctras
 from .gif import Gifs
+from .voice_chat import VoiceCall
 
 
 class Methods(
@@ -29,5 +30,6 @@ class Methods(
     Channels,
     Exctras,
     Gifs,
+    VoiceCall,
 ):
     pass
