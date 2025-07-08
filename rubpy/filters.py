@@ -303,6 +303,7 @@ class Commands(BaseModel):
 
         return False
 
+
 class regex(BaseModel):
     """
     Filter for matching text using regular expressions.
@@ -376,27 +377,6 @@ class ObjectGuids(BaseModel):
         return update.object_guid in self.object_guids
 
 class author_guids(BaseModel):
-    """
-    Filter based on author GUIDs.
-    """
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self.author_guids = []
-        for arg in args:
-            if isinstance(arg, list):
-                self.author_guids.extend(arg)
-            elif isinstance(arg, tuple):
-                self.author_guids.extend(list(arg))
-            else:
-                self.author_guids.append(arg)
-
-    async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.author_guid is None:
-            return False
-
-        return update.author_guid in self.author_guids
-
-class AuthorGuids(BaseModel):
     """
     Filter based on author GUIDs.
     """

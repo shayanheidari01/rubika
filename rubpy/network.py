@@ -215,27 +215,19 @@ class Network:
     async def get_updates(self):
         """
         Receive updates from the Rubika WebSocket.
-
-        Raises:
-        - aiohttp.ClientError
         """
         while True:
             try:
                 async with self.session.ws_connect(self.wss_url, verify_ssl=False, proxy=self.client.proxy, heartbeat=30) as ws:
-                    await self.send_json_to_ws(ws)
-                    asyncio.create_task(self.send_json_to_ws(ws, data=True))
+                    await ws.send_json(dict(method='handShake', auth=self.client.auth, api_version='6', data=''))
 
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             asyncio.create_task(self.handle_text_message(msg.json()))
-
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             break
                         elif msg.type == aiohttp.WSMsgType.ERROR:
                             break
-
-            except aiohttp.ClientError:
-                continue
 
             except Exception:
                 continue
@@ -273,66 +265,6 @@ class Network:
             self.client.logger.error(
                 'websocket raised an exception',
                 extra={'data': self.wss_url}, exc_info=True)
-
-    async def send_json_to_ws(self, ws: aiohttp.ClientWebSocketResponse, data=False):
-        """
-        Send a JSON payload to the Rubika WebSocket.
-
-        Parameters:
-        - ws: aiohttp WebSocket instance.
-        - data: If True, periodically send an empty JSON payload.
-
-        Returns:
-            - Awaitable task.
-        """
-        messages = []
-
-        if data is True:
-            while True:
-                try:
-                    await asyncio.sleep(0.5)
-                    results = await self.client.get_chats_updates()
-
-                    if results.status == 'OK' and results.chats:
-                        for chat in results.chats:
-                            update_id = ''.join([chat.object_guid, chat.last_message.message_id])
-
-                            if chat.last_message.is_mine and update_id not in messages:
-                                my_last_send_time = None
-                                if chat.abs_object.type == 'Group':
-                                    my_last_send_time = chat.group_my_last_send_time
-                                elif chat.abs_object.type == 'User':
-                                    my_last_send_time = chat.user_my_last_send_time
-
-                                if my_last_send_time is None:
-                                    continue
-
-                                results = await self.client.get_messages_by_id(chat.object_guid, chat.last_message.message_id)
-                                result = {'message': results.messages[0].to_dict}
-
-                                if my_last_send_time == int(result['message']['time']):
-                                    result['client'] = self.client
-                                    result['action'] = 'New'
-                                    result['object_guid'] = chat.object_guid
-                                    result['user_guid'] = self.client.guid
-                                    result['message']['is_mine'] = chat.last_message.is_mine
-                                    asyncio.create_task(self.handel_update('message_updates', result))
-
-                            messages.append(update_id)
-
-                            if len(messages) == 200:
-                                messages.clear()
-                                await ws.send_json({})
-
-                except Exception:
-                    pass
-
-        return await ws.send_json(dict(
-            method='handShake',
-            auth=self.client.auth,
-            api_version='5',
-            data='',
-        ))
 
     async def upload_file(self, file, mime: str = None, file_name: str = None, chunk: int = 1048576,
                           callback=None, *args, **kwargs):
