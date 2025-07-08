@@ -4,7 +4,7 @@ from .rubino import Rubino
 from . import types, utils, filters, exceptions, enums, sync
 
 __author__ = 'Rubpy Project'
-__version__ = '7.1.0'
+__version__ = '7.1.1'
 __license__ = 'GNU Lesser General Public License v3 (LGPLv3)'
 __welcome__ = (
     f'Welcome to Rubpy (version {__version__})\n'
