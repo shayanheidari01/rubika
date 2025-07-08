@@ -279,7 +279,7 @@ class Network:
         - callback: Progress callback.
 
         Returns:
-        Results object.
+        - Results object.
         """
         if isinstance(file, str):
             if not os.path.exists(file):
@@ -313,7 +313,7 @@ class Network:
             data = file[index * chunk: index * chunk + chunk]
             try:
                 result = await self.session.post(
-                    upload_url,
+                    url=upload_url,
                     headers={
                         'auth': self.client.auth,
                         'file-id': id,
@@ -326,11 +326,17 @@ class Network:
                     proxy=self.client.proxy,
                 )
                 result = await result.json()
+                self.client.logger.info(rf'UploadFile({file_name}) | Messenger | response={result}')
 
-                if result.get('status') != 'OK':
-                    raise exceptions.UploadError(result.get('status'),
-                                                 result.get('status_det'),
-                                                 dev_message=result.get('dev_message'))
+                if result.get('status') == 'ERROR_TRY_AGAIN':
+                    result = await self.client.request_send_file(file_name, len(file), mime)
+                    id = result.id
+                    index = 0
+                    dc_id = result.dc_id
+                    total = int(len(file) / chunk + 1)
+                    upload_url = result.upload_url
+                    access_hash_send = result.access_hash_send
+                    continue
 
                 if callable(callback):
                     try:
@@ -349,7 +355,9 @@ class Network:
                 index += 1
 
             except Exception:
-                pass
+                self.client.logger.error(
+                    f'UploadFile({file_name}) | Messenger | raised an exception',
+                    extra={'data': self.wss_url}, exc_info=True)
 
         status = result['status']
         status_det = result['status_det']
@@ -408,26 +416,35 @@ class Network:
                 headers['start-index'] = str(start_index)
                 headers['last-index'] = str(last_index)
 
-                response = await session.post('/GetFile.ashx', headers=headers, proxy=self.client.proxy)
-                if response.ok:
-                    data = await response.read()
-                    if not data:
-                        break
+                try:
+                    async with session.post('/GetFile.ashx', headers=headers, proxy=self.client.proxy) as response:
+                        if response.ok:
+                            data = await response.read()
+                            if not data:
+                                break
 
-                    result += data
+                            result += data
 
-                    if callable(callback):
-                        if inspect.iscoroutinefunction(callback):
-                            await callback(size, len(result))
+                            if callable(callback):
+                                if inspect.iscoroutinefunction(callback):
+                                    await callback(size, len(result))
+
+                                else:
+                                    callback(size, len(result))
 
                         else:
-                            callback(size, len(result))
+                            continue
 
-                # Check for the end of the file
-                if len(result) >= size:
-                    break
+                        # Check for the end of the file
+                        if len(result) >= size:
+                            break
 
-                # Update the start_index value to fetch the next part of the file
-                start_index = last_index + 1
+                        # Update the start_index value to fetch the next part of the file
+                        start_index = last_index + 1
+
+                except Exception:
+                    self.client.logger.error(
+                        f'DownloadFile | Messenger | raised an exception',
+                        extra={'data': headers}, exc_info=True)
 
         return result

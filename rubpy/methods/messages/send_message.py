@@ -1,11 +1,12 @@
+from ..utilities import thumbnail, audio
 from ...types import Update
-from ...enums import ParseMode
-from ..utilities import thumbnail
+
 from typing import Optional, Union
 from asyncio import create_task
+from random import random
 from pathlib import Path
 from os import path
-from random import random
+
 import rubpy
 import aiohttp
 import aiofiles
@@ -40,8 +41,9 @@ class SendMessage:
         type: str = 'File',
         is_spoil: bool = False,
         thumb: bool = True,
+        audio_info: bool = True,
         auto_delete: Optional[Union[int, float]] = None,
-        parse_mode: Optional[Union[ParseMode, str]] = None,
+        parse_mode: Optional[Union['rubpy.enums.ParseMode', str]] = None,
         metadata: Optional[Union[Update, dict]] = None,
         *args, **kwargs,
     ) -> rubpy.types.Update:
@@ -102,7 +104,7 @@ class SendMessage:
         # Process inline file content
         if file_inline is not None and isinstance(file_inline, str):
             if not file_inline.startswith('http'):
-                async with aiofiles.open(file_inline, 'rb+') as file:
+                async with aiofiles.open(file_inline, 'rb') as file:
                     kwargs['file_name'] = kwargs.get(
                         'file_name', path.basename(file_inline))
                     file_inline = await file.read()
@@ -120,6 +122,8 @@ class SendMessage:
             # Process thumbnail
             if type in ('Music', 'Voice'):
                 thumb = None
+                if audio_info is True:
+                    audio_info = audio.Audio.get_audio_info(file_inline)
 
             if thumb:
                 if type in ('Video', 'Gif', 'VideoMessage'):
@@ -150,6 +154,10 @@ class SendMessage:
                 file_inline['width'] = thumb.width
                 file_inline['height'] = thumb.height
                 file_inline['thumb_inline'] = thumb.to_base64()
+            
+            if isinstance(audio_info, audio.AudioResult):
+                file_inline['music_performer'] = kwargs.get('performer', audio_info.performer)
+                file_inline['time'] = kwargs.get('time', audio_info.duration if type == 'Music' else audio_info.duration * 1000)
 
             # Finalize input for sending the message
             file_inline['is_spoil'] = bool(is_spoil)
