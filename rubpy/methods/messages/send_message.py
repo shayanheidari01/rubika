@@ -163,11 +163,19 @@ class SendMessage:
             # Finalize input for sending the message
             file_inline['is_spoil'] = bool(is_spoil)
 
+        # Send the message
         if file_inline is not None:
             input['file_inline'] = file_inline if isinstance(file_inline, dict) else file_inline.to_dict
+            result = await self.builder('sendMessage', input=input)
 
-        # Send the message
-        result = await self.builder('sendMessage', input=input)
+        else:
+            chunks = [text[i:i+4200] for i in range(0, len(text), 4200)]
+            if not chunks:
+                result = await self.builder('sendMessage', input=input)
+            else:
+                for chunk in chunks:
+                    input['text'] = chunk.strip()
+                    result = await self.builder('sendMessage', input=input)
 
         # Schedule auto-delete if specified
         if isinstance(auto_delete, (int, float)):
