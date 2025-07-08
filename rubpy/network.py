@@ -294,7 +294,6 @@ class Network:
             mime = file_name.split('.')[-1]
 
         result = await self.client.request_send_file(file_name, len(file), mime)
-
         id = result.id
         index = 0
         dc_id = result.dc_id
@@ -347,6 +346,20 @@ class Network:
 
                 index += 1
 
+            except asyncio.TimeoutError:
+                continue
+
+            except aiohttp.ContentTypeError:
+                result = await self.client.request_send_file(file_name, len(file), mime)
+                id = result.id
+                index = 0
+                dc_id = result.dc_id
+                total = int(len(file) / chunk + 1)
+                upload_url = result.upload_url
+                access_hash_send = result.access_hash_send
+                print('UploadError | Try Again...')
+                await asyncio.sleep(5)
+
             except Exception:
                 self.client.logger.error(
                     f'UploadFile({file_name}) | Messenger | raised an exception',
@@ -375,8 +388,9 @@ class Network:
             file_id: int,
             access_hash: str,
             size: int,
-            chunk: int=131072,
+            chunk: int = 131072,
             callback=None,
+            gather: bool = False
     ) -> bytes:
         """
         Download a file from Rubika.
@@ -388,13 +402,11 @@ class Network:
         - size: Total size of the file.
         - chunk: Chunk size for downloading.
         - callback: Progress callback.
+        - gather: Whether to use asyncio.gather for concurrent downloading.
 
         Returns:
         Downloaded file content.
         """
-        start_index = 0
-        result = b''
-
         headers = {
             'auth': self.client.auth,
             'access-hash-rec': access_hash,
@@ -402,42 +414,53 @@ class Network:
             'user-agent': self.client.user_agent
         }
 
-        async with aiohttp.ClientSession(base_url=f'https://messenger{dc_id}.iranlms.ir', connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
-            while True:
-                last_index = start_index + chunk - 1 if start_index + chunk < size else size - 1
+        base_url = f'https://messenger{dc_id}.iranlms.ir'
 
-                headers['start-index'] = str(start_index)
-                headers['last-index'] = str(last_index)
+        async def fetch_chunk(session, start_index, last_index):
+            chunk_headers = headers.copy()
+            chunk_headers.update({'start-index': str(start_index), 'last-index': str(last_index)})
+            try:
+                async with session.post('/GetFile.ashx', headers=chunk_headers, proxy=self.client.proxy) as response:
+                    if response.status != 200:
+                        self.client.logger.warning(f'Download failed with status {response.status}')
+                        return b''
+                    return await response.read()
+            except Exception as e:
+                self.client.logger.error('DownloadFile | Messenger | raised an exception',
+                                        extra={'data': chunk_headers, 'exception': str(e)}, exc_info=True)
+                return b''
 
-                try:
-                    async with session.post('/GetFile.ashx', headers=headers, proxy=self.client.proxy) as response:
-                        if response.ok:
-                            data = await response.read()
-                            if not data:
-                                break
+        async with aiohttp.ClientSession(base_url=base_url, connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+            if gather:
+                tasks = []
+                for start_index in range(0, size, chunk):
+                    last_index = min(start_index + chunk, size) - 1
+                    tasks.append(fetch_chunk(session, start_index, last_index))
+                
+                result = await asyncio.gather(*tasks)
+                result = b''.join(result)
 
-                            result += data
+                if callable(callback):
+                    if inspect.iscoroutinefunction(callback):
+                        await callback(size, len(result))
+                    else:
+                        callback(size, len(result))
+            else:
+                result = b''
+                start_index = 0
+                while start_index < size:
+                    last_index = min(start_index + chunk, size) - 1
+                    data = await fetch_chunk(session, start_index, last_index)
+                    if not data:
+                        break
 
-                            if callable(callback):
-                                if inspect.iscoroutinefunction(callback):
-                                    await callback(size, len(result))
+                    result += data
+                    start_index = last_index + 1
 
-                                else:
-                                    callback(size, len(result))
-
+                    if callable(callback):
+                        if inspect.iscoroutinefunction(callback):
+                            await callback(size, len(result))
                         else:
-                            continue
-
-                        # Check for the end of the file
-                        if len(result) >= size:
-                            break
-
-                        # Update the start_index value to fetch the next part of the file
-                        start_index = last_index + 1
-
-                except Exception:
-                    self.client.logger.error(
-                        f'DownloadFile | Messenger | raised an exception',
-                        extra={'data': headers}, exc_info=True)
+                            callback(size, len(result))
 
         return result

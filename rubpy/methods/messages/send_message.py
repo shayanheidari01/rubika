@@ -150,7 +150,6 @@ class SendMessage:
 
             # Process thumbnail for inline display
             if isinstance(thumb, thumbnail.ResultMedia):
-                print(thumb.seconds)
                 file_inline['time'] = thumb.seconds
                 file_inline['width'] = thumb.width
                 file_inline['height'] = thumb.height
