@@ -105,6 +105,9 @@ class ErrorMessageIgn(RequestError):
 class NotSupportedApiVersion(RequestError):
     pass
 
+class NetworkError(Exception):
+    pass
+
 
 class ExcetionsHandler:
     def __init__(self, name) -> None:

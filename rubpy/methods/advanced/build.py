@@ -42,7 +42,7 @@ class Builder:
         result = await self.connection.send(method=name,
                                             tmp_session=tmp_session,
                                             encrypt=encrypt,
-                                            input=input)
+                                            input=input or {})
         if result is not None:
             data_enc = result.get('data_enc')
             if data_enc is not None:

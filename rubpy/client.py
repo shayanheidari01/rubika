@@ -1,121 +1,117 @@
+from typing import Optional, Union, Literal
+import logging
+import rubpy
 from .sessions import SQLiteSession, StringSession
 from .parser import Markdown
 from .methods import Methods
-from typing import Optional, Union, Literal
-from . import __name__ as logger_name
-import logging
-import rubpy
-import time
-
 
 class Client(Methods):
+    """کلاینت اصلی برای تعامل با API روبیکا."""
+
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
-        'app_version': '4.4.9',
+        'app_version': '4.4.20',
         'platform': 'Web',
         'package': 'web.rubika.ir',
-        }
+    }
 
-    USER_AGENT = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                  'AppleWebKit/537.36 (KHTML, like Gecko)'
-                  'Chrome/102.0.0.0 Safari/537.36')
+    USER_AGENT = (
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/102.0.0.0 Safari/537.36'
+    )
 
     API_VERSION = '6'
 
-    def __init__(self,
-                 name: str,
-                 auth: Optional[str] = None,
-                 private_key: Optional[Union[str, bytes]] = None,
-                 bot_token: Optional[str] = None,
-                 phone_number: Optional[str] = None,
-                 user_agent: Optional[str] = None or USER_AGENT,
-                 timeout: Optional[Union[str, int]] = 20,
-                 lang_code: Optional[str] = 'fa',
-                 parse_mode: Optional[str] = None,
-                 proxy: str = None,
-                 logger: "logging.Logger" = None,
-                 display_welcome: bool = True,
-                 platform: Literal['Web', 'Android'] = 'Web',
+    def __init__(
+        self,
+        name: Union[str, StringSession],
+        auth: Optional[str] = None,
+        private_key: Optional[Union[str, bytes]] = None,
+        bot_token: Optional[str] = None,
+        phone_number: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        timeout: Union[str, int, float] = 20,
+        lang_code: str = 'fa',
+        parse_mode: Optional[Literal['html', 'markdown', 'mk']] = None,
+        proxy: Optional[str] = None,
+        logger: Optional[logging.Logger] = None,
+        display_welcome: bool = False,
+        platform: Literal['Web', 'Android'] = 'Web',
     ) -> None:
-        """Client
-            Args:
-                - name (`str` | `rubpy.sessions.StringSession`):
-                    The file name of the session file that is used
-                    if there is a string Given (may be a complete path)
-                    or it could be a string session
-                    [rubpy.sessions.StringSession]
-                
-                - auth (`str`, optional): To set up auth
-                - private_key (`str`, optional): To set up private key
-                - bot_token (`str`, optional): To set up bot token
-                - phone_number (`str`, optional): To set up phone number
+        """
+        مقداردهی اولیه کلاینت روبیکا.
 
-                - proxy (`str`, optional):
-                    To set up a proxy, example:
-                        proxy='http://127.0.0.1:80'
+        پارامترها:
+        - name: نام یا مسیر فایل سشن (str) یا نمونه StringSession.
+        - auth: کلید احراز هویت (اختیاری).
+        - private_key: کلید خصوصی RSA (اختیاری، رشته یا بایت).
+        - bot_token: توکن ربات (اختیاری).
+        - phone_number: شماره تلفن (اختیاری).
+        - user_agent: رشته User-Agent (اختیاری، پیش‌فرض مرورگر کروم).
+        - timeout: زمان انتظار درخواست‌ها (ثانیه، پیش‌فرض 20).
+        - lang_code: کد زبان (پیش‌فرض 'fa').
+        - parse_mode: حالت تجزیه پیام (html، markdown، mk یا None).
+        - proxy: آدرس پروکسی (مثال: 'http://127.0.0.1:80').
+        - logger: شیء Logger برای لاگ‌گیری (اختیاری).
+        - display_welcome: نمایش پیام خوش‌آمدگویی (پیش‌فرض False).
+        - platform: پلتفرم کلاینت ('Web' یا 'Android').
 
-                - parse_mode (`bool`, optional):
-                    To set the parse mode `` default( `None` ) ``
-
-                - user_agent (`str`, optional):
-                    Client uses the web version, You can set the usr-user_agent
-
-                - timeout (`int` | `float`, optional):
-                    To set the timeout `` default( `20 seconds` )``
-
-                - logger (`logging.Logger`, optional):
-                    Logger base for use.
-
-                - lang_code(`str`, optional):
-                    To set the lang_code `` default( `fa` ) ``
-
-                - display_welcome (`bool`, optional):
-                    To set the display welcome `` default( `True` ) ``
+        خطاها:
+        - ValueError: در صورت نامعتبر بودن ورودی‌ها.
+        - TypeError: در صورت نادرست بودن نوع name.
         """
         super().__init__()
 
+        # تنظیم پلتفرم
+        self.DEFAULT_PLATFORM = self.DEFAULT_PLATFORM.copy()
         if platform.lower() == 'android':
             self.DEFAULT_PLATFORM['platform'] = 'Android'
 
+        # اعتبارسنجی ورودی‌ها
         if auth and not isinstance(auth, str):
-            raise ValueError('`auth` is `string` arg.')
-
-        if isinstance(private_key, str):
-            if not private_key.startswith('-----BEGIN RSA PRIVATE KEY-----'):
-                private_key = '-----BEGIN RSA PRIVATE KEY-----\n' + private_key
-            if not private_key.startswith('\n-----END RSA PRIVATE KEY-----'):
-                private_key += '\n-----END RSA PRIVATE KEY-----'
-
+            raise ValueError('پارامتر auth باید رشته باشد.')
         if bot_token and not isinstance(bot_token, str):
-            raise ValueError('`bot_token` is `string` arg.')
-
+            raise ValueError('پارامتر bot_token باید رشته باشد.')
         if phone_number and not isinstance(phone_number, str):
-            raise ValueError('`phone_number` is `string` arg.')
-
+            raise ValueError('پارامتر phone_number باید رشته باشد.')
         if user_agent and not isinstance(user_agent, str):
-            raise ValueError('`user_agent` is `string` arg.')
+            raise ValueError('پارامتر user_agent باید رشته باشد.')
+        if not isinstance(timeout, (int, float)):
+            try:
+                timeout = float(timeout)
+            except (ValueError, TypeError):
+                raise ValueError('پارامتر timeout باید عدد باشد.')
 
-        if not isinstance(timeout, int):
-            timeout = int(timeout)
-
+        # تنظیم سشن
         if isinstance(name, str):
             session = SQLiteSession(name)
+        elif isinstance(name, StringSession):
+            session = name
+        else:
+            raise TypeError('پارامتر name باید رشته یا نمونه StringSession باشد.')
 
-        elif not isinstance(name, StringSession):
-            raise TypeError('The given session must be a '
-                            'str or [rubpy.sessions.StringSession]')
-
-        if parse_mode not in (None, 'html', 'markdown', 'mk'):
-            raise ValueError('The `parse_mode` argument can only be in `("html", "markdown", "mk")`.')
-        elif parse_mode is not None:
+        # تنظیم parse_mode
+        valid_parse_modes = {'html', 'markdown', 'mk'}
+        if parse_mode is not None:
             parse_mode = parse_mode.lower()
+            if parse_mode not in valid_parse_modes:
+                raise ValueError(f'پارامتر parse_mode باید یکی از {valid_parse_modes} یا None باشد.')
         else:
             parse_mode = 'markdown'
 
+        # تنظیم logger
         if not isinstance(logger, logging.Logger):
-            logger = logging.getLogger(logger_name)
-    
-        self.DEFAULT_PLATFORM['lang_code'] = lang_code
+            logger = logging.getLogger(__name__)
+
+        # تنظیم کلید خصوصی
+        if isinstance(private_key, str):
+            if not private_key.startswith('-----BEGIN RSA PRIVATE KEY-----'):
+                private_key = f'-----BEGIN RSA PRIVATE KEY-----\n{private_key}'
+            if not private_key.endswith('\n-----END RSA PRIVATE KEY-----'):
+                private_key += '\n-----END RSA PRIVATE KEY-----'
+
+        # مقداردهی متغیرها
         self.name = name
         self.auth = auth
         self.logger = logger
@@ -123,7 +119,7 @@ class Client(Methods):
         self.bot_token = bot_token
         self.phone_number = phone_number
         self.display_welcome = display_welcome
-        self.user_agent = user_agent
+        self.user_agent = user_agent or self.USER_AGENT
         self.lang_code = lang_code
         self.timeout = timeout
         self.session = session
@@ -137,28 +133,30 @@ class Client(Methods):
         self.guid = None
         self.key = None
         self.handlers = {}
+        self.DEFAULT_PLATFORM['lang_code'] = lang_code
 
-        if self.display_welcome:
-            for char in rubpy.__welcome__:
-                print(char, sep='', end='', flush=True)
-                time.sleep(0.01)
+        # حذف پیام خوش‌آمدگویی برای بهینه‌سازی
+        if display_welcome:
+            self.logger.info("کلاینت روبیکا با موفقیت مقداردهی شد.")
 
     def __enter__(self) -> "Client":
+        """پشتیبانی از context manager برای شروع کلاینت."""
         return self.start()
 
-    def __exit__(self, *args, **kwargs):
+    def __exit__(self, *args, **kwargs) -> None:
+        """پشتیبانی از context manager برای قطع اتصال."""
         try:
-            return self.disconnect()
+            self.disconnect()
+        except Exception as e:
+            self.logger.warning(f"خطا در قطع اتصال: {e}")
 
-        except Exception:
-            pass
-
-    async def __aenter__(self):
+    async def __aenter__(self) -> "Client":
+        """پشتیبانی از async context manager برای شروع کلاینت."""
         return await self.start()
 
-    async def __aexit__(self, *args, **kwargs):
+    async def __aexit__(self, *args, **kwargs) -> None:
+        """پشتیبانی از async context manager برای قطع اتصال."""
         try:
-            return await self.disconnect()
-
-        except Exception:
-            pass
+            await self.disconnect()
+        except Exception as e:
+            self.logger.warning(f"خطا در قطع اتصال: {e}")

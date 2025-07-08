@@ -9,7 +9,10 @@ from .get_transcription import GetTranscription
 from .user_is_admin import UserIsAdmin
 from .report_object import ReportObject
 from.transcribe_voice import TranscribeVoice
-
+from .get_join_links import GetJoinLinks
+from .create_join_link import CreateJoinLink
+from .get_join_requests import GetJoinRequests
+from .action_on_join_request import ActionOnJoinRequest
 
 class Exctras(
     GetObjectByUsername,
@@ -23,5 +26,9 @@ class Exctras(
     UserIsAdmin,
     ReportObject,
     TranscribeVoice,
+    GetJoinLinks,
+    CreateJoinLink,
+    ActionOnJoinRequest,
+    GetJoinRequests,
 ):
     pass

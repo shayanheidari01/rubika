@@ -21,4 +21,4 @@ class GetMySessions:
         Returns:
         - rubpy.types.Update: Information about the user's sessions.
         """
-        return await self.builder('getMySessions')  # type: ignore
+        return await self.builder('getMySessions', input={})  # type: ignore

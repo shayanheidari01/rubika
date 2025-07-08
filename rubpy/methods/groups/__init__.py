@@ -22,6 +22,7 @@ from .set_group_admin import SetGroupAdmin
 from .set_group_default_access import SetGroupDefaultAccess
 from .set_group_link import SetGroupLink
 from .set_group_voice_chat_setting import SetGroupVoiceChatSetting
+from .get_group_online_count import GetGroupOnlineCount
 
 
 class Groups(
@@ -49,5 +50,6 @@ class Groups(
     SetGroupDefaultAccess,
     SetGroupLink,
     SetGroupVoiceChatSetting,
+    GetGroupOnlineCount,
 ):
     pass

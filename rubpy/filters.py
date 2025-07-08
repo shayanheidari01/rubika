@@ -1,56 +1,56 @@
-from typing import Union, List, Pattern, Type
-import difflib
-import inspect
-import warnings
 import sys
 import re
+import warnings
+from typing import Union, List, Pattern, Type, Any, Optional
 
-# List of public elements to be exported
+# لیست عناصر عمومی برای export
 __all__ = ['Operator', 'BaseModel', 'author_guids', 'object_guids', 'commands', 'regex',
            'AuthorGuids', 'ObjectGuids', 'Commands', 'RegexModel']
-# List of models for internal use
+
+# لیست مدل‌های داخلی
 __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
     'text', 'original_update', 'object_guid', 'author_guid',
     'time', 'reply_message_id', 'is_me', 'is_forward', 'is_text',
     'music', 'file', 'photo', 'sticker', 'video', 'voice',
-    'contact', 'location', 'poll', 'gif', 'is_event']
+    'contact', 'location', 'poll', 'gif', 'is_event'
+]
 
-def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
+def create_model(
+    name: str,
+    base: tuple,
+    authorize: List[str] = __models__,
+    exception: bool = True,
+    **kwargs
+) -> Optional[Type['BaseModel']]:
     """
-    Create a model dynamically based on the given name and base class.
+    ایجاد دینامیک یک مدل بر اساس نام و کلاس پایه.
 
-    :param name: Name of the model.
-    :param base: Base class for the model.
-    :param authorize: List of authorized model names.
-    :param exception: Whether to raise an exception if the model is not authorized.
-    :param args: Additional positional arguments.
-    :param kwargs: Additional keyword arguments.
-    :return: Dynamically created model class.
+    پارامترها:
+    - name: نام مدل.
+    - base: کلاس پایه برای مدل.
+    - authorize: لیست نام‌های مدل‌های مجاز.
+    - exception: آیا در صورت غیرمجاز بودن مدل خطا پرتاب شود.
+    - kwargs: آرگومان‌های اضافی برای تنظیم کلاس.
+
+    خروجی:
+    کلاس مدل ایجادشده یا None در صورت غیرمجاز بودن.
+
+    خطاها:
+    - AttributeError: اگر مدل غیرمجاز باشد و exception=True.
     """
-    result = None
     if name in authorize:
-        result = name
-    else:
-        proposal = difflib.get_close_matches(name, authorize, n=1)
-        if proposal:
-            result = proposal[0]
-            caller = inspect.getframeinfo(inspect.stack()[2][0])
-            warnings.warn(
-                f'{caller.filename}:{caller.lineno}: Do you mean'
-                f' "{name}", "{result}"? Correct it.')
-
-    if result is not None or not exception:
-        if result is None:
-            result = name
-        return type(result, base, {'__name__': result, **kwargs})
-
-    raise AttributeError(f'Module has no attribute ({name})')
+        return type(name, base, {'__name__': name, **kwargs})
+    
+    if not exception:
+        return None
+    
+    raise AttributeError(f"ماژول فاقد مدل با نام '{name}' است")
 
 class Operator:
     """
-    Class representing operators used in filtering models.
+    کلاس برای تعریف عملگرهای استفاده‌شده در فیلترهای مدل‌ها.
     """
     Or = 'OR'
     And = 'AND'
@@ -61,73 +61,77 @@ class Operator:
     Greatere = 'Greatere'
     Inequality = 'Inequality'
 
-    def __init__(self, value, operator, *args, **kwargs):
+    def __init__(self, value: Any, operator: str):
         self.value = value
         self.operator = operator
 
-    def __eq__(self, value) -> bool:
+    def __eq__(self, value: str) -> bool:
         return self.operator == value
 
 class BaseModel:
     """
-    Base class for custom models.
-    """
-    def __init__(self, func=None, filters=[], *args, **kwargs) -> None:
-        self.func = func
-        if not isinstance(filters, list):
-            filters = [filters]
-        self.filters = filters
+    کلاس پایه برای مدل‌های سفارشی.
 
-    def insert(self, filter):
+    پارامترها:
+    - func: تابع فیلتر (اختیاری).
+    - filters: لیست یا تک فیلتر برای اعمال.
+    - kwargs: آرگومان‌های اضافی.
+    """
+    def __init__(self, func: Optional[callable] = None, filters: Union[Any, List[Any]] = None, **kwargs) -> None:
+        self.func = func
+        self.filters = [filters] if filters and not isinstance(filters, list) else filters or []
+
+    def insert(self, filter: 'Operator') -> 'BaseModel':
+        """اضافه کردن فیلتر به لیست فیلترها."""
         self.filters.append(filter)
         return self
 
-    def __or__(self, value):
+    def __or__(self, value: Any) -> 'BaseModel':
         return self.insert(Operator(value, Operator.Or))
 
-    def __and__(self, value):
-        return self.insert(Operator(value, Operator.And))
+    def __and__(self, value: Any) -> 'BaseModel':
+        return self.insert( Operator(value, Operator.And))
 
-    def __eq__(self, value):
+    def __eq__(self, value: Any) -> bool:
         return self.insert(Operator(value, Operator.Equal))
 
-    def __ne__(self, value):
+    def __ne__(self, value: Any) -> bool:
         return self.insert(Operator(value, Operator.Inequality))
 
-    def __lt__(self, value):
+    def __lt__(self, value: Any) -> 'BaseModel':
         return self.insert(Operator(value, Operator.Less))
 
-    def __le__(self, value):
+    def __le__(self, value: Any) -> 'BaseModel':
         return self.insert(Operator(value, Operator.Lesse))
 
-    def __gt__(self, value):
+    def __gt__(self, value: Any) -> 'BaseModel':
         return self.insert(Operator(value, Operator.Greater))
 
-    def __ge__(self, value):
+    def __ge__(self, value: Any) -> 'BaseModel':
         return self.insert(Operator(value, Operator.Greatere))
 
-    async def build(self, update):
+    async def build(self, update: Any) -> bool:
+        """
+        ساخت و اجرای فیلترها روی آپدیت.
+
+        پارامترها:
+        - update: شیء آپدیت برای بررسی.
+
+        خروجی:
+        True اگر فیلترها با موفقیت اعمال شوند، در غیر این صورت False.
+        """
         result = getattr(update, self.__class__.__name__, None)
+        
         if callable(self.func):
-            if update.is_async(self.func):
-                result = await self.func(result)
-            else:
-                result = self.func(result)
+            result = await self.func(result) if update.is_async(self.func) else self.func(result)
 
         for filter in self.filters:
             value = filter.value
-
             if callable(value):
-                if update.is_async(value):
-                    value = await value(update, result)
-                else:
-                    value = value(update, result)
+                value = await value(update, result) if update.is_async(value) else value(update, result)
 
             if self.func:
-                if update.is_async(self.func):
-                    value = await self.func(value)
-                else:
-                    value = self.func(value)
+                value = await self.func(value) if update.is_async(self.func) else self.func(value)
 
             if filter == Operator.Or:
                 result = result or value
@@ -148,167 +152,139 @@ class BaseModel:
 
         return bool(result)
 
-    async def __call__(self, update, *args, **kwargs):
+    async def __call__(self, update: Any, *args, **kwargs) -> bool:
+        """اجرای مدل روی آپدیت."""
         return await self.build(update)
-
 
 class commands(BaseModel):
     """
-    Filter for commands in text messages.
+    فیلتر برای دستورات در پیام‌های متنی.
+
+    پارامترها:
+    - commands: دستور یا لیست دستورات (رشته یا لیست رشته‌ها).
+    - prefixes: پیشوند یا لیست پیشوندها (پیش‌فرض '/').
+    - case_sensitive: حساسیت به حروف بزرگ و کوچک (پیش‌فرض False).
     """
     def __init__(
-            self,
-            commands: Union[str, List[str]],
-            prefixes: Union[str, List[str]] = '/',
-            case_sensitive: bool = False, *args, **kwargs,
+        self,
+        commands: Union[str, List[str]],
+        prefixes: Union[str, List[str]] = '/',
+        case_sensitive: bool = False,
+        *args, **kwargs
     ) -> None:
-        """Filter Commands, i.e.: text messages starting with "/" or any other custom prefix.
-
-        Parameters:
-            commands (``str`` | ``list``):
-                The command or list of commands as string the filter should look for.
-                Examples: "start", ["start", "help", "settings"]. When a message text containing
-                a command arrives, the command itself and its arguments will be stored in the *command*
-                field of the :obj:`~pyrogram.types.Message`.
-
-            prefixes (``str`` | ``list``, *optional*):
-                A prefix or a list of prefixes as string the filter should look for.
-                Defaults to "/" (slash). Examples: ".", "!", ["/", "!", "."], list(".:!").
-                Pass None or "" (empty string) to allow commands with no prefix at all.
-
-            case_sensitive (``bool``, *optional*):
-                Pass True if you want your command(s) to be case sensitive. Defaults to False.
-                Examples: when True, command="Start" would trigger /Start but not /start.
-        """
-
         super().__init__(*args, **kwargs)
-        self.command_re = re.compile(r"([\"'])(.*?)(?<!\\)\1|(\S+)")
-        commands = commands if isinstance(commands, list) else [commands]
-        commands = {c if case_sensitive else c.lower() for c in commands}
-
-        prefixes = [] if prefixes is None else prefixes
-        prefixes = prefixes if isinstance(prefixes, list) else [prefixes]
-        prefixes = set(prefixes) if prefixes else {""}
-
-        self.commands = commands
-        self.prefixes = prefixes
+        self.command_re = re.compile(r'([\"\'`])(.*?)(?<!\\)\1|(\S+)', re.UNICODE)
+        self.commands = {c if case_sensitive else c.lower() for c in ([commands] if isinstance(commands, str) else commands)}
+        self.prefixes = set([prefixes] if isinstance(prefixes, str) else prefixes or [''])
         self.case_sensitive = case_sensitive
 
-    async def __call__(self, update, *args, **kwargs) -> bool:
-        username = ""
-        text = update.text
-        update['command'] = None
-
-        if not text:
+    async def __call__(self, update: Any, *args, **kwargs) -> bool:
+        """بررسی دستورات در متن آپدیت."""
+        if not update.text:
             return False
 
+        update['command'] = None
         for prefix in self.prefixes:
-            if not text.startswith(prefix):
+            if not update.text.startswith(prefix):
                 continue
 
-            without_prefix = text[len(prefix):]
-
+            without_prefix = update.text[len(prefix):]
             for cmd in self.commands:
-                if not re.match(rf"^(?:{cmd}(?:@?{username})?)(?:\s|$)", without_prefix,
-                                flags=re.IGNORECASE if not self.case_sensitive else 0):
+                pattern = rf'^{cmd}(?:\s|$)' if self.case_sensitive else rf'^{cmd}(?:\s|$)' 
+                if not re.match(pattern, without_prefix, flags=0 if self.case_sensitive else re.IGNORECASE):
                     continue
 
-                without_command = re.sub(rf"{cmd}(?:@?{username})?\s?", "", without_prefix, count=1,
-                                         flags=re.IGNORECASE if not self.case_sensitive else 0)
-
-                # match.groups are 1-indexed, group(1) is the quote, group(2) is the text
-                # between the quotes, group(3) is unquoted, whitespace-split text
-
-                # Remove the escape character from the arguments
+                without_command = re.sub(rf'{cmd}\s?', '', without_prefix, count=1, 
+                                      flags=0 if self.case_sensitive else re.IGNORECASE)
                 update['command'] = [cmd] + [
-                    re.sub(r"\\([\"'])", r"\1", m.group(2) or m.group(3) or "")
+                    re.sub(r'\\([\"\'`])', r'\1', m.group(2) or m.group(3) or '')
                     for m in self.command_re.finditer(without_command)
                 ]
-
                 return True
 
         return False
 
-
 class regex(BaseModel):
     """
-    Filter for matching text using regular expressions.
+    فیلتر برای تطبیق متن با عبارات منظم.
+
+    پارامترها:
+    - pattern: الگوی عبارت منظم.
     """
-    def __init__(self, pattern: Pattern, *args, **kwargs) -> None:
-        self.pattern = re.compile(pattern)
+    def __init__(self, pattern: Union[str, Pattern], *args, **kwargs) -> None:
+        self.pattern = re.compile(pattern) if isinstance(pattern, str) else pattern
         super().__init__(*args, **kwargs)
 
-    async def __call__(self, update, *args, **kwargs) -> bool:
+    async def __call__(self, update: Any, *args, **kwargs) -> bool:
+        """تطبیق متن آپدیت با الگوی عبارت منظم."""
         if update.text is None:
             return False
-
         update.pattern_match = self.pattern.match(update.text)
         return bool(update.pattern_match)
 
-
 class object_guids(BaseModel):
     """
-    Filter based on object GUIDs.
+    فیلتر بر اساس GUIDهای شیء.
+
+    پارامترها:
+    - args: GUID یا لیست/تاپل GUIDها.
     """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.object_guids = []
         for arg in args:
-            if isinstance(arg, list):
-                self.object_guids.extend(arg)
-            elif isinstance(arg, tuple):
-                self.object_guids.extend(list(arg))
-            else:
-                self.object_guids.append(arg)
+            self.object_guids.extend(arg if isinstance(arg, (list, tuple)) else [arg])
 
-    async def __call__(self, update, *args, **kwargs) -> bool:
+    async def __call__(self, update: Any, *args, **kwargs) -> bool:
+        """بررسی وجود GUID شیء در آپدیت."""
         return update.object_guid is not None and update.object_guid in self.object_guids
-
 
 class author_guids(BaseModel):
     """
-    Filter based on author GUIDs.
+    فیلتر بر اساس GUIDهای نویسنده.
+
+    پارامترها:
+    - args: GUID یا لیست/تاپل GUIDها.
     """
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.author_guids = []
         for arg in args:
-            if isinstance(arg, list):
-                self.author_guids.extend(arg)
-            elif isinstance(arg, tuple):
-                self.author_guids.extend(list(arg))
-            else:
-                self.author_guids.append(arg)
+            self.author_guids.extend(arg if isinstance(arg, (list, tuple)) else [arg])
 
-    async def __call__(self, update, *args, **kwargs) -> bool:
+    async def __call__(self, update: Any, *args, **kwargs) -> bool:
+        """بررسی وجود GUID نویسنده در آپدیت."""
         return update.author_guid is not None and update.author_guid in self.author_guids
-
 
 class Models:
     """
-    Class to handle and create specific models.
+    کلاس برای مدیریت و ایجاد مدل‌های خاص.
     """
-    def __init__(self, name, *args, **kwargs) -> None:
+    def __init__(self, name: str) -> None:
         self.__name__ = name
 
     def __eq__(self, value: object) -> bool:
-        return BaseModel in value.__bases__
+        """بررسی برابری با کلاس پایه مدل‌ها."""
+        return BaseModel in getattr(value, '__bases__', ())
 
-    def __dir__(self):
+    def __dir__(self) -> List[str]:
+        """دریافت لیست مدل‌های مجاز."""
         return sorted(__models__)
 
-    def __call__(self, name, *args, **kwargs):
-        return self.__getattr__(name)
+    def __call__(self, name: str, *args, **kwargs) -> Type['BaseModel']:
+        """فراخوانی مدل بر اساس نام."""
+        return self.__getattr__(name)(*args, **kwargs)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Type['BaseModel']:
+        """دریافت مدل دینامیک بر اساس نام."""
         if name in __all__:
             return globals()[name]
         return create_model(name, (BaseModel,), authorize=__models__, exception=False)
 
-# Replace the current module with an instance of Models
+# جایگزینی ماژول جاری با نمونه‌ای از Models
 sys.modules[__name__] = Models(__name__)
 
-# Define specific model types
+# تعریف نوع‌های مدل خاص
 is_pinned: Type[BaseModel]
 is_mute: Type[BaseModel]
 count_unseen: Type[BaseModel]
@@ -337,5 +313,4 @@ location: Type[BaseModel]
 poll: Type[BaseModel]
 gif: Type[BaseModel]
 sticker: Type[BaseModel]
-is_event: Type[BaseModel]
 AuthorGuids, ObjectGuids, Commands, RegexModel = author_guids, object_guids, commands, regex
