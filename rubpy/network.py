@@ -370,7 +370,7 @@ class Network:
             except Exception:
                 self.client.logger.error(
                     f'UploadFile({file_name}) | Messenger | raised an exception',
-                    extra={'data': self.wss_url}, exc_info=True)
+                    extra={'data': upload_url}, exc_info=True)
 
         status = result['status']
         status_det = result['status_det']
@@ -395,7 +395,7 @@ class Network:
             file_id: int,
             access_hash: str,
             size: int,
-            chunk: int=131072,
+            chunk: int=1054768,
             callback=None,
     ) -> bytes:
         """
@@ -410,7 +410,7 @@ class Network:
         - callback: Progress callback.
 
         Returns:
-        Downloaded file content.
+            - Downloaded file content.
         """
         start_index = 0
         result = b''

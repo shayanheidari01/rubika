@@ -6,7 +6,7 @@ class Download:
             self: "rubpy.Client",
             file_inline: "rubpy.types.Update",
             save_as: str = None,
-            chunk_size: int = 131072,
+            chunk_size: int = 1054768,
             callback=None,
             *args,
             **kwargs,

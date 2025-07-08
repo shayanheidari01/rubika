@@ -5,4 +5,4 @@ from .poll_type import PollType
 from .reaction_type import ReactionType
 from .chat_access_type import Access
 from .parse_mode import ParseMode
-from .report_type import ReportType
+from .report_type import ReportType, ReportTypeObject
