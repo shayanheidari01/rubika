@@ -30,7 +30,7 @@ class Network:
         'origin': 'https://web.rubika.ir',
         'referer': 'https://web.rubika.ir/',
         'content-type': 'application/json',
-        'connection': 'keep-alive',
+        'connection': 'keep-alive'
     }
 
     def __init__(self, client: "rubpy.Client") -> None:
@@ -38,10 +38,10 @@ class Network:
         Initialize the Network class.
 
         Parameters:
-        - client: rubpy.Client instance.
+        - client (rubpy.Client): instance.
         """
         self.client = client
-        self.HEADERS['user-agent'] = self.client.USER_AGENT
+        self.HEADERS['user-agent'] = self.client.user_agent
         if self.client.DEFAULT_PLATFORM['platform'] == 'Android':
             self.HEADERS.pop('origin')
             self.HEADERS.pop('referer')
@@ -55,7 +55,7 @@ class Network:
         self.session = aiohttp.ClientSession(
             connector=connector,
             headers=self.HEADERS,
-            timeout=aiohttp.ClientTimeout(client.timeout),
+            timeout=aiohttp.ClientTimeout(client.timeout)
         )
 
         if client.bot_token is not None:
@@ -283,16 +283,37 @@ class Network:
         - data: If True, periodically send an empty JSON payload.
 
         Returns:
-        Awaitable task.
+            - Awaitable task.
         """
-        if data:
+        messages = []
+
+        if data is True:
             while True:
                 try:
-                    await asyncio.sleep(10)
-                    await ws.send_json({})
-                    await self.client.get_chats_updates()
+                    await asyncio.sleep(0.5)
+                    results = await self.client.get_chats_updates()
 
-                except:
+                    if results.status == 'OK' and results.chats:
+                        for chat in results.chats:
+                            update_id = ''.join([chat.object_guid, chat.last_message.message_id])
+
+                            if chat.last_message.is_mine and update_id not in messages:
+                                results = await self.client.get_messages_by_id(chat.object_guid, chat.last_message.message_id)
+                                result = {'message': results.messages[0].to_dict}
+                                result['client'] = self.client
+                                result['action'] = 'New'
+                                result['object_guid'] = chat.object_guid
+                                result['user_guid'] = self.client.guid
+                                result['message']['is_mine'] = chat.last_message.is_mine
+                                await self.handel_update('message_updates', result)
+
+                            messages.append(update_id)
+
+                            if len(messages) == 50:
+                                messages.clear()
+                                await ws.send_json({})
+
+                except Exception:
                     pass
 
         return await ws.send_json(dict(

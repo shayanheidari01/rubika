@@ -13,7 +13,7 @@ __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
     'text', 'original_update', 'object_guid', 'author_guid',
-    'time', 'reply_message_id']
+    'time', 'reply_message_id', 'is_me', 'is_forward', 'is_text']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
     """
@@ -322,3 +322,7 @@ object_guid: Type[BaseModel]
 author_guid: Type[BaseModel]
 time: Type[BaseModel]
 reply_message_id: Type[BaseModel]
+is_me: Type[BaseModel]
+is_forward: Type[BaseModel]
+is_event: Type[BaseModel]
+is_text: Type[BaseModel]
