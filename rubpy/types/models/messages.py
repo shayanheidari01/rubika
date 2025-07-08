@@ -231,7 +231,7 @@ class SendMessage(BaseModel):
                     message = message.sticker
                 
                 except AttributeError:
-                    message = message.raw_text
+                    message = message.text
                 
                 if file_inline is not None:
                     if file_inline.type not in [methods.messages.Gif,
@@ -544,7 +544,7 @@ class EditMessage(BaseModel):
                     message = message.sticker
                 
                 except AttributeError:
-                    message = message.raw_text
+                    message = message.text
                 
                 if file_inline is not None:
                     if file_inline.type not in [methods.messages.Gif,

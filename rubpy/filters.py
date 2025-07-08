@@ -10,7 +10,7 @@ __all__ = ['Operator', 'BaseModel', 'RegexModel',
 __models__ = [
     'is_pinned', 'is_mute', 'count_unseen', 'message_id',
     'is_group', 'is_private', 'is_channel', 'is_in_contact',
-    'raw_text', 'original_update', 'object_guid', 'author_guid',
+    'text', 'original_update', 'object_guid', 'author_guid',
     'time', 'reply_message_id']
 
 def create_model(name, base, authorize: list = [], exception: bool = True, *args, **kwargs):
@@ -174,7 +174,7 @@ class Commands(BaseModel):
 
     async def __call__(self, update, *args, **kwargs) -> bool:
         username = ""
-        text = update.raw_text
+        text = update.text
         update['command'] = None
 
         if not text:
@@ -214,10 +214,10 @@ class RegexModel(BaseModel):
         super().__init__(*args, **kwargs)
 
     async def __call__(self, update, *args, **kwargs) -> bool:
-        if update.raw_text is None:
+        if update.text is None:
             return False
 
-        update.pattern_match = self.pattern.match(update.raw_text)
+        update.pattern_match = self.pattern.match(update.text)
         return bool(update.pattern_match)
 
 
@@ -287,7 +287,7 @@ is_group: Type[BaseModel]
 is_private: Type[BaseModel]
 is_channel: Type[BaseModel]
 is_in_contact: Type[BaseModel]
-raw_text: Type[BaseModel]
+text: Type[BaseModel]
 original_update: Type[BaseModel]
 object_guid: Type[BaseModel]
 author_guid: Type[BaseModel]

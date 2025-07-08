@@ -193,10 +193,10 @@ class Network:
                     continue
 
                 if not inspect.iscoroutinefunction(func):
-                    threading.Thread(target=func, args=(Update(handler.to_dict()),)).start()
+                    threading.Thread(target=func, args=(Update(handler.original_update),)).start()
 
                 else:
-                    asyncio.create_task(func(Update(handler.to_dict())))
+                    asyncio.create_task(func(Update(handler.original_update)))
 
             except exceptions.StopHandler:
                 break

@@ -4,6 +4,7 @@ from .methods import Methods
 from typing import Optional, Union
 from . import __name__ as logger_name
 import logging
+import re
 
 
 class Client(Methods):

@@ -69,11 +69,8 @@ class Markdown:
                         'length': len(string) - 4,
                     })
                     break
-
                 else:
                     text = self.pattern.sub(r'\7', text, count=1)
-                    mention_text_object_type = 'hyperlink'
-                    mention_type = 'MentionText'
                     mention_text_object_guid = markdown.group(8)
                     length = len(markdown.group(7))
 
@@ -84,31 +81,16 @@ class Markdown:
                     elif mention_text_object_guid.startswith('c'):
                         mention_text_object_type = 'Channel'
                     else:
-                        mention_type = 'Link'
+                        mention_text_object_type = 'hyperlink'
 
-                    if mention_type == 'MentionText':
-                        meta_data_parts.append({
-                            'type': mention_type,
-                            'from_index': from_index,
-                            'length': length,
-                            'mention_text_object_guid': mention_text_object_guid,
-                            'mention_text_object_type': mention_text_object_type
-                        })
-                        break
-
-                    else:
-                        meta_data_parts.append({
-                            'from_index': from_index,
-                            'length': length,
-                            'link': {
-                                'hyperlink_data': {
-                                    'url': mention_text_object_guid,
-                                },
-                                'type': mention_text_object_type,
-                            },
-                            'type': mention_type,
-                        })
-                        break
+                    # Simplify by removing the unnecessary 'mention_type' variable
+                    meta_data_parts.append({
+                        'from_index': from_index,
+                        'length': length,
+                        'mention_text_object_guid': mention_text_object_guid,
+                        'mention_text_object_type': mention_text_object_type
+                    })
+                    break
 
             else:
                 break
