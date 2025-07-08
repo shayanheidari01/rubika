@@ -16,6 +16,7 @@ class SendMessage:
                            text: Optional[str] = None,
                            reply_to_message_id: Optional[str] = None,
                            file_inline: Optional[Union[Path, bytes]] = None,
+                           sticker: Optional[dict] = None,
                            type: str = 'File',
                            is_spoil: bool = False,
                            thumb: bool = True,
@@ -67,6 +68,9 @@ class SendMessage:
             if 'metadata' in markdown.keys():
                 input['metadata'] = markdown.get('metadata')
                 input['text'] = markdown.get('text')
+
+        if isinstance(sticker, dict):
+            input['sticker'] = sticker
 
         if file_inline:
             if not isinstance(file_inline, Results):

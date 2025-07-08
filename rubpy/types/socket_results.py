@@ -143,16 +143,10 @@ class SocketResults:
     def text(self):
         return self.message.type == 'Text'
 
-    @classmethod
-    def guids(cls, _: list) -> bool:
-        if type(_) == list:
-            return cls.object_guid in _
-        return cls.object_guid == _
-
     def guid_type(self, object_guid: str):
-        if object_guid.startswith('c'):
+        if object_guid.startswith('c0'):
             return 'Channel'
-        elif object_guid.startswith('g'):
+        elif object_guid.startswith('g0'):
             return 'Group'
         else:
             return 'User'
@@ -208,9 +202,12 @@ class SocketResults:
 
         return await self.client.edit_message(object_guid, message_id, text)
 
-    async def copy(self,
-                   to_object_guid: str,
-                   from_object_guid: str = None, message_ids=None, *args, **kwargs):
+    async def copy(
+            self,
+            to_object_guid: str,
+            from_object_guid: str = None,
+            message_ids=None, *args, **kwargs,
+    ):
         """_copy_
         Args:
             to_object_guid (str):
@@ -231,43 +228,29 @@ class SocketResults:
         messages = []
         if result.messages:
             for message in result.messages:
-                
-                try:
-                    file_inline = message.file_inline
+                file_inline = message.file_inline
+                sticker = message.sticker
+                text = message.text
+
+                if sticker:
+                    result = await self.client.send_message(to_object_guid, sticker=sticker.to_dict())
+                    messages.append(result)
+                    continue
+
+                elif file_inline:
                     kwargs.update(file_inline.to_dict())
-
-                except AttributeError:
-                    file_inline = None
-
-                try:
-                    thumb = thumbnail.Thumbnail(b64decode(message.thumb_inline))
-                    
-                except AttributeError:
-                    thumb = kwargs.get('thumb', True)
-                                
-                try:
-                    message = message.sticker
-                
-                except AttributeError:
-                    message = message.raw_text
-                
-                if file_inline is not None:
-                    if file_inline.type not in ['Gif',
-                                                'Sticker']:
+                    if file_inline.type not in ['Gif', 'Sticker']:
                         file_inline = await self.download(file_inline)
                         messages.append(await self.client.send_message(
-                            thumb=thumb,
-                            message=message,
-                            file_inline=file_inline,
-                            object_guid=to_object_guid, *args, **kwargs))
+                            object_guid=to_object_guid,
+                            text=text,
+                            file_inline=file_inline, *args, **kwargs))
                         continue
 
-                messages.append(await self.client.send_message(
-                    message=message,
-                    object_guid=to_object_guid,
-                    file_inline=file_inline, *args, **kwargs))
-    
-        return {'status': 'OK', 'messages': messages}
+                result = await self.client.send_message(to_object_guid, text, file_inline=file_inline, *args, **kwargs)
+                messages.append(result)
+
+        return SocketResults({'status': 'OK', 'messages': messages})
 
     async def seen(self, seen_list: dict = None):
         """_seen_
@@ -478,10 +461,13 @@ class SocketResults:
         )
 
     async def download(self, file_inline=None, file=None, *args, **kwargs):
-        return await self._client.download_file_inline(
+        if isinstance(file_inline, dict):
+            file_inline = SocketResults(file_inline)
+
+        return await self.client.download(
             file_inline or self.file_inline,
             file=file, *args, **kwargs)
-    
+
     async def get_author(self, author_guid: str = None, *args, **kwargs):
         """_get user or author information_
         Args:

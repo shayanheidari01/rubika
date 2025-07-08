@@ -23,6 +23,7 @@ from .reaction import Reaction
 from .remove_reaction import RemoveReaction
 from .get_message_share_url import GetMessageShareUrl
 from .get_messages_updates import GetMessagesUpdates
+from .send_sticker import SendSticker
 
 
 class Messages(
@@ -51,5 +52,6 @@ class Messages(
         Reaction,
         GetMessageShareUrl,
         GetMessagesUpdates,
+        SendSticker,
 ):
         pass

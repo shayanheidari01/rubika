@@ -1,4 +1,6 @@
+import threading
 import asyncio
+import inspect
 import aiohttp
 import rubpy
 import aiofiles
@@ -166,10 +168,15 @@ class Network:
                             return
 
                         # analyze handlers
+
                         if not await handler(update=update):
                             return
+                        
+                        if not inspect.iscoroutinefunction(func):
+                            threading.Thread(target=func, args=(handler,)).start()
 
-                        asyncio.create_task(func(handler))
+                        else:
+                            asyncio.create_task(func(handler))
 
                     except exceptions.StopHandler:
                         break
@@ -210,6 +217,7 @@ class Network:
                     await asyncio.sleep(10)
                     await ws.send_json({})
                     await self.client.get_chats_updates()
+
                 except:
                     pass
 

@@ -2,10 +2,17 @@ from ... import exceptions
 from ...crypto import Crypto
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
+import asyncio
+import rubpy
 
 
 class Start:
-    async def start(self, phone_number: str = None):
+    async def start(self: "rubpy.Client", phone_number: str = None):
+        if self.display_welcome:
+            for char in rubpy.__welcome__:
+                print(char, sep='', end='', flush=True)
+                await asyncio.sleep(0.01)
+
         if not hasattr(self, 'connection'):
             await self.connect()
 
@@ -13,7 +20,8 @@ class Start:
             #self._logger.info('user info', extra={'data': await self.get_me()})
             self.decode_auth = Crypto.decode_auth(self.auth) if self.auth is not None else None
             self.import_key = pkcs1_15.new(RSA.import_key(self.private_key.encode())) if self.private_key is not None else None
-            await self.get_me()
+            result = await self.get_me()
+            self.guid = result.user.user_guid
 
         except exceptions.NotRegistered:
             #self._logger.debug('user not registered!')

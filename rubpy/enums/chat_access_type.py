@@ -1,4 +1,6 @@
-class Access:
+from enum import Enum
+
+class Access(str, Enum):
     ChangeInfo = "ChangeInfo"
     PinMessages = "PinMessages"
     DeleteGlobalAllMessages = "DeleteGlobalAllMessages"

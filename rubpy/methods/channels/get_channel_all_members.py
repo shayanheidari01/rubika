@@ -6,7 +6,7 @@ class GetChannelAllMembers:
     async def get_channel_all_members(
             self: "rubpy.Client",
             channel_guid: str,
-            search_text: str='',
+            search_text: str=None,
             start_id: str=None,
     ):
         result = await self.builder('getChannelAllMembers',

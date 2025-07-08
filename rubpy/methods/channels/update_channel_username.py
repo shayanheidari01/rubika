@@ -11,5 +11,7 @@ class UpdateChannelUsername:
             'username': username.replace('@', '')
         }
 
-        return await self.builder('updateChannelUsername',
-                                  input=input)
+        return await self.builder(
+            name='updateChannelUsername',
+            input=input,
+        )

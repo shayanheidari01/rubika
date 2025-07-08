@@ -1,6 +1,6 @@
-class ChatAction:
-    """Chat action enumeration used in :obj:`~pyrogram.types.ChatEvent`."""
+from enum import Enum
 
+class ChatAction(str, Enum):
     TYPING = 'Typing'
     "Typing text message"
 

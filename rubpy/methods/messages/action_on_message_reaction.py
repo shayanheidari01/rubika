@@ -1,6 +1,6 @@
 import rubpy
 
-from typing import Literal, Optional
+from typing import Literal
 
 class ActionOnMessageReaction:
     async def action_on_message_reaction(

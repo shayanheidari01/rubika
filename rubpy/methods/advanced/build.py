@@ -30,19 +30,21 @@ class Builder:
                                             tmp_session=tmp_session,
                                             encrypt=encrypt,
                                             input=input)
-        data_enc = result.get('data_enc')
-        if data_enc:
-            result = Crypto.decrypt(data_enc,
-                                key=self.key)
 
-        status = result['status']
-        status_det = result['status_det']
+        if result:
+            data_enc = result.get('data_enc')
+            if data_enc:
+                result = Crypto.decrypt(data_enc,
+                                    key=self.key)
 
-        if status == 'OK' and status_det == 'OK':
-            if dict:
-                return result.get('data')
+            status = result['status']
+            status_det = result['status_det']
 
-            result['data']['_client'] = self
-            return Results(result['data'])
+            if status == 'OK':
+                if dict:
+                    return result.get('data')
 
-        raise exceptions(status_det)(result, request=None)
+                result['data']['_client'] = self
+                return Results(result['data'])
+
+            raise exceptions(status_det)(result, request=None)
