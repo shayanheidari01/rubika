@@ -1,7 +1,7 @@
 from .sessions import SQLiteSession, StringSession
 from .parser import Markdown
 from .methods import Methods
-from typing import Optional, Union
+from typing import Optional, Union, Literal
 from . import __name__ as logger_name
 import logging
 import re
@@ -34,6 +34,7 @@ class Client(Methods):
                  proxy: str = None,
                  logger: "logging.Logger" = None,
                  display_welcome: bool = True,
+                 platform: Literal['Web', 'Android'] = 'Web',
     ) -> None:
         """Client
             Args:
@@ -72,12 +73,17 @@ class Client(Methods):
         """
         super().__init__()
 
+        if platform.lower() == 'android':
+            self.DEFAULT_PLATFORM['platform'] = 'Android'
+
         if auth and not isinstance(auth, str):
             raise ValueError('`auth` is `string` arg.')
 
         if isinstance(private_key, str):
             if not private_key.startswith('-----BEGIN RSA PRIVATE KEY-----'):
-                private_key = ''.join(['-----BEGIN RSA PRIVATE KEY-----\n', private_key.strip(), '\n-----END RSA PRIVATE KEY-----'])
+                private_key = '-----BEGIN RSA PRIVATE KEY-----\n' + private_key
+            if not private_key.startswith('\n-----END RSA PRIVATE KEY-----'):
+                private_key += '\n-----END RSA PRIVATE KEY-----'
 
         if bot_token and not isinstance(bot_token, str):
             raise ValueError('`bot_token` is `string` arg.')

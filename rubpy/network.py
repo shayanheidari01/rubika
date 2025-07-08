@@ -27,9 +27,6 @@ def capitalize(text: str):
 
 class Network:
     HEADERS = {
-        'user-agent': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                       'AppleWebKit/537.36 (KHTML, like Gecko)'
-                       'Chrome/102.0.0.0 Safari/537.36'),
         'origin': 'https://web.rubika.ir',
         'referer': 'https://web.rubika.ir/',
         'connection': 'keep-alive',
@@ -43,6 +40,14 @@ class Network:
         - client: rubpy.Client instance.
         """
         self.client = client
+        self.HEADERS['user-agent'] = self.client.USER_AGENT
+        if self.client.DEFAULT_PLATFORM['platform'] == 'Android':
+            self.HEADERS.pop('origin')
+            self.HEADERS.pop('referer')
+            self.HEADERS['user-agent'] = 'okhttp/3.12.1'
+            self.client.DEFAULT_PLATFORM['package'] = 'app.rbmain.a'
+            self.client.DEFAULT_PLATFORM['app_version'] = '3.6.4'
+
         connector = aiohttp.TCPConnector(verify_ssl=False)
         self.json_decoder = json.JSONDecoder().decode
         self.json_encoder = json.JSONEncoder().encode
@@ -87,13 +92,13 @@ class Network:
 
             except aiohttp.ServerTimeoutError:
                 try_count += 1
-                print(f'Server timeout error ({try_count})')
+                self.client.logger.error('Client timeout error', extra={'data': try_count})
                 await asyncio.sleep(try_count)
                 continue
 
             except aiohttp.ClientConnectionError:
                 try_count += 1
-                print(f'Client connection error ({try_count})')
+                self.client.logger.error('Client connection error', extra={'data': try_count})
                 await asyncio.sleep(try_count)
                 continue
 

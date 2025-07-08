@@ -1,16 +1,16 @@
-from ...crypto import Crypto
+import rubpy
 from ...network import Network
 
 
 class Connect:
-    async def connect(self):
+    async def connect(self: "rubpy.Client"):
         self.connection = Network(client=self)
 
-        if self.auth and self.private_key is not None:
-            self.guid = (await self.get_me()).user.user_guid
+        # if self.auth and self.private_key is not None:
+        #     self.guid = (await self.get_me()).user.user_guid
 
         information = self.session.information()
-        #self.logger.info(f'the session information was read {information}')
+        self.logger.info(f'the session information was read {information}')
 
         if information:
             self.auth = information[1]
