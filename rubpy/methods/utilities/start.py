@@ -2,14 +2,14 @@ from ... import exceptions
 from ...crypto import Crypto
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
-from typing import Union
+from typing import Union, NoneType
 import rubpy
 import re
 
 def convert_farsi_digits(text):
     return text.translate(str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789"))
 
-def normalize_phone_number(phone: str) -> Union[str, None]:
+def normalize_phone_number(phone: str) -> Union[str, NoneType]:
     phone = convert_farsi_digits(phone)
     phone = phone.strip().replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
 
