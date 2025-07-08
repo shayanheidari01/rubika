@@ -2,7 +2,8 @@ from .sessions import SQLiteSession, StringSession
 from .parser import Markdown
 from .methods import Methods
 from typing import Optional, Union
-import rubpy
+from . import __name__ as logger_name
+import logging
 
 
 class Client(Methods):
@@ -30,8 +31,44 @@ class Client(Methods):
                  lang_code: Optional[str] = 'fa',
                  parse_mode: Optional[str] = None,
                  proxy: str = None,
+                 logger: "logging.Logger" = None,
                  display_welcome: bool = True,
     ) -> None:
+        """Client
+            Args:
+                name (`str` | `rubpy.sessions.StringSession`):
+                    The file name of the session file that is used
+                    if there is a string Given (may be a complete path)
+                    or it could be a string session
+                    [rubpy.sessions.StringSession]
+                
+                auth (`str`, optional): To set up auth
+                private_key (`str`, optional): To set up private key
+                bot_token (`str`, optional): To set up bot token
+                phone_number (`str`, optional): To set up phone number
+
+                proxy (`str`, optional):
+                    To set up a proxy, example:
+                        proxy='http://127.0.0.1:80'
+
+                parse_mode (`bool`, optional):
+                    To set the parse mode `` default( `None` ) ``
+
+                user_agent (`str`, optional):
+                    Client uses the web version, You can set the usr-user_agent
+
+                timeout (`int` | `float`, optional):
+                    To set the timeout `` default( `20 seconds` )``
+
+                logger (`logging.Logger`, optional):
+                    Logger base for use.
+
+                lang_code(`str`, optional):
+                    To set the lang_code `` default( `fa` ) ``
+
+                display_welcome (`bool`, optional):
+                    To set the display welcome `` default( `True` ) ``
+        """
         super().__init__()
 
         if auth and not isinstance(auth, str):
@@ -63,9 +100,13 @@ class Client(Methods):
         if parse_mode not in (None, 'html', 'markdown', 'mk'):
             raise ValueError('The `parse_mode` argument can only be in `("html", "markdown", "mk")`.')
 
+        if not isinstance(logger, logging.Logger):
+            logger = logging.getLogger(logger_name)
+    
         self.DEFAULT_PLATFORM['lang_code'] = lang_code
         self.name = name
         self.auth = auth
+        self.logger = logger
         self.private_key = private_key
         self.bot_token = bot_token
         self.phone_number = phone_number

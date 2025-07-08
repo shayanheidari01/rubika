@@ -448,3 +448,19 @@ class SocketResults:
             object_guid=object_guid,
             activity=activity,
         )
+
+    async def is_admin(
+            self,
+            object_guid: str = None,
+            user_guid: str = None,
+    ):
+        if object_guid is None:
+            object_guid = self.object_guid
+        
+        if user_guid is None:
+            user_guid = self.object_guid
+
+        return await self.client.user_is_admin(
+            object_guid=object_guid,
+            user_guid=user_guid,
+        )

@@ -178,56 +178,34 @@ class Network:
 
         return await self.request(url, data=data)
 
-    async def update_handler(self, update: dict):
-        """
-        Handle updates received from Rubika API.
+    async def handel_update(self, name, update):
+        #handlers = self.client.handlers.copy()
+        for func, handler in self.client.handlers.items():
+            try:
+                # if handler is empty filters
+                if isinstance(handler, type):
+                    handler = handler()
 
-        Parameters:
-        - update: Update data.
-        """
-        if isinstance(update, str):
-            update: dict = self.json_decoder(update)
+                if handler.__name__ != capitalize(name):
+                    continue
 
-        data_enc: str = update.get('data_enc')
+                # analyze handlers
+                if not await handler(update=update):
+                    continue
 
-        if data_enc:
-            result = Crypto.decrypt(data_enc, key=self.client.key)
-            user_guid = result.pop('user_guid')
+                if not inspect.iscoroutinefunction(func):
+                    threading.Thread(target=func, args=(handler,)).start()
 
-            async def complete(name, package):
-                if not isinstance(package, list):
-                    return
+                else:
+                    asyncio.create_task(func(handler))
 
-                for update in package:
-                    update['client'] = self.client
-                    update['user_guid'] = user_guid
+            except exceptions.StopHandler:
+                break
 
-                for func, handler in self.client.handlers.items():
-                    try:
-                        # if handler is empty filters
-                        if isinstance(handler, type):
-                            handler = handler()
-
-                        if handler.__name__ != capitalize(name):
-                            return
-
-                        # analyze handlers
-                        if not await handler(update=update):
-                            return
-
-                        if not inspect.iscoroutinefunction(func):
-                            threading.Thread(target=func, args=(handler,)).start()
-                        else:
-                            asyncio.create_task(func(handler))
-
-                    except exceptions.StopHandler:
-                        break
-
-                    except Exception:
-                        pass
-
-            for name, package in result.items():
-                asyncio.create_task(complete(name, package))
+            except Exception:
+                self.client.logger.error(
+                    'handler raised an exception',
+                    extra={'data': update}, exc_info=True)
 
     async def get_updates(self):
         """
@@ -244,7 +222,31 @@ class Network:
 
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
-                            asyncio.create_task(self.update_handler(msg.data))
+                            try:
+                                result = msg.json()
+                                if not result.get('data_enc'):
+                                    self.client.logger.debug(
+                                        'the data_enc key was not found',
+                                        extra={'data': result})
+                                    continue
+
+                                result = Crypto.decrypt(result['data_enc'],
+                                                        key=self.client.key)
+                                user_guid = result.pop('user_guid')
+                                for name, package in result.items():
+                                    if not isinstance(package, list):
+                                        continue
+
+                                    for update in package:
+                                        update['client'] = self.client
+                                        update['user_guid'] = user_guid
+                                        asyncio.create_task(self.handel_update(name, update))
+
+                            except Exception:
+                                self.client.logger.error(
+                                    'websocket raised an exception',
+                                    extra={'data': self.wss_url}, exc_info=True)
+
                         elif msg.type == aiohttp.WSMsgType.CLOSED:
                             break
                         elif msg.type == aiohttp.WSMsgType.ERROR:
@@ -284,7 +286,7 @@ class Network:
             data='',
         ))
 
-    async def upload_file(self, file, mime: str = None, file_name: str = None, chunk: int = 1048576 * 2,
+    async def upload_file(self, file, mime: str = None, file_name: str = None, chunk: int = 1048576,
                           callback=None, *args, **kwargs):
         """
         Upload a file to Rubika.

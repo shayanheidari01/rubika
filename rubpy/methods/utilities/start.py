@@ -17,14 +17,14 @@ class Start:
             await self.connect()
 
         try:
-            #self._logger.info('user info', extra={'data': await self.get_me()})
             self.decode_auth = Crypto.decode_auth(self.auth) if self.auth is not None else None
             self.import_key = pkcs1_15.new(RSA.import_key(self.private_key.encode())) if self.private_key is not None else None
             result = await self.get_me()
             self.guid = result.user.user_guid
+            self.logger.info('user', extra={'guid': result})
 
         except exceptions.NotRegistered:
-            #self._logger.debug('user not registered!')
+            self.logger.debug('user not registered!')
             if phone_number is None:
                 phone_number = input('Phone Number: ')
                 is_phone_number_true = True

@@ -3,6 +3,7 @@ import warnings
 import base64
 import typing
 import io
+import os
 from pathlib import Path
 
 DEFAULT_TEMP_PATH = r'./temps'
@@ -12,17 +13,23 @@ if not path.exists():
     path.mkdir(parents=True)
 
 try:
+    from moviepy.editor import VideoFileClip
+
+except ImportError:
+    VideoFileClip = None
+
+try:
     import cv2
     import numpy as np
 
-except ImportError as e:
+except ImportError:
     cv2 = None
     numpy = None
 
 try:
     import PIL.Image
 
-except ImportError as e:
+except ImportError:
     PIL = None
 
 
@@ -94,6 +101,20 @@ class MediaThumbnail:
 
     @classmethod
     def from_video(cls, video: bytes) -> typing.Optional[ResultMedia]:
+        if VideoFileClip and PIL is not None:
+            file = tempfile.NamedTemporaryFile(mode='wb+', suffix='.rp-temp', dir=DEFAULT_TEMP_PATH, delete=False)
+            file.write(video)
+            file_name = file.name
+            file.close()
+            os.chmod(file_name, 0o777)
+            capture = VideoFileClip(file_name)
+            width, height = capture.size
+            seconds = capture.duration * 1000
+            image = capture.get_frame(0)
+            capture.close()
+            os.remove(file_name)
+            return ResultMedia(image, width, height, seconds)
+
         # Check if OpenCV is available
         if cv2 is None:
             warnings.warn('OpenCV not found, video processing disabled')
