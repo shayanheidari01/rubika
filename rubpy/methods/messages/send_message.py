@@ -116,7 +116,7 @@ class SendMessage:
                     async with cs.get(file_inline) as result:
                         file_inline = await result.read()
 
-        if not isinstance(file_inline, (dict, Update)):
+        if isinstance(file_inline, bytes):
             # Process thumbnail
             if type in ('Music', 'Voice'):
                 thumb = None
@@ -154,7 +154,8 @@ class SendMessage:
             # Finalize input for sending the message
             file_inline['is_spoil'] = bool(is_spoil)
 
-        input['file_inline'] = file_inline if isinstance(file_inline, dict) else file_inline.to_dict
+        if file_inline is not None:
+            input['file_inline'] = file_inline if isinstance(file_inline, dict) else file_inline.to_dict
 
         # Send the message
         result = await self.builder('sendMessage', input=input)
