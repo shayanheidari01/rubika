@@ -75,6 +75,12 @@ class SendMessage:
 
         # Process text content and parse mode
         if isinstance(text, str):
+            if metadata:
+                if 'metadata' in metadata:
+                    input.update(metadata)
+                else:
+                    input['metadata'] = metadata
+
             input['text'] = text.strip()
             parse_mode = parse_mode or self.parse_mode
             if isinstance(parse_mode, str):
@@ -110,7 +116,7 @@ class SendMessage:
                     async with cs.get(file_inline) as result:
                         file_inline = await result.read()
 
-        if file_inline:
+        if not isinstance(file_inline, (dict, Update)):
             # Process thumbnail
             if type in ('Music', 'Voice'):
                 thumb = None
@@ -145,11 +151,10 @@ class SendMessage:
                 file_inline['height'] = thumb.height
                 file_inline['thumb_inline'] = thumb.to_base64()
 
-        # Finalize input for sending the message
+            # Finalize input for sending the message
             file_inline['is_spoil'] = bool(is_spoil)
-            input['file_inline'] = (
-                file_inline if isinstance(file_inline, dict) else file_inline.to_dict
-            )
+
+        input['file_inline'] = file_inline if isinstance(file_inline, dict) else file_inline.to_dict
 
         # Send the message
         result = await self.builder('sendMessage', input=input)
