@@ -443,9 +443,9 @@ async def handle_set_language(update: Update, templates: dict):
     await update.edit(f"✅ زبان به {'فارسی' if language == 'fa' else 'انگلیسی'} تنظیم شد.")
 
 async def handle_ai(update: Update, templates: dict):
-    response = await http_client.get('https://chatgpt.ehsancoder-as.workers.dev/', params={'text': update.text[4:].strip()})
-    if response.status_code == 200 and response.json().get('ok'):
-        await update.edit(f"Ai Response:\n\n{response.json()['result']}")
+    response = await http_client.get('https://shython-apis.liara.run/ai', params={'prompt': update.text[4:].strip()})
+    if response.status_code == 200 and response.json().get('status'):
+        await update.edit(f"Ai Response:\n\n{response.json()['data']}")
     else:
         await update.edit(templates['ai_error'] if response.status_code != 200 else templates['ai_no_response'])
 
