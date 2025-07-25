@@ -1,0 +1,25 @@
+from enum import Enum
+
+
+class ButtonTypeEnum(str, Enum):
+    SIMPLE = "Simple"
+    SELECTION = "Selection"
+    CALENDAR = "Calendar"
+    NUMBER_PICKER = "NumberPicker"
+    STRING_PICKER = "StringPicker"
+    LOCATION = "Location"
+    PAYMENT = "Payment"
+    CAMERA_IMAGE = "CameraImage"
+    CAMERA_VIDEO = "CameraVideo"
+    GALLERY_IMAGE = "GalleryImage"
+    GALLERY_VIDEO = "GalleryVideo"
+    FILE = "File"
+    AUDIO = "Audio"
+    RECORD_AUDIO = "RecordAudio"
+    MY_PHONE_NUMBER = "MyPhoneNumber"
+    MY_LOCATION = "MyLocation"
+    TEXTBOX = "Textbox"
+    LINK = "Link"
+    ASK_MY_PHONE_NUMBER = "AskMyPhoneNumber"
+    ASK_LOCATION = "AskLocation"
+    BARCODE = "Barcode"
