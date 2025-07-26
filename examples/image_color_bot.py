@@ -36,7 +36,7 @@ async def is_spammer(chat_id: str) -> bool:
             return True
     return False
 
-@bot.on_update(filters.CommandFilter('start'))
+@bot.on_update(filters.commands('start'))
 async def handle_start(c: BotClient, update: Update):
     if await is_spammer(update.chat_id):
         if update.chat_id not in notified_users:
@@ -50,7 +50,7 @@ async def handle_start(c: BotClient, update: Update):
         "برای راهنمایی بیشتر، دستور `/help` رو بزن 😊"
     )
 
-@bot.on_update(filters.CommandFilter('help'))
+@bot.on_update(filters.commands('help'))
 async def handle_help(c: BotClient, update: Update):
     if await is_spammer(update.chat_id):
         if update.chat_id not in notified_users:
@@ -70,7 +70,7 @@ async def handle_help(c: BotClient, update: Update):
         "منتظرم رنگ‌های خاصت رو ببینم! 🌈"
     )
 
-@bot.on_update(filters.CommandFilter('image'))
+@bot.on_update(filters.commands('image'))
 async def make_image(c: BotClient, update: Update):
     if await is_spammer(update.chat_id):
         if update.chat_id not in notified_users:
@@ -111,4 +111,4 @@ async def make_image(c: BotClient, update: Update):
             except Exception as remove_err:
                 print(f"⚠ خطا در حذف فایل: {remove_err}")
 
-asyncio.run(bot.run())
+bot.run()
