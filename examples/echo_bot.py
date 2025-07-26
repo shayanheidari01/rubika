@@ -4,10 +4,9 @@ from rubpy.bot import filters
 app = BotClient("bot-token")
 
 
-@app.on_update(filters.TextFilter & filters.PV)
+@app.on_update(filters.text & filters.private)
 async def echo(client, update):
     await update.reply(update.new_message.text)
 
 
-import asyncio
-asyncio.run(app.run())  # Automatically start()
+app.run()  # Automatically start()
