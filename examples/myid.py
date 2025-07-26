@@ -1,10 +1,10 @@
 from rubpy import BotClient
 from rubpy.bot.models import Update
-from rubpy.bot.filters import CommandFilter
+from rubpy.bot import filters
 
 bot = BotClient('your-bot-token')
 
-@bot.on_update(CommandFilter('start'))
+@bot.on_update(filters.commands('start'))
 async def handle_start(c: BotClient, update: Update):
     if update.new_message:
         text = (
@@ -16,5 +16,4 @@ async def handle_start(c: BotClient, update: Update):
         )
         await update.reply(text)
 
-import asyncio
-asyncio.run(bot.run())
+bot.run()
