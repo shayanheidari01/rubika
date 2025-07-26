@@ -1,0 +1,7 @@
+rubpy
+httpx
+sqlalchemy
+TranslatorX
+googlesearch-python
+persiantools
+aiofiles
