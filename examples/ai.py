@@ -5,7 +5,7 @@ You can edit the source code whenever you want.
 
 import aiohttp
 from rubpy import BotClient
-from rubpy.bot.filters import CommandFilter, TextFilter
+from rubpy.bot import filters
 from rubpy.bot.models import Update, Keypad, KeypadRow, Button
 from rubpy.bot.enums import ChatKeypadTypeEnum
 
@@ -13,7 +13,7 @@ bot = BotClient(
     token='your-bot-token'
 )
 
-@bot.on_update(CommandFilter('start'))
+@bot.on_update(filters.commands('start'))
 async def handle_start(bot, update: Update):
     keypad = Keypad(
             rows=[
@@ -32,11 +32,11 @@ async def handle_start(bot, update: Update):
     await update.reply('سلام! خوش اومدی. از دکمه های زیر برای برای کار با ربات استفاده کن:',
                        chat_keypad=keypad, chat_keypad_type=ChatKeypadTypeEnum.NEW)
 
-@bot.on_update(TextFilter("گفتگو با هوش مصنوعی ✨"))
+@bot.on_update(filters.text("گفتگو با هوش مصنوعی ✨"))
 async def handle_ai(bot, update: Update):
     await update.reply('سوال یا موضوعی که میخوای در موردش باهام صحبت کنی رو بفرست ✨')
 
-@bot.on_update(TextFilter("تولید تصویر 🌌"))
+@bot.on_update(filters.text("تولید تصویر 🌌"))
 async def handle_ai(bot, update: Update):
     keypad = Keypad(
             rows=[
@@ -49,7 +49,7 @@ async def handle_ai(bot, update: Update):
         )
     await update.reply('این بخش در حال به روزرسانی است.', inline_keypad=keypad)
 
-@bot.on_update(TextFilter("پاکسازی حافظه 🗑"))
+@bot.on_update(filters.text("پاکسازی حافظه 🗑"))
 async def handle_ai(bot, update: Update):
     keypad = Keypad(
             rows=[
@@ -80,6 +80,4 @@ async def handle_ai(bot, update: Update):
             except Exception:
                 await update.reply('⚠ خطایی رخ داد، مجددا تلاش کنید.')
 
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(bot.run()) # You can set webhook on bot.run
+bot.run() # You can set webhook on bot.run
