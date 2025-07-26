@@ -12,29 +12,6 @@ class Filter:
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         return True
 
-class TextFilter(Filter):
-    def __init__(self, text: str = None, regex: bool = False):
-        warnings.warn(
-            "TextFilter is deprecated and may be removed in future versions. Use text instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-        self.text = text
-        self.regex = regex
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        text = (
-            update.new_message.text if isinstance(update, Update) and update.new_message
-            else update.text if isinstance(update, InlineMessage)
-            else ""
-        )
-        if not text:
-            return False
-        if not self.text and not self.regex:
-            return True
-        return bool(re.match(self.text, text)) if self.regex else text == self.text
-
 class text(Filter):
     """
     Filter for checking message text content.
@@ -85,22 +62,6 @@ class text(Filter):
             return True
         return bool(re.match(self.text, text)) if self.regex else text == self.text
 
-class CommandFilter(Filter):
-    warnings.warn(
-            "filters.CommandFilter is deprecated and may be removed in future versions. Use filters.commands instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    def __init__(self, command: Union[str, List[str]]):
-        self.commands = [command] if isinstance(command, str) else command
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        text = update.new_message.text if isinstance(update, Update) and update.new_message else update.text if isinstance(update, InlineMessage) else ""
-        if not text:
-            return False
-        return any(text.startswith(f"/{cmd}") for cmd in self.commands)
-
 class commands(Filter):
     """
     Filter for detecting command messages (e.g. /start, /help).
@@ -144,50 +105,6 @@ class commands(Filter):
             return False
         return any(text.startswith(f"/{cmd}") for cmd in self.commands)
 
-class ButtonFilter(Filter):
-    warnings.warn(
-            "filters.ButtonFilter is deprecated and may be removed in future versions. Use filters.button instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    def __init__(self, button_id: str):
-        self.button_id = button_id
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        aux_data = None
-        update_type = "InlineMessage" if isinstance(update, InlineMessage) else update.type
-        if isinstance(update, Update) and (update.new_message or update.updated_message):
-            message = update.new_message or update.updated_message
-            aux_data = message.aux_data
-        elif isinstance(update, InlineMessage):
-            aux_data = update.aux_data
-
-        if not aux_data:
-            #logger.info(f"No aux_data for button_id={self.button_id} in {update_type}")
-            return False
-
-        button_id = aux_data.get("button_id") or aux_data.get("callback_data") or ""
-        result = button_id == self.button_id
-        #logger.info(f"ButtonFilter check for button_id={self.button_id} in {update_type}: {result}, aux_data={aux_data}")
-        return result
-
-class UpdateTypeFilter(Filter):
-    warnings.warn(
-            "filters.UpdateTypeFilter is deprecated and may be removed in future versions. Use filters.update_type instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    def __init__(self, update_types: Union[str, List[str]]):
-        self.update_types = [update_types] if isinstance(update_types, str) else update_types
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        result = (isinstance(update, Update) and update.type in self.update_types) or \
-                 (isinstance(update, InlineMessage) and "InlineMessage" in self.update_types)
-        #logger.info(f"UpdateTypeFilter check for types={self.update_types}, update={type(update).__name__}: {result}")
-        return result
-
 class update_type(Filter):
     """
     Filter for matching specific update types.
@@ -229,46 +146,6 @@ class update_type(Filter):
         )
         # logger.info(f"UpdateTypeFilter check for types={self.update_types}, update={type(update).__name__}: {result}")
         return result
-
-class ButtonRegexFilter(Filter):
-    warnings.warn(
-            "filters.ButtonRegexFilter is deprecated and may be removed in future versions. Use filters.button instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    """Filter for button interactions using regex pattern."""
-    def __init__(self, pattern: str):
-        self.pattern = re.compile(pattern)
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        aux_data = None
-        if isinstance(update, Update):
-            message = update.new_message or update.updated_message
-            if message:
-                aux_data = message.aux_data
-        elif isinstance(update, InlineMessage):
-            aux_data = update.aux_data
-        if aux_data:
-            button_id = aux_data.get("button_id") or aux_data.get("callback_data")
-            if not button_id:
-                for key in aux_data:
-                    if isinstance(aux_data[key], dict) and ("button_id" in aux_data[key] or "callback_data" in aux_data[key]):
-                        button_id = aux_data[key].get("button_id") or aux_data[key].get("callback_data")
-                        break
-            if button_id:
-                return bool(self.pattern.match(button_id))
-        return False
-
-class PV(Filter):
-    warnings.warn(
-            "filters.PV is deprecated and may be removed in future versions. Use filters.private instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        return update.new_message.sender_type == 'User'
     
 class private(Filter):
     """
@@ -329,31 +206,6 @@ class group(Filter):
             return False
         return sender_type == 'Group'
 
-class Group(Filter):
-    warnings.warn(
-            "filters.Group is deprecated and may be removed in future versions. Use filters.group instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        sender_type = update.new_message.sender_type if isinstance(update, Update) and update.new_message else update.updated_message.sender_type if update.updated_message else ""
-        if not sender_type:
-            return False
-        return sender_type == 'Group'
-
-class Bot(Filter):
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        warnings.warn(
-            "filters.Bot is deprecated and may be removed in future versions. Use filters.bot instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-        sender_type = update.new_message.sender_type if isinstance(update, Update) and update.new_message else update.updated_message.sender_type if update.updated_message else ""
-        if not sender_type:
-            return False
-        return sender_type == 'Bot'
-
 class bot(Filter):
     """
     Filter for detecting messages sent by bots.
@@ -386,19 +238,6 @@ class bot(Filter):
         if not sender_type:
             return False
         return sender_type == 'Bot'
-
-class Chat(Filter):
-    warnings.warn(
-            "filters.Chat is deprecated and may be removed in future versions. Use filters.chat instead.",
-            DeprecationWarning,
-            stacklevel=2
-        )
-
-    def __init__(self, chat_id: Union[list, str]):
-        self.chats = [chat_id] if isinstance(chat_id, str) else chat_id
-
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        return update.chat_id in self.chats
 
 class chat(Filter):
     """
@@ -520,5 +359,250 @@ class forward(Filter):
                 return True
             return bool(update.find_key('forwarded_from'))
         
+        except KeyError:
+            return False
+
+class is_edited(Filter):
+    """
+    Filter for checking edited messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any is_edited message
+        >>> @bot.on_update(filters.is_edited)
+        ... async def any_edited(c, update):
+        ...     await update.delete()
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('is_edited'))
+
+        except KeyError:
+            return False
+
+class sender_type(Filter):
+    """
+    Filter for matching specific sender types.
+
+    This filter is used to allow or restrict handlers based on the `sender_type` field in an update.
+    It supports both a single sender type as a string, or a list of allowed sender types.
+
+    Args:
+        types (Union[List[str], str]): A single sender type or a list of allowed sender types.
+            Examples of sender types may include "user", "bot", "channel", etc.
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot.models import Update
+        >>> from rubpy.bot.filters import sender_type
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> @bot.on_update(sender_type("User"))
+        ... async def handle_user_message(c, update):
+        ...     await c.send_message(update.chat_id, "Hello user!")
+        >>>
+        >>> @bot.on_update(sender_type(["Bot", "Channel"]))
+        ... async def handle_bots_or_channels(c, update):
+        ...     await c.send_message(update.chat_id, "Hello bot or channel!")
+    """
+    
+    def __init__(self, types: Union[List[str], str]):
+        self.types = [types] if isinstance(types, str) else types
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            sender_type = update.find_key('sender_type')
+            return bool(sender_type in self.types)
+        except KeyError:
+            return False
+
+class has_aux_data(Filter):
+    """
+    Filter for checking aux_data messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any aux_data message
+        >>> @bot.on_update(filters.has_aux_data)
+        ... async def any_has_aux_data(c, update):
+        ...     await update.reply("has aux data")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('aux_data'))
+
+        except KeyError:
+            return False
+
+class file(Filter):
+    """
+    Filter for checking file messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any file message
+        >>> @bot.on_update(filters.file)
+        ... async def any_file(c, update):
+        ...     await update.reply("new file")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('file'))
+
+        except KeyError:
+            return False
+
+class location(Filter):
+    """
+    Filter for checking location messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any location message
+        >>> @bot.on_update(filters.location)
+        ... async def any_location(c, update):
+        ...     await update.reply("new location")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('location'))
+
+        except KeyError:
+            return False
+
+class sticker(Filter):
+    """
+    Filter for checking sticker messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any sticker message
+        >>> @bot.on_update(filters.sticker)
+        ... async def any_sticker(c, update):
+        ...     await update.reply("new sticker")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('sticker'))
+
+        except KeyError:
+            return False
+
+class contact_message(Filter):
+    """
+    Filter for checking contact_message messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any contact_message message
+        >>> @bot.on_update(filters.contact_message)
+        ... async def any_contact_message(c, update):
+        ...     await update.reply("new contact_message")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('contact_message'))
+
+        except KeyError:
+            return False
+
+class poll(Filter):
+    """
+    Filter for checking poll messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any poll message
+        >>> @bot.on_update(filters.poll)
+        ... async def any_poll(c, update):
+        ...     await update.reply("new poll")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('poll'))
+
+        except KeyError:
+            return False
+
+class live_location(Filter):
+    """
+    Filter for checking live_location messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any live_location message
+        >>> @bot.on_update(filters.live_location)
+        ... async def any_live_location(c, update):
+        ...     await update.reply("new live_location")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            return bool(update.find_key('live_location'))
+
         except KeyError:
             return False
