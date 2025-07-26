@@ -23,6 +23,22 @@
 
 ### 🚀 Async Example
 ```python
+from rubpy import BotClient
+from rubpy.bot import filters
+
+app = BotClient("bot_token")
+
+
+@app.on_message(filters.private)
+async def hello(client, message):
+    await message.reply("Hello from Rubpy!")
+
+
+app.run()
+```
+
+### 🚀 Async Example
+```python
 from rubpy import Client, filters
 from rubpy.types import Update
 
