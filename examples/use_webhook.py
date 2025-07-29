@@ -1,14 +1,16 @@
 import asyncio
-from rubpy.bot import BotClient, Button, ButtonFilter, ButtonTypeEnum, CommandFilter, InlineMessage, Keypad, KeypadRow, Update, UpdateTypeFilter
+from rubpy.bot import BotClient, filters
+from rubpy.bot.models import Button, InlineMessage, Keypad, KeypadRow, Update
+from rubpy.bot.enums import ButtonTypeEnum
 
 # Replace with your actual bot token
-RUBIKA_TOKEN = "your-bot-token"
+RUBIKA_TOKEN = "bot-token"
 WEBHOOK_URL = "https://example.com"  # URL وب‌هوک شما
 
 async def main():
     bot = BotClient(token=RUBIKA_TOKEN, use_webhook=True)
 
-    @bot.on_update(CommandFilter("start"))
+    @bot.on_update(filters.commands("start"))
     async def handle_start(client: BotClient, update: Update):
         if update.new_message:
             chat_id = update.chat_id
@@ -27,7 +29,7 @@ async def main():
             )
            # logger.debug(f"Start command response: {response}")
 
-    @bot.on_update(ButtonFilter("btn_hello"))
+    @bot.on_update(filters.button("btn_hello"))
     async def handle_hello_button(client: BotClient, update: InlineMessage):
        # logger.info(f"Handling btn_hello click for chat_id={update.chat_id}")
         response = await client.send_message(
@@ -36,7 +38,7 @@ async def main():
         )
         #logger.debug(f"Button hello response: {response}")
 
-    @bot.on_update(ButtonFilter("btn_info"))
+    @bot.on_update(filters.button("btn_info"))
     async def handle_info_button(client: BotClient, update: InlineMessage):
        # logger.info(f"Handling btn_info click for chat_id={update.chat_id}")
         bot_info = await client.get_me()
@@ -46,7 +48,7 @@ async def main():
         )
        # logger.debug(f"Button info response: {response}")
 
-    @bot.on_update(UpdateTypeFilter("NewMessage"))
+    @bot.on_update(filters.update_type("NewMessage"))
     async def handle_new_message(client: BotClient, update: Update):
         if update.new_message and not update.new_message.text.startswith("/"):
          #   logger.info(f"Handling new message for chat_id={update.chat_id}")
@@ -60,7 +62,7 @@ async def main():
             )
          #   logger.debug(f"New message response: {response}")
 
-    await bot.run(webhook_url=WEBHOOK_URL, port=8080)
+    await bot.run(webhook_url=WEBHOOK_URL, port=8000, path='/wk')
 
     """
     (method) def run(
