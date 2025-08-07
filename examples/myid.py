@@ -1,6 +1,5 @@
-from rubpy import BotClient
+from rubpy.bot import BotClient, filters
 from rubpy.bot.models import Update
-from rubpy.bot import filters
 
 bot = BotClient('your-bot-token')
 
@@ -17,3 +16,4 @@ async def handle_start(c: BotClient, update: Update):
         await update.reply(text)
 
 bot.run()
+
