@@ -1,4 +1,4 @@
-````markdown
+
 # Bot Client – `rubpy.BotClient`
 
 کلاس **`BotClient`** هسته اصلی برای ساخت و اجرای ربات در **Rubika Bot API** است.  
