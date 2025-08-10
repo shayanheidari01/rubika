@@ -322,8 +322,24 @@ async def live_loc(c, u):
 
 ---
 
+---
+
+## `multi filters`
+
+ترکیب چند فیلتر.
+
+```python
+from rubpy.bot import filters
+
+@bot.on_update(filters.private, filters.commands('start'))
+async def multi_filter(c, u):
+    await u.reply("Multi filters detected!")
+```
+
+---
+
 ## نکات تکمیلی
 
 * همه‌ی فیلترها **async** هستند و در متد `check` بررسی انجام می‌دهند.
-* می‌توان چند فیلتر را با هم ترکیب کرد (اگر سیستم هندلر از این قابلیت پشتیبانی کند).
+* می‌توان چند فیلتر را با هم ترکیب کرد.
 * این فیلترها برای کار با **Update** و **InlineMessage** بهینه شده‌اند.
