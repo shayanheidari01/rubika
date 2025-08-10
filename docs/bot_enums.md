@@ -1,304 +1,154 @@
+# مستندات rubpy.bot.enums
 
+این مستندات به توضیح کلاس‌ها و ثابت‌های تعریف شده در فایل `enums.py` می‌پردازد که برای مدیریت انواع داده‌های ثابت (Enumerations) در پروژه استفاده می‌شوند. این فایل شامل مجموعه‌ای از کلاس‌های مبتنی بر `Enum` است که برای دسته‌بندی و مدیریت انواع مختلف داده‌ها مانند نوع چت، نوع دکمه، وضعیت پرداخت و غیره به کار می‌روند.
 
-**مستندات Enumها در `rubpy.bot.enums`**
+## ساختار و توضیحات
 
-> این مستندات به زبان فارسی آماده شده‌اند تا تمامی `Enum`های استفاده‌شده در ماژول‌های `rubpy.bot` را شرح دهند. هدف این است که توسعه‌دهندگان به‌سرعت معنای هر مقدار، محل استفادهٔ معمول و نمونهٔ کد را پیدا کنند.
-
----
-
-## فهرست
-
-* مقدمه: چرا از `STREnum` استفاده شده؟
-* نحوهٔ استفادهٔ سریع
-* توضیح هر Enum و اعضای آن
-
-  * ChatTypeEnum
-  * ForwardedFromEnum
-  * PaymentStatusEnum
-  * PollStatusEnum
-  * LiveLocationStatusEnum
-  * ButtonSelectionTypeEnum
-  * ButtonSelectionSearchEnum
-  * ButtonSelectionGetEnum
-  * ButtonCalendarTypeEnum
-  * ButtonTextboxTypeKeypadEnum
-  * ButtonTextboxTypeLineEnum
-  * ButtonLocationTypeEnum
-  * ButtonTypeEnum
-  * MessageSenderEnum
-  * UpdateTypeEnum
-  * ChatKeypadTypeEnum
-  * UpdateEndpointTypeEnum
-* مثال‌های عملی و نکات پیاده‌سازی
-* توصیه‌ها و بهترین شیوه‌ها
-
----
-
-## مقدمه: چرا از `STREnum` استفاده شده؟
-
-در این پروژه همهٔ enumها از پایهٔ `STREnum` که از `str` و `Enum` ارث‌بری می‌کند مشتق شده‌اند. علت:
-
-* مطابقت مستقیم با رشته‌های برگشتی/منتقل‌شده توسط API (بدون نیاز به فراخوانی `.value`).
-* قابلیت مقایسهٔ مستقیم با رشته‌ها و آسان‌تر شدن سریال‌سازی به JSON.
-
-**نکته:** چون `STREnum` از `str` مشتق شده است، می‌توانید مقدار enum را مستقیماً با رشتهٔ مربوطه مقایسه کنید یا آن را در JSON بنویسید.
+### کلاس پایه: STREnum
+کلاس `STREnum` به عنوان یک کلاس پایه برای تمام ثابت‌های رشته‌ای (string-based enums) تعریف شده است. این کلاس از `str` و `Enum` ارث‌بری می‌کند تا مقادیر ثابت به صورت رشته‌ای و قابل مدیریت باشند.
 
 ```python
-from rubpy.bot.enums import ChatTypeEnum
+from enum import Enum
 
-if chat.chat_type == ChatTypeEnum.User:
-    # همچنین معتبر است:
-if chat.chat_type == 'User':
+class STREnum(str, Enum):
     pass
 ```
 
----
+### ثابت‌های تعریف‌شده
 
-## نحوهٔ استفادهٔ سریع
+#### 1. ChatTypeEnum
+این ثابت نوع چت را مشخص می‌کند:
+- `USER`: چت با یک کاربر
+- `BOT`: چت با یک ربات
+- `GROUP`: چت گروهی
+- `CHANNEL`: چت در کانال
+
+#### 2. ForwardedFromEnum
+مشخص‌کننده منبع پیام فوروارد شده:
+- `USER`: پیام از یک کاربر
+- `CHANNEL`: پیام از یک کانال
+- `BOT`: پیام از یک ربات
+
+#### 3. PaymentStatusEnum
+وضعیت پرداخت را مشخص می‌کند:
+- `Paid`: پرداخت شده
+- `NotPaid`: پرداخت نشده
+
+#### 4. PollStatusEnum
+وضعیت نظرسنجی:
+- `OPEN`: نظرسنجی باز
+- `CLOSED`: نظرسنجی بسته
+
+#### 5. LiveLocationStatusEnum
+وضعیت موقعیت مکانی زنده:
+- `STOPPED`: موقعیت مکانی متوقف شده
+- `LIVE`: موقعیت مکانی فعال
+
+#### 6. ButtonSelectionTypeEnum
+نوع انتخاب دکمه:
+- `TextOnly`: فقط متن
+- `TextImgThu`: متن و تصویر کوچک
+- `TextImgBig`: متن و تصویر بزرگ
+
+#### 7. ButtonSelectionSearchEnum
+نوع جستجوی دکمه انتخاب:
+- `NONE`: بدون جستجو
+- `Local`: جستجوی محلی
+- `Api`: جستجو از طریق API
+
+#### 8. ButtonSelectionGetEnum
+روش دریافت دکمه انتخاب:
+- `Local`: دریافت محلی
+- `Api`: دریافت از API
+
+#### 9. ButtonCalendarTypeEnum
+نوع تقویم دکمه:
+- `DatePersian`: تقویم پارسی
+- `DateGregorian`: تقویم میلادی
+
+#### 10. ButtonTextboxTypeKeypadEnum
+نوع صفحه‌کلید برای جعبه متن:
+- `STRING`: رشته‌ای
+- `NUMBER`: عددی
+
+#### 11. ButtonTextboxTypeLineEnum
+نوع خط جعبه متن:
+- `SingleLine`: تک‌خطی
+- `MultiLine`: چندخطی
+
+#### 12. ButtonLocationTypeEnum
+نوع دکمه موقعیت:
+- `PICKER`: انتخاب‌گر موقعیت
+- `VIEW`: نمایش موقعیت
+
+#### 13. ButtonTypeEnum
+انواع دکمه‌های موجود:
+- `SIMPLE`: دکمه ساده
+- `SELECTION`: دکمه انتخاب
+- `CALENDAR`: دکمه تقویم
+- `NumberPicker`: انتخاب‌گر عدد
+- `StringPicker`: انتخاب‌گر رشته
+- `LOCATION`: دکمه موقعیت
+- `PAYMENT`: دکمه پرداخت
+- `CameraImage`: تصویر دوربین
+- `CameraVideo`: ویدئو دوربین
+- `GalleryImage`: تصویر گالری
+- `GalleryVideo`: ویدئو گالری
+- `FILE`: فایل
+- `AUDIO`: صدا
+- `RecordAudio`: ضبط صدا
+- `MyPhoneNumber`: شماره تلفن من
+- `MyLocation`: موقعیت من
+- `Textbox`: جعبه متن
+- `LINK`: لینک
+- `AskMyPhoneNumber`: درخواست شماره تلفن
+- `AskLocation`: درخواست موقعیت
+- `BARCODE`: بارکد
+
+#### 14. MessageSenderEnum
+فرستنده پیام:
+- `USER`: کاربر
+- `BOT`: ربات
+
+#### 15. UpdateTypeEnum
+نوع به‌روزرسانی:
+- `UpdatedMessage`: پیام به‌روزرسانی شده
+- `NewMessage`: پیام جدید
+- `RemovedMessage`: پیام حذف شده
+- `StartedBot`: ربات شروع شده
+- `StoppedBot`: ربات متوقف شده
+- `UpdatedPayment`: پرداخت به‌روزرسانی شده
+
+#### 16. ChatKeypadTypeEnum
+نوع صفحه‌کلید چت:
+- `NONE`: بدون صفحه‌کلید
+- `NEW`: صفحه‌کلید جدید
+- `REMOVE`: حذف صفحه‌کلید
+
+#### 17. UpdateEndpointTypeEnum
+نوع نقطه پایانی به‌روزرسانی:
+- `ReceiveUpdate`: دریافت به‌روزرسانی
+- `ReceiveInlineMessage`: دریافت پیام اینلاین
+- `ReceiveQuery`: دریافت پرس‌وجو
+- `GetSelectionItem`: دریافت آیتم انتخاب
+- `SearchSelectionItems`: جستجوی آیتم‌های انتخاب
+
+## استفاده
+برای استفاده از این ثابت‌ها، کافی است ماژول را وارد کرده و از کلاس‌های موردنظر استفاده کنید. به عنوان مثال:
 
 ```python
-from rubpy.bot.enums import UpdateTypeEnum, ButtonTypeEnum
+from enums import ChatTypeEnum, ButtonTypeEnum
 
-# دریافت نوع آپدیت
-if update.type == UpdateTypeEnum.NewMessage:
-    # پردازش پیام جدید
-    pass
+# بررسی نوع چت
+chat_type = ChatTypeEnum.USER
+print(chat_type)  # خروجی: User
 
 # بررسی نوع دکمه
-if some_button.type == ButtonTypeEnum.Payment:
-    # پردازش پرداخت
-    pass
+button_type = ButtonTypeEnum.SIMPLE
+print(button_type)  # خروجی: Simple
 ```
 
----
-
-## شرح Enumها
-
-### `ChatTypeEnum`
-
-نمایانگر نوع چت یا مخاطب.
-
-* `User` — چت تک‌نفره با یک کاربر
-* `Bot` — چت با یک بات
-* `Group` — گروه
-* `Channel` — کانال
-
-**محل استفاده:** فیلد `chat_type` در مدل `Chat`.
-
----
-
-### `ForwardedFromEnum`
-
-منبع فوروارد پیام.
-
-* `User` — از کاربر فوروارد شده
-* `Channel` — از یک کانال فوروارد شده
-* `Bot` — از یک بات فوروارد شده
-
----
-
-### `PaymentStatusEnum`
-
-وضعیت پرداخت‌های درون‌رابطه‌ای.
-
-* `Paid` — پرداخت انجام شده
-* `NotPaid` — پرداخت انجام نشده
-
-**محل استفاده:** مدل `PaymentStatus`.
-
----
-
-### `PollStatusEnum`
-
-وضعیت نظرسنجی‌ها.
-
-* `Open` — نظرسنجی فعال است
-* `Closed` — نظرسنجی بسته شده
-
----
-
-### `LiveLocationStatusEnum`
-
-وضعیت موقعیت زنده (Live Location).
-
-* `Stopped` — موقعیت زنده متوقف شده
-* `Live` — موقعیت در حالِ اشتراک‌گذاری است
-
----
-
-### `ButtonSelectionTypeEnum`
-
-نوع نمایش آیتم‌های انتخاب در دکمه‌ها.
-
-* `TextOnly` — فقط متن
-* `TextImgThu` — متن + تصویر بندانگشتی
-* `TextImgBig` — متن + تصویر بزرگ
-
----
-
-### `ButtonSelectionSearchEnum`
-
-چگونگی جستجو در آیتم‌های انتخابی.
-
-* `NONE` (مقدار رشته‌ای "None") — غیرفعال
-* `Local` — جستجوی محلی
-* `Api` — جستجوی مبتنی بر API
-
----
-
-### `ButtonSelectionGetEnum`
-
-نحوهٔ واکشی آیتم انتخاب (local یا api).
-
-* `Local`
-* `Api`
-
----
-
-### `ButtonCalendarTypeEnum`
-
-نوع تقویم برای ورودی تاریخ در دکمه‌ها.
-
-* `DatePersian` — تاریخ شمسی
-* `DateGregorian` — تاریخ میلادی
-
----
-
-### `ButtonTextboxTypeKeypadEnum`
-
-نوع دادهٔ ورودی از صفحه‌کلید برای textbox.
-
-* `String` — رشته
-* `Number` — عدد
-
----
-
-### `ButtonTextboxTypeLineEnum`
-
-حالت خطی textbox.
-
-* `SingleLine` — تک‌خطی
-* `MultiLine` — چندخطی
-
----
-
-### `ButtonLocationTypeEnum`
-
-نحوهٔ نمایش/انتخاب موقعیت در دکمهٔ موقعیت.
-
-* `Picker` — حالت انتخابگر
-* `View` — حالت فقط نمایش
-
----
-
-### `ButtonTypeEnum`
-
-فهرست نوع‌های کامل دکمه که توصیفگر عملیاتی است که دکمه انجام می‌دهد.
-
-مقادیر اصلی:
-
-* `Simple`, `Selection`, `Calendar`, `NumberPicker`, `StringPicker`, `Location`, `Payment`,
-  `CameraImage`, `CameraVideo`, `GalleryImage`, `GalleryVideo`, `File`, `Audio`,
-  `RecordAudio`, `MyPhoneNumber`, `MyLocation`, `Textbox`, `Link`,
-  `AskMyPhoneNumber`, `AskLocation`, `Barcode`
-
-**توضیح کوتاه:**
-
-* `Payment` — دکمه مربوط به شروع فرایند پرداخت
-* `CameraImage` / `GalleryImage` — انتظار فایل تصویری از دوربین یا گالری
-* `Textbox` — باز کردن یک فیلد متنی برای کاربر
-
----
-
-### `MessageSenderEnum`
-
-فرستندهٔ پیام: `User` یا `Bot`.
-
----
-
-### `UpdateTypeEnum`
-
-نوعِ آپدیت ارسالی توسط سرور به بات.
-
-* `UpdatedMessage` — پیام ویرایش شده
-* `NewMessage` — پیام جدید
-* `RemovedMessage` — پیام حذف شده
-* `StartedBot` — کاربر بات را استارت کرده
-* `StoppedBot` — کاربر بات را متوقف کرده
-* `UpdatedPayment` — تغییر وضعیت پرداخت
-
-**محل استفاده:** فیلد `type` در مدل `Update`.
-
----
-
-### `ChatKeypadTypeEnum`
-
-نوع به‌روزرسانی کیپد (کیبورد) در چت.
-
-* `NONE` (`"None"`) — هیچ تغییری
-* `New` — ارسال یک کیپد جدید
-* `Remove` — حذف کیپد
-
----
-
-### `UpdateEndpointTypeEnum`
-
-نوع ورودی endpoint در ارتباطات داخلی/وبهوک.
-
-* `ReceiveUpdate` — دریافت آپدیت عادی
-* `ReceiveInlineMessage` — دریافت پیام اینلاین
-* `ReceiveQuery` — دریافت یک query
-* `GetSelectionItem` — واکشی آیتم انتخابی
-* `SearchSelectionItems` — جستجوی آیتم‌های انتخابی
-
----
-
-## مثال‌های عملی و نکات پیاده‌سازی
-
-* مقایسهٔ مستقیم با رشته:
-
-```python
-from rubpy.bot.enums import ChatTypeEnum
-
-if chat.chat_type == ChatTypeEnum.Group:
-    print('این یک گروه است')
-
-# یا معادل:
-if chat.chat_type == 'Group':
-    print('این یک گروه است')
-```
-
-* سریال‌سازی به JSON:
-
-```python
-import json
-from rubpy.bot.enums import UpdateTypeEnum
-
-payload = {'type': UpdateTypeEnum.NewMessage}
-# json.dumps به‌صورت خودکار مقدار enum را به رشته تبدیل می‌کند
-print(json.dumps(payload))  # {"type": "NewMessage"}
-```
-
-* دریافت از API و تبدیل به enum (اگر لازم است بررسی کنید):
-
-```python
-from rubpy.bot.enums import UpdateTypeEnum
-
-raw = 'UpdatedMessage'
-try:
-    t = UpdateTypeEnum(raw)
-except ValueError:
-    # مقدار نامعتبر از سرور دریافت شد — مدیریت خطا
-    t = None
-```
-
----
-
-## توصیه‌ها و بهترین شیوه‌ها
-
-1. همیشه فرض کنید مقادیر ورودی از سرور ممکن است تغییر کنند یا عضو جدید اضافه شود — هنگام تبدیل رشته‌ها به Enum از مدیریت خطا استفاده کنید.
-2. از توانایی مقایسهٔ مستقیم enumها با رشته‌ها بهره ببرید تا خوانایی کد بهتر شود.
-3. برای مستندسازی API و تست‌ها، مقادیر enum را به‌صورت رشته‌ای در نمونه‌داده‌ها استفاده کنید تا شباهت با payload واقعی حفظ شود.
-4. هنگام تعریف کیپد/دکمه‌ها، از `ButtonTypeEnum` برای تصمیم‌گیری دربارهٔ پردازش هر دکمه استفاده کنید (مثلاً اگر نوع `Payment` است، مسیر پرداخت را اجرا کن).
-
----
+## نکات
+- تمام ثابت‌ها به صورت رشته‌ای هستند و از `STREnum` ارث‌بری می‌کنند.
+- ثابت‌ها به صورت واضح و خوانا نام‌گذاری شده‌اند تا استفاده از آن‌ها در کد ساده باشد.
+- از `__all__` برای مشخص کردن کلاس‌های قابل صادر استفاده شده است تا از وارد کردن کلاس‌های غیرضروری جلوگیری شود.
