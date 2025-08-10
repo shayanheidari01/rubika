@@ -187,7 +187,7 @@ bot = BotClient("your_bot_token")
 async def start_cmd(c, update):
     await c.send_message(update.chat_id, "Welcome to Rubpy Bot! 🚀")
 
-@bot.on_update(filters.text())
+@bot.on_update(filters.text)
 async def echo(c, update):
     await c.send_message(update.chat_id, f"You said: {update.text}")
 
