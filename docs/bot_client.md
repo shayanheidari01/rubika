@@ -364,7 +364,7 @@ async def handle_start(client: BotClient, update: Update):
 ```
 
 - **فیلترها:** کلاس‌هایی با متد `async def check(self, update) -> bool`. مثال: `filters.text`, `filters.commands`.
-- **ترکیب:** از `&` برای ترکیب فیلترها (مثل `filters.text & filters.private`).
+- **ترکیب:** از `,` برای ترکیب فیلترها (مثل `filters.text, filters.private`).
 - **نمونه‌سازی:** اگر کلاس فیلتر ارسال شود، در زمان چک نمونه‌سازی می‌شود.
 
 ---
