@@ -1,128 +1,210 @@
-# مستندات کلاس `BotClient`
 
-کلاس `BotClient` هسته اصلی ارتباط با API ربات روبیکا است که برای دریافت، ارسال و مدیریت پیام‌ها، فایل‌ها، وب‌هوک و دیگر عملیات‌های مربوط به بات استفاده می‌شود.
+# Bot Client – `rubpy.BotClient`
 
----
-
-## 📌 شروع سریع
-
-```python
-client = BotClient(token="YOUR_TOKEN")
-await client.start()
-```
+کلاس **`BotClient`** هسته اصلی برای ساخت و اجرای ربات در **Rubika Bot API** است.  
+این کلاس مدیریت اتصال، دریافت آپدیت‌ها، ارسال پیام و سایر عملیات API را انجام می‌دهد.
 
 ---
 
-## 🧠 ویژگی‌ها
-
-### 📬 ارسال پیام
+## ایجاد یک نمونه از BotClient
 
 ```python
-await client.send_message(chat_id="12345", text="سلام دنیا!")
-```
+from rubpy import BotClient
 
-### 🖼 ارسال فایل، عکس، استیکر و غیره
+bot = BotClient("your_bot_token")
+````
 
-```python
-await client.send_file(chat_id="12345", file="path/to/file.jpg", type="Image")
-```
+### پارامترها
 
-### 📍 ارسال موقعیت مکانی
-
-```python
-await client.send_location(chat_id="12345", latitude=35.7, longitude=51.4)
-```
-
-### ☎️ ارسال مخاطب
-
-```python
-await client.send_contact(chat_id="12345", first_name="علی", last_name="رضایی", phone_number="0912XXXXXXX")
-```
+| نام        | نوع   | پیش‌فرض                            | توضیح                                        |
+| ---------- | ----- | ---------------------------------- | -------------------------------------------- |
+| `token`    | `str` | **ضروری**                          | توکن ربات که از @BotFather روبیکا دریافت شده |
+| `timeout`  | `int` | `20`                               | مدت‌زمان انتظار برای پاسخ API (ثانیه)        |
+| `base_url` | `str` | `https://messengerg2c2.iranlms.ir` | آدرس API (تغییر فقط در حالت تست/لوکال)       |
+| `session`  | `str` | None                               | نام فایل جلسه برای ذخیره وضعیت (اختیاری)     |
 
 ---
 
-## 🔄 دریافت آپدیت‌ها
+## اجرای ربات
 
-### دریافت با Polling:
+دو روش اصلی برای اجرای ربات وجود دارد:
 
-```python
-updates = await client.get_updates()
-```
+### ۱. متد `run()`
 
-### دریافت با Webhook:
+این متد، رویدادهای ثبت‌شده با دکوریتور `@bot.on_update` را اجرا می‌کند و ربات را در حالت long polling نگه می‌دارد.
 
 ```python
-await client.run(webhook_url="https://your.domain/webhook")
+@bot.on_update()
+async def main_handler(c, update):
+    await c.send_message(update.chat_id, "سلام! 👋")
+
+bot.run()
 ```
 
 ---
 
-## ⚙️ تنظیم فیلتر و هندلر برای آپدیت‌ها
+### ۲. متد `loop()`
+
+برای یکپارچه‌سازی با برنامه‌های async دیگر.
 
 ```python
-@client.on_update(TextFilter("سلام"))
-async def greeting_handler(client, update):
-    await client.send_message(update.chat_id, "سلام! چطوری؟")
+import asyncio
+
+async def start():
+    await bot.loop()
+
+asyncio.run(start())
 ```
 
 ---
 
-## ✏️ ویرایش و حذف پیام
+## هندلرها
+
+`BotClient` با استفاده از دکوریتور **`@bot.on_update()`** آپدیت‌ها را مدیریت می‌کند.
 
 ```python
-await client.edit_message_text(chat_id="12345", message_id="abc", text="متن جدید")
-await client.delete_message(chat_id="12345", message_id="abc")
+from rubpy.bot import filters
+
+@bot.on_update(filters.text("hello"))
+async def hello_handler(c, update):
+    await c.send_message(update.chat_id, "Hello there!")
 ```
 
 ---
 
-## 💬 نظرسنجی
+### ترکیب فیلترها
+
+می‌توان چند فیلتر را ترکیب کرد:
 
 ```python
-await client.send_poll(chat_id="12345", question="نظرت چیه؟", options=["عالی", "خوب", "بد"])
+@bot.on_update(filters.private & filters.commands("start"))
+async def start_private(c, update):
+    await c.send_message(update.chat_id, "Welcome to the bot!")
 ```
 
 ---
 
-## 🧪 تنظیم دستورات ربات
+## متدهای کلیدی BotClient
+
+### `send_message(chat_id, text, *, reply_to=None, buttons=None)`
+
+ارسال پیام متنی.
 
 ```python
-await client.set_commands([
-    {"command": "/start", "description": "شروع"},
-    {"command": "/help", "description": "راهنما"},
-])
+await bot.send_message(
+    chat_id="b0_test_chat",
+    text="سلام دوستان!",
+    reply_to=update.message_id,
+    buttons=[
+        [{"text": "Button 1", "callback_data": "btn_1"}],
+        [{"text": "Visit Website", "url": "https://example.com"}]
+    ]
+)
+```
+
+| پارامتر    | توضیح                              |
+| ---------- | ---------------------------------- |
+| `chat_id`  | شناسه چت (خصوصی یا گروه)           |
+| `text`     | متن پیام                           |
+| `reply_to` | پاسخ به یک پیام خاص (اختیاری)      |
+| `buttons`  | دکمه‌های شیشه‌ای (Inline Keyboard) |
+
+---
+
+### `send_file(chat_id, file_path, *, caption=None)`
+
+ارسال فایل.
+
+```python
+await bot.send_file("b0_test_chat", "photo.jpg", caption="عکس من 📷")
 ```
 
 ---
 
-## 🌐 تنظیم Webhook
+### `edit_message(chat_id, message_id, text, *, buttons=None)`
+
+ویرایش پیام.
 
 ```python
-await client.update_bot_endpoints(url="https://your.domain/webhook", endpoint_type="ReceiveUpdate")
+await bot.edit_message("b0_test_chat", update.message_id, "متن ویرایش شده ✅")
 ```
 
 ---
 
-## 🧼 پایان اجرای بات
+### `delete_message(chat_id, message_id)`
+
+حذف پیام.
 
 ```python
-await client.stop()
-await client.close()
+await bot.delete_message("b0_test_chat", update.message_id)
 ```
 
 ---
 
+### `get_me()`
+
+دریافت اطلاعات ربات.
+
+```python
+me = await bot.get_me()
+print(me.username, me.first_name)
+```
+
 ---
 
-## 🧼 نمونه کدها
-- [استفاده در حالت لانگ پولینگ](https://github.com/shayanheidari01/rubika/blob/master/examples/example.py)
-- [حالت وب هوک](https://github.com/shayanheidari01/rubika/blob/master/examples/use_webhook.py)
-- [تست متدها](https://github.com/shayanheidari01/rubika/blob/master/examples/test_bot_api.py)
-- [ربات هوش مصنوعی](https://github.com/shayanheidari01/rubika/blob/master/examples/ai.py)
+## مدیریت خطاها
 
+می‌توان از دکوریتور **`@bot.on_error`** برای مدیریت خطاها استفاده کرد.
+
+```python
+@bot.on_error()
+async def error_handler(c, update, error):
+    print(f"Error: {error}")
+```
 
 ---
 
-## 📚 اطلاعات بیشتر
+## توقف ربات
 
-برای اطلاعات دقیق‌تر، به کد کامل کلاس `BotClient` در مخزن مراجعه نمایید.
+برای توقف امن ربات:
+
+```python
+await bot.stop()
+```
+
+یا در حالت sync:
+
+```python
+bot.stop()
+```
+
+---
+
+## نکات مهم
+
+* اگر از **long polling** استفاده می‌کنید، اطمینان حاصل کنید که اسکریپت همیشه در حال اجرا باشد.
+* برای امنیت، توکن ربات را **در کد مستقیم ننویسید** و از متغیر محیطی استفاده کنید.
+* فیلترها در `rubpy.bot.filters` ابزار قدرتمندی برای مدیریت آپدیت‌ها هستند.
+
+---
+
+## نمونه کامل
+
+```python
+from rubpy import BotClient
+from rubpy.bot import filters
+
+bot = BotClient("your_bot_token")
+
+@bot.on_update(filters.commands("start"))
+async def start_cmd(c, update):
+    await c.send_message(update.chat_id, "Welcome to Rubpy Bot! 🚀")
+
+@bot.on_update(filters.text())
+async def echo(c, update):
+    await c.send_message(update.chat_id, f"You said: {update.text}")
+
+bot.run()
+```
+آیا می‌خواهی که این فایل رو دو زبانه کنم؟
+```
