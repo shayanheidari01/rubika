@@ -1,4 +1,4 @@
-
+````markdown
 # Bot Client – `rubpy.BotClient`
 
 کلاس **`BotClient`** هسته اصلی برای ساخت و اجرای ربات در **Rubika Bot API** است.  
@@ -20,7 +20,7 @@ bot = BotClient("your_bot_token")
 | ---------- | ----- | ---------------------------------- | -------------------------------------------- |
 | `token`    | `str` | **ضروری**                          | توکن ربات که از @BotFather روبیکا دریافت شده |
 | `timeout`  | `int` | `20`                               | مدت‌زمان انتظار برای پاسخ API (ثانیه)        |
-| `base_url` | `str` | `https://messengerg2c2.iranlms.ir` | آدرس API (تغییر فقط در حالت تست/لوکال)       |
+| `base_url` | `str` | `https://botapi.rubika.ir/v3/` | آدرس API (تغییر فقط در حالت تست/لوکال)       |
 | `session`  | `str` | None                               | نام فایل جلسه برای ذخیره وضعیت (اختیاری)     |
 
 ---
@@ -77,7 +77,7 @@ async def hello_handler(c, update):
 می‌توان چند فیلتر را ترکیب کرد:
 
 ```python
-@bot.on_update(filters.private, filters.commands("start"))
+@bot.on_update(filters.private & filters.commands("start"))
 async def start_private(c, update):
     await c.send_message(update.chat_id, "Welcome to the bot!")
 ```
@@ -150,19 +150,6 @@ me = await bot.get_me()
 print(me.username, me.first_name)
 ```
 
----
-
-## مدیریت خطاها
-
-می‌توان از دکوریتور **`@bot.on_error`** برای مدیریت خطاها استفاده کرد.
-
-```python
-@bot.on_error()
-async def error_handler(c, update, error):
-    print(f"Error: {error}")
-```
-
----
 
 ## توقف ربات
 
