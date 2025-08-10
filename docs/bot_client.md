@@ -77,7 +77,7 @@ async def hello_handler(c, update):
 می‌توان چند فیلتر را ترکیب کرد:
 
 ```python
-@bot.on_update(filters.private & filters.commands("start"))
+@bot.on_update(filters.private, filters.commands("start"))
 async def start_private(c, update):
     await c.send_message(update.chat_id, "Welcome to the bot!")
 ```
