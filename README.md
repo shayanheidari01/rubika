@@ -7,9 +7,9 @@
   <em>Asynchronous & elegant Python framework for the Rubika API</em>
   <br><br>
   <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
-  <a href="https://github.com/shayanheidari01/rubika/tree/master/docs">📘 Documentation</a> •
+  <a href="https://rubpy.shayan-heidari.ir/">📘 Documentation</a> •
   <a href="https://pypi.org/project/rubpy/#history">📦 Releases</a> •
-  <a href="https://t.me/rubikapy">🗞 News</a>
+  <a href="https://rubika.ir/rubikapy">🗞 News</a>
 </p>
 
 ---
@@ -23,13 +23,12 @@
 
 ### 🚀 Async Example
 ```python
-from rubpy import BotClient
-from rubpy.bot import filters
+from rubpy.bot import BotClient, filters
 
 app = BotClient("bot_token")
 
 
-@app.on_message(filters.private)
+@app.on_update(filters.private)
 async def hello(client, message):
     await message.reply("Hello from Rubpy!")
 
@@ -113,5 +112,5 @@ pip install -U rubpy
 
 ### 📣 Stay Connected
 
-- [Telegram Channel](https://t.me/rubikapy)
+- [Rubika Channel](https://rubika.ir/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)
