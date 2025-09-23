@@ -14,6 +14,10 @@
 
 ---
 
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/rubpy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/rubpy)
+
+---
+
 ## 🌟 Rubpy
 
 > **Modern. Elegant. Asynchronous.**  
@@ -114,3 +118,4 @@ pip install -U rubpy
 
 - [Rubika Channel](https://rubika.ir/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)
+
