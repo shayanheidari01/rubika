@@ -14,7 +14,12 @@
 
 ---
 
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/rubpy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/rubpy)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/rubpy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Total+Downloads)](https://pepy.tech/projects/rubpy)
+
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/rubpy?period=monthly&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Monthly+Downloads)](https://pepy.tech/projects/rubpy)
+
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/rubpy?period=weekly&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Weekly+Downloads)](https://pepy.tech/projects/rubpy)
+
 
 ---
 
@@ -118,4 +123,5 @@ pip install -U rubpy
 
 - [Rubika Channel](https://rubika.ir/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)
+
 
