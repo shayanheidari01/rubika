@@ -4,7 +4,7 @@
   </a>
   <br><br>
   <strong><font size="+2">Rubpy</font></strong><br>
-  <a href="https://pepy.tech/projects/rubpy"><img src="https://static.pepy.tech/personalized-badge/rubpy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Total+Downloads" alt="PyPI Downloads"></a>
+  <a href="https://pepy.tech/projects/rubpy"><img src="https://static.pepy.tech/personalized-badge/rubpy?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=Total+Downloads" alt="PyPI Downloads"></a> <br>
   <em>Asynchronous & elegant Python framework for the Rubika API</em>
   <br><br>
   <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
@@ -121,6 +121,7 @@ pip install -U rubpy
 
 - [Rubika Channel](https://rubika.ir/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)
+
 
 
 
