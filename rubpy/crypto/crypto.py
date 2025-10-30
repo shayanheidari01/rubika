@@ -13,7 +13,7 @@ from string import ascii_lowercase, ascii_uppercase
 
 
 class Crypto:
-    AES_IV = b'\x00' * 16
+    AES_IV = b"\x00" * 16
 
     @staticmethod
     def decode_auth(auth: str) -> str:
@@ -26,14 +26,14 @@ class Crypto:
         Returns:
             str: The decoded auth string.
         """
-        result_list, digits = [], '0123456789'
+        result_list, digits = [], "0123456789"
         translation_table_lower = str.maketrans(
             ascii_lowercase,
-            ''.join([chr(((32 - (ord(c) - 97)) % 26) + 97) for c in ascii_lowercase])
+            "".join([chr(((32 - (ord(c) - 97)) % 26) + 97) for c in ascii_lowercase]),
         )
         translation_table_upper = str.maketrans(
             ascii_uppercase,
-            ''.join([chr(((29 - (ord(c) - 65)) % 26) + 65) for c in ascii_uppercase])
+            "".join([chr(((29 - (ord(c) - 65)) % 26) + 65) for c in ascii_uppercase]),
         )
 
         for char in auth:
@@ -46,7 +46,7 @@ class Crypto:
             else:
                 result_list.append(char)
 
-        return ''.join(result_list)
+        return "".join(result_list)
 
     @classmethod
     def passphrase(cls, auth):
@@ -60,13 +60,13 @@ class Crypto:
             str: The generated passphrase.
         """
         if len(auth) != 32:
-            raise ValueError('auth length should be 32 digits')
+            raise ValueError("auth length should be 32 digits")
 
         result_list = []
-        chunks = re.findall(r'\S{8}', auth)
-        for character in (chunks[2] + chunks[0] + chunks[3] + chunks[1]):
+        chunks = re.findall(r"\S{8}", auth)
+        for character in chunks[2] + chunks[0] + chunks[3] + chunks[1]:
             result_list.append(chr(((ord(character) - 97 + 9) % 26) + 97))
-        return ''.join(result_list)
+        return "".join(result_list)
 
     @classmethod
     def secret(cls, length):
@@ -79,8 +79,7 @@ class Crypto:
         Returns:
             str: The generated secret.
         """
-        return ''.join(secrets.choice(string.ascii_lowercase)
-                       for _ in range(length))
+        return "".join(secrets.choice(string.ascii_lowercase) for _ in range(length))
 
     @classmethod
     def decrypt(cls, data, key):
@@ -95,8 +94,8 @@ class Crypto:
             dict: The decrypted data as a dictionary.
         """
         aes = AES.new(key.encode(), AES.MODE_CBC, cls.AES_IV)
-        dec = aes.decrypt(base64.urlsafe_b64decode(data.encode('UTF-8')))
-        return json.loads(unpad(dec, AES.block_size).decode('UTF-8'))
+        dec = aes.decrypt(base64.urlsafe_b64decode(data.encode("UTF-8")))
+        return json.loads(unpad(dec, AES.block_size).decode("UTF-8"))
 
     @classmethod
     def encrypt(cls, data: str, key: str):
@@ -112,9 +111,9 @@ class Crypto:
         """
         if isinstance(data, dict):
             data = json.dumps(data)
-        raw = pad(data.encode('UTF-8'), AES.block_size)
+        raw = pad(data.encode("UTF-8"), AES.block_size)
         aes = AES.new(key.encode(), AES.MODE_CBC, cls.AES_IV)
-        return base64.b64encode(aes.encrypt(raw)).decode('UTF-8')
+        return base64.b64encode(aes.encrypt(raw)).decode("UTF-8")
 
     @staticmethod
     def sign(pkcs1_15: "pkcs1_15.new", data: str) -> str:
@@ -128,9 +127,9 @@ class Crypto:
         Returns:
             str: The base64-encoded signature.
         """
-        #key = RSA.import_key(private_key.encode('utf-8'))
-        signature = pkcs1_15.sign(SHA256.new(data.encode('utf-8')))
-        return base64.b64encode(signature).decode('utf-8')
+        # key = RSA.import_key(private_key.encode('utf-8'))
+        signature = pkcs1_15.sign(SHA256.new(data.encode("utf-8")))
+        return base64.b64encode(signature).decode("utf-8")
 
     @staticmethod
     def create_keys() -> tuple:
@@ -141,8 +140,10 @@ class Crypto:
             tuple: A tuple containing the base64-encoded public key and the private key.
         """
         keys = RSA.generate(1024)
-        public_key = Crypto.decode_auth(base64.b64encode(keys.publickey().export_key()).decode('utf-8'))
-        private_key = keys.export_key().decode('utf-8')
+        public_key = Crypto.decode_auth(
+            base64.b64encode(keys.publickey().export_key()).decode("utf-8")
+        )
+        private_key = keys.export_key().decode("utf-8")
         return public_key, private_key
 
     @staticmethod
@@ -157,5 +158,5 @@ class Crypto:
         Returns:
             str: The decrypted data as a string.
         """
-        key = RSA.import_key(private_key.encode('utf-8'))
-        return PKCS1_OAEP.new(key).decrypt(base64.b64decode(data)).decode('utf-8')
+        key = RSA.import_key(private_key.encode("utf-8"))
+        return PKCS1_OAEP.new(key).decrypt(base64.b64decode(data)).decode("utf-8")

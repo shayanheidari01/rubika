@@ -1,0 +1,129 @@
+site_name: کتابخانه روبپای | Rubpy Docs
+site_url: https://rubpy.shayan-heidari.ir
+site_description: آموزش و مستندات کتابخانه روبپای (Rubpy) برای ساخت ربات روبیکا با پایتون
+site_author: شایان حیدری
+
+repo_url: https://github.com/shayanheidari01/rubika/
+
+theme:
+  name: material
+  font:
+    text: Vazirmatn
+    code: Roboto Mono
+  palette:
+    - scheme: default
+      primary: white
+      accent: amber
+      toggle:
+        icon: material/weather-sunny
+        name: حالت تاریک
+    - scheme: slate
+      primary: white
+      accent: amber
+      toggle:
+        icon: material/weather-night
+        name: حالت روشن
+  features:
+    - search.suggest
+    - search.highlight
+    - content.tabs.link
+    - navigation.footer
+    - content.code.copy
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+  logo: https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png
+  favicon: https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png
+  language: fa
+
+nav:
+  - معرفی: index.md
+  - متدهای بات: bot_client_methods.md
+  - فیلترهای بات: bot_filters.md
+  - مدل های بات: bot_models.md
+  - اینام های بات: bot_enums.md
+  - مثال های بات: bot_examples.md
+  - متدهای حساب کاربری: client_methods.md
+  - فیلترهای حساب کاربری: account_filters.md
+  - مثال های استفاده از حساب کاربری: account_examples.md
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format ''
+  - toc:
+      permalink: true
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - mdx_include:
+      base_path: docs
+  - pymdownx.tabbed:
+      alternate_style: true
+
+extra_css:
+  - css/termynal.css
+  - css/custom.css
+
+extra_javascript:
+  - js/termynal.js
+  - js/custom.js
+  # JSON-LD Schema for Google
+  - |
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Rubpy",
+      "applicationCategory": "DeveloperLibrary",
+      "operatingSystem": "Any",
+      "url": "https://rubpy.shayan-heidari.ir/",
+      "logo": "https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png",
+      "author": {
+        "@type": "Person",
+        "name": "شایان حیدری"
+      },
+      "description": "کتابخانه روبپای (Rubpy) برای ساخت ربات‌های روبیکا با پایتون | شامل متدها، فیلترها، مدل‌ها و مثال‌های کامل."
+    }
+    </script>
+
+extra:
+  generator: false
+  canonical_url: https://rubpy.shayan-heidari.ir/
+  logo_alt: "کتابخانه روبپای - مستندات ساخت ربات روبیکا با پایتون"
+  meta:
+    - name: keywords
+      content: روبپای, Rubpy, روبیکا, ربات روبیکا, کتابخانه روبیکا, Python bot, ساخت ربات روبیکا, کتابخانه روبیکا پایتون, بات روبیکا, روبیکاپای, مستندات روبیکا
+    - name: description
+      content: آموزش و مستندات کامل کتابخانه روبپای (Rubpy) برای ساخت ربات‌های روبیکا با پایتون | نصب، متدها، فیلترها، مدل‌ها و مثال‌های کاربردی.
+    - name: robots
+      content: index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1
+    - name: viewport
+      content: width=device-width, initial-scale=1
+    - name: author
+      content: شایان حیدری
+    - property: og:title
+      content: کتابخانه روبپای | مستندات ساخت ربات روبیکا
+    - property: og:description
+      content: آموزش و مستندات کامل کتابخانه روبپای (Rubpy) برای ساخت ربات‌های روبیکا با پایتون
+    - property: og:url
+      content: https://rubpy.shayan-heidari.ir/
+    - property: og:image
+      content: https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png
+    - property: og:type
+      content: website
+    - property: twitter:card
+      content: summary_large_image
+    - property: twitter:title
+      content: کتابخانه روبپای | مستندات ساخت ربات روبیکا
+    - property: twitter:description
+      content: آموزش و مستندات کامل کتابخانه روبپای (Rubpy) برای ساخت ربات‌های روبیکا با پایتون
+    - property: twitter:image
+      content: https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png
+
+plugins:
+  - search
+  # - sitemap:
+  #     changefreq: daily
+  #     priority: 0.8

@@ -28,13 +28,15 @@ class Update:
         return update
 
     def __init__(self, update: dict, *args, **kwargs) -> None:
-        self.client: "rubpy.Client" = update.get('client')
+        self.client: "rubpy.Client" = update.get("client")
         self.original_update = update
 
     def jsonify(self, indent=None) -> str:
         result = self.original_update
-        result['original_update'] = 'dict{...}'
-        return dumps(result, indent=indent, ensure_ascii=False, default=lambda value: str(value))
+        result["original_update"] = "dict{...}"
+        return dumps(
+            result, indent=indent, ensure_ascii=False, default=lambda value: str(value)
+        )
 
     def find_keys(self, keys, original_update=None, *args, **kwargs):
         if original_update is None:
@@ -67,7 +69,7 @@ class Update:
 
     @property
     def command(self):
-        return self.find_keys('command')
+        return self.find_keys("command")
 
     @property
     def to_dict(self) -> dict:
@@ -76,7 +78,7 @@ class Update:
 
     @property
     def message(self):
-        return self.find_keys('message')
+        return self.find_keys("message")
 
     @property
     def is_me(self):
@@ -84,11 +86,11 @@ class Update:
 
     @property
     def status(self):
-        return self.find_keys('status')
+        return self.find_keys("status")
 
     @property
     def action(self):
-        return 'action' in self.original_update and self.original_update.get('action')
+        return "action" in self.original_update and self.original_update.get("action")
 
     @property
     def is_edited(self) -> bool:
@@ -96,78 +98,78 @@ class Update:
 
     @property
     def type(self):
-        return self.find_keys(keys=['type', 'author_type'])
+        return self.find_keys(keys=["type", "author_type"])
 
     @property
     def title(self) -> str:
-        return self.find_keys('title')
+        return self.find_keys("title")
 
     @property
     def is_forward(self) -> bool:
         message = self.message
-        return message is not None and 'forwarded_from' in message.original_update
+        return message is not None and "forwarded_from" in message.original_update
 
     @property
     def forward_type_from(self):
-        return self.message.find_keys('type_from')
+        return self.message.find_keys("type_from")
 
     @property
     def is_event(self) -> bool:
-        return self.message is not None and self.message.type == 'Event'
+        return self.message is not None and self.message.type == "Event"
 
     @property
     def event_data(self):
-        if self.is_event is True: 
-            return self.message.find_keys('event_data')
+        if self.is_event is True:
+            return self.message.find_keys("event_data")
 
     @property
     def is_file_inline(self):
         message = self.message
-        return message.type in ['FileInline', 'FileInlineCaption']
+        return message.type in ["FileInline", "FileInlineCaption"]
 
     @property
     def file_inline(self):
-        return self.find_keys('file_inline')
+        return self.find_keys("file_inline")
 
     @property
     def music(self):
-        return self.file_inline is not None and self.file_inline.type == 'Music'
+        return self.file_inline is not None and self.file_inline.type == "Music"
 
     @property
     def file(self):
-        return self.file_inline is not None and self.file_inline.type == 'File'
+        return self.file_inline is not None and self.file_inline.type == "File"
 
     @property
     def photo(self):
-        return self.file_inline is not None and self.file_inline.type == 'Image'
+        return self.file_inline is not None and self.file_inline.type == "Image"
 
     @property
     def video(self):
-        return self.file_inline is not None and self.file_inline.type == 'Video'
+        return self.file_inline is not None and self.file_inline.type == "Video"
 
     @property
     def voice(self):
-        return self.file_inline is not None and self.file_inline.type == 'Voice'
+        return self.file_inline is not None and self.file_inline.type == "Voice"
 
     @property
     def contact(self):
-        return self.file_inline is not None and self.file_inline.type == 'Contact'
+        return self.file_inline is not None and self.file_inline.type == "Contact"
 
     @property
     def location(self):
-        return self.file_inline is not None and self.file_inline.type == 'Location'
+        return self.file_inline is not None and self.file_inline.type == "Location"
 
     @property
     def poll(self):
-        return self.file_inline is not None and self.file_inline.type == 'Poll'
+        return self.file_inline is not None and self.file_inline.type == "Poll"
 
     @property
     def gif(self):
-        return self.file_inline is not None and self.file_inline.type == 'Gif'
+        return self.file_inline is not None and self.file_inline.type == "Gif"
 
     @property
     def sticker(self):
-        return self.find_keys('sticker')
+        return self.find_keys("sticker")
 
     @property
     def text(self) -> str:
@@ -175,27 +177,27 @@ class Update:
 
     @property
     def message_id(self):
-        return self.find_keys(keys=['message_id', 'pinned_message_id'])
+        return self.find_keys(keys=["message_id", "pinned_message_id"])
 
     @property
     def reply_message_id(self):
-        return self.message.find_keys(keys='reply_to_message_id')
+        return self.message.find_keys(keys="reply_to_message_id")
 
     @property
     def is_group(self):
-        return self.type == 'Group'
+        return self.type == "Group"
 
     @property
     def is_channel(self):
-        return self.type == 'Channel'
+        return self.type == "Channel"
 
     @property
     def is_private(self):
-        return self.type == 'User'
+        return self.type == "User"
 
     @property
     def object_guid(self):
-        return self.find_keys(keys=['group_guid', 'object_guid', 'channel_guid'])
+        return self.find_keys(keys=["group_guid", "object_guid", "channel_guid"])
 
     @property
     def author_guid(self):
@@ -204,7 +206,7 @@ class Update:
     @property
     def is_text(self):
         message = self.message
-        return message is not None and message.type == 'Text'
+        return message is not None and message.type == "Text"
 
     def guid_type(self, object_guid: str = None):
         """
@@ -219,16 +221,18 @@ class Update:
         if object_guid is None:
             object_guid = self.object_guid
 
-        if object_guid.startswith('c0'):
-            return 'Channel'
-        elif object_guid.startswith('g0'):
-            return 'Group'
+        if object_guid.startswith("c0"):
+            return "Channel"
+        elif object_guid.startswith("g0"):
+            return "Group"
         else:
-            return 'User'
+            return "User"
 
     # async methods
 
-    async def pin(self, object_guid: str = None, message_id: str = None, action: str = 'Pin'):
+    async def pin(
+        self, object_guid: str = None, message_id: str = None, action: str = "Pin"
+    ):
         """
         Pin a message.
 
@@ -266,9 +270,16 @@ class Update:
         if message_id is None:
             message_id = self.message_id
 
-        return await self.client.set_pin_message(object_guid, message_id, 'Unpin')
+        return await self.client.set_pin_message(object_guid, message_id, "Unpin")
 
-    async def edit(self, text: str, object_guid: str = None, message_id: str = None, *args, **kwargs):
+    async def edit(
+        self,
+        text: str,
+        object_guid: str = None,
+        message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Edit a message.
 
@@ -288,7 +299,14 @@ class Update:
 
         return await self.client.edit_message(object_guid, message_id, text)
 
-    async def copy(self, to_object_guid: str, from_object_guid: str = None, message_ids=None, *args, **kwargs):
+    async def copy(
+        self,
+        to_object_guid: str,
+        from_object_guid: str = None,
+        message_ids=None,
+        *args,
+        **kwargs
+    ):
         """
         Copy messages to another object.
 
@@ -313,23 +331,32 @@ class Update:
                 text = message.text
 
                 if sticker:
-                    result = await self.client.send_message(to_object_guid, sticker=sticker.to_dict)
+                    result = await self.client.send_message(
+                        to_object_guid, sticker=sticker.to_dict
+                    )
                     messages.append(result)
                     continue
                 elif file_inline:
                     kwargs.update(file_inline.to_dict)
-                    if file_inline.type not in ['Gif', 'Sticker']:
+                    if file_inline.type not in ["Gif", "Sticker"]:
                         file_inline = await self.download(file_inline)
-                        messages.append(await self.client.send_message(
-                            object_guid=to_object_guid,
-                            text=text,
-                            file_inline=file_inline, *args, **kwargs))
+                        messages.append(
+                            await self.client.send_message(
+                                object_guid=to_object_guid,
+                                text=text,
+                                file_inline=file_inline,
+                                *args,
+                                **kwargs
+                            )
+                        )
                         continue
 
-                result = await self.client.send_message(to_object_guid, text, file_inline=file_inline, *args, **kwargs)
+                result = await self.client.send_message(
+                    to_object_guid, text, file_inline=file_inline, *args, **kwargs
+                )
                 messages.append(result)
 
-        return Update({'status': 'OK', 'messages': messages})
+        return Update({"status": "OK", "messages": messages})
 
     async def seen(self, seen_list: dict = None):
         """
@@ -346,8 +373,16 @@ class Update:
             seen_list = {self.object_guid: self.message_id}
         return await self.client.seen_chats(seen_list)
 
-    async def reply(self, text: str = None, object_guid: str = None, reply_to_message_id: str = None,
-                file_inline=None, auto_delete: int = None, *args, **kwargs):
+    async def reply(
+        self,
+        text: str = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        file_inline=None,
+        auto_delete: int = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply to a message.
 
@@ -368,14 +403,26 @@ class Update:
         if reply_to_message_id is None:
             reply_to_message_id = self.message_id
 
-        return await self.client.send_message(object_guid, text, reply_to_message_id=reply_to_message_id,
-                                            file_inline=file_inline,
-                                            auto_delete=auto_delete,
-                                            *args, **kwargs)
+        return await self.client.send_message(
+            object_guid,
+            text,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=file_inline,
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_document(self, document: Union[str, bytes, Path], caption: str = None,
-                            auto_delete: int = None, object_guid: str = None,
-                            reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_document(
+        self,
+        document: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a document.
 
@@ -390,12 +437,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                file_inline=document, type='File', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=document,
+            type="File",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_photo(self, photo: Union[str, bytes, Path], caption: str = None,
-                        auto_delete: int = None, object_guid: str = None,
-                        reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_photo(
+        self,
+        photo: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a photo.
 
@@ -410,12 +472,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                file_inline=photo, type='Image', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=photo,
+            type="Image",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_video(self, video: Union[str, bytes, Path], caption: str = None,
-                           auto_delete: int = None, object_guid: str = None,
-                           reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_video(
+        self,
+        video: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a video.
 
@@ -430,12 +507,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                 file_inline=video, type='Video', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=video,
+            type="Video",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_music(self, music: Union[str, bytes, Path], caption: str = None,
-                           auto_delete: int = None, object_guid: str = None,
-                           reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_music(
+        self,
+        music: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a music.
 
@@ -450,12 +542,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                 file_inline=music, type='Music', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=music,
+            type="Music",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_voice(self, voice: Union[str, bytes, Path], caption: str = None,
-                           auto_delete: int = None, object_guid: str = None,
-                           reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_voice(
+        self,
+        voice: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a voice.
 
@@ -470,12 +577,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                 file_inline=voice, type='Voice', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=voice,
+            type="Voice",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_gif(self, gif: Union[str, bytes, Path], caption: str = None,
-                         auto_delete: int = None, object_guid: str = None,
-                         reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_gif(
+        self,
+        gif: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a gif.
 
@@ -490,12 +612,27 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                 file_inline=gif, type='Gif', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=gif,
+            type="Gif",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
-    async def reply_video_message(self, video: Union[str, bytes, Path], caption: str = None,
-                                   auto_delete: int = None, object_guid: str = None,
-                                   reply_to_message_id: str = None, *args, **kwargs):
+    async def reply_video_message(
+        self,
+        video: Union[str, bytes, Path],
+        caption: str = None,
+        auto_delete: int = None,
+        object_guid: str = None,
+        reply_to_message_id: str = None,
+        *args,
+        **kwargs
+    ):
         """
         Reply with a video.
 
@@ -510,8 +647,16 @@ class Update:
         Returns:
             - dict: Result of the reply operation.
         """
-        return await self.reply(text=caption, object_guid=object_guid, reply_to_message_id=reply_to_message_id,
-                                 file_inline=video, type='VideoMessage', auto_delete=auto_delete, *args, **kwargs)
+        return await self.reply(
+            text=caption,
+            object_guid=object_guid,
+            reply_to_message_id=reply_to_message_id,
+            file_inline=video,
+            type="VideoMessage",
+            auto_delete=auto_delete,
+            *args,
+            **kwargs
+        )
 
     async def forward(self, to_object_guid: str):
         """
@@ -529,7 +674,9 @@ class Update:
             message_ids=[self.message_id],
         )
 
-    async def forwards(self, to_object_guid: str, from_object_guid: str = None, message_ids=None):
+    async def forwards(
+        self, to_object_guid: str, from_object_guid: str = None, message_ids=None
+    ):
         """
         Forward messages.
 
@@ -573,7 +720,9 @@ class Update:
         if isinstance(file_inline, dict):
             file_inline = Update(file_inline)
 
-        return await self.client.download(file_inline or self.file_inline, save_as=save_as, *args, **kwargs)
+        return await self.client.download(
+            file_inline or self.file_inline, save_as=save_as, *args, **kwargs
+        )
 
     async def get_author(self, author_guid: str = None, *args, **kwargs):
         """
@@ -603,11 +752,11 @@ class Update:
         if object_guid is None:
             object_guid = self.object_guid
 
-        if self.guid_type(object_guid) == 'User':
+        if self.guid_type(object_guid) == "User":
             return await self.client.get_user_info(object_guid)
-        elif self.guid_type(object_guid) == 'Group':
+        elif self.guid_type(object_guid) == "Group":
             return await self.client.get_group_info(object_guid)
-        elif self.guid_type(object_guid) == 'Channel':
+        elif self.guid_type(object_guid) == "Channel":
             return await self.client.get_channel_info(object_guid)
 
     async def get_messages(self, object_guid: str = None, message_ids=None):
@@ -666,7 +815,9 @@ class Update:
             message_ids=message_ids,
         )
 
-    async def reaction(self, reaction_id: int, object_guid: str = None, message_id: str = None):
+    async def reaction(
+        self, reaction_id: int, object_guid: str = None, message_id: str = None
+    ):
         """
         Add a reaction to a message.
 
@@ -687,7 +838,7 @@ class Update:
         return await self.client.action_on_message_reaction(
             object_guid=object_guid,
             message_id=message_id,
-            action='Add',
+            action="Add",
             reaction_id=reaction_id,
         )
 
@@ -707,9 +858,9 @@ class Update:
         if user_guid is None:
             user_guid = self.author_guid
 
-        if object_guid.startswith('g0'):
+        if object_guid.startswith("g0"):
             return await self.client.ban_group_member(object_guid, user_guid)
-        elif object_guid.startswith('c0'):
+        elif object_guid.startswith("c0"):
             return await self.client.ban_channel_member(object_guid, user_guid)
 
     async def unban_member(self, object_guid: str = None, user_guid: str = None):
@@ -728,12 +879,16 @@ class Update:
         if user_guid is None:
             user_guid = self.author_guid
 
-        if object_guid.startswith('g0'):
-            return await self.client.ban_group_member(object_guid, user_guid, 'Unset')
-        elif object_guid.startswith('c0'):
-            return await self.client.ban_channel_member(object_guid, user_guid, 'Unset')
+        if object_guid.startswith("g0"):
+            return await self.client.ban_group_member(object_guid, user_guid, "Unset")
+        elif object_guid.startswith("c0"):
+            return await self.client.ban_channel_member(object_guid, user_guid, "Unset")
 
-    async def send_activity(self, activity: Literal['Typing', 'Uploading', 'Recording'] = 'Typing', object_guid: str = None):
+    async def send_activity(
+        self,
+        activity: Literal["Typing", "Uploading", "Recording"] = "Typing",
+        object_guid: str = None,
+    ):
         """
         Send chat activity.
 
@@ -785,26 +940,36 @@ class Update:
             - dict: Result of the admin check operation.
         """
         if user_guid is None:
-            user_guid = self.object_guid if self.guid_type(user_guid) == 'User' else self.author_guid
+            user_guid = (
+                self.object_guid
+                if self.guid_type(user_guid) == "User"
+                else self.author_guid
+            )
 
         return await self.client.set_block_user(user_guid=user_guid)
 
-    async def get_reply_author(self, object_guid: str = None, reply_message_id: str = None):
+    async def get_reply_author(
+        self, object_guid: str = None, reply_message_id: str = None
+    ):
         try:
             result = await self.client.get_messages_by_id(
                 object_guid or self.object_guid,
-                message_ids=reply_message_id or self.reply_message_id)
+                message_ids=reply_message_id or self.reply_message_id,
+            )
             return await self.client.get_info(result.messages[0].author_object_guid)
-    
+
         except IndexError:
             return None
 
-    async def get_reply_message(self, object_guid: str = None, reply_message_id: str = None):
+    async def get_reply_message(
+        self, object_guid: str = None, reply_message_id: str = None
+    ):
         try:
             result = await self.client.get_messages_by_id(
                 object_guid or self.object_guid,
-                message_ids=reply_message_id or self.reply_message_id)
+                message_ids=reply_message_id or self.reply_message_id,
+            )
             return result.messages[0]
-    
+
         except IndexError:
             return None

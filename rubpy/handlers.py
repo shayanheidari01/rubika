@@ -5,20 +5,21 @@ from .types import Update
 
 # لیست handlerهای مجاز
 AUTHORIZED_HANDLERS = [
-    'ChatUpdates',
-    'MessageUpdates',
-    'ShowActivities',
-    'ShowNotifications',
-    'RemoveNotifications'
+    "ChatUpdates",
+    "MessageUpdates",
+    "ShowActivities",
+    "ShowNotifications",
+    "RemoveNotifications",
 ]
+
 
 def create_handler(
     name: str,
     base: tuple,
     authorized_handlers: List[str] = AUTHORIZED_HANDLERS,
     exception: bool = True,
-    **kwargs
-) -> Optional[Type['BaseHandlers']]:
+    **kwargs,
+) -> Optional[Type["BaseHandlers"]]:
     """
     ایجاد دینامیک یک handler بر اساس نام و کلاس پایه.
 
@@ -36,12 +37,13 @@ def create_handler(
     - AttributeError: اگر handler غیرمجاز باشد و exception=True.
     """
     if name in authorized_handlers:
-        return type(name, base, {'__name__': name, **kwargs})
-    
+        return type(name, base, {"__name__": name, **kwargs})
+
     if not exception:
         return None
-    
+
     raise AttributeError(f"ماژول فاقد handler با نام '{name}' است")
+
 
 class BaseHandlers(Update):
     """
@@ -52,7 +54,8 @@ class BaseHandlers(Update):
     - any_handler: آیا هر handler باید اجرا شود.
     - kwargs: آرگومان‌های اضافی.
     """
-    __name__ = 'CustomHandlers'
+
+    __name__ = "CustomHandlers"
 
     def __init__(self, *models: Any, any_handler: bool = False, **kwargs) -> None:
         self.__models = models
@@ -68,7 +71,9 @@ class BaseHandlers(Update):
         خروجی:
         True اگر تابع ناهمگام باشد، در غیر این صورت False.
         """
-        return asyncio.iscoroutinefunction(value) or (hasattr(value, '__call__') and asyncio.iscoroutinefunction(value.__call__))
+        return asyncio.iscoroutinefunction(value) or (
+            hasattr(value, "__call__") and asyncio.iscoroutinefunction(value.__call__)
+        )
 
     async def __call__(self, update: Dict, *args, **kwargs) -> bool:
         """
@@ -89,9 +94,17 @@ class BaseHandlers(Update):
 
         for handler_filter in self.__models:
             # اگر handler_filter یک کلاس باشد، نمونه‌سازی می‌شود
-            filter_instance = handler_filter(func=None) if isinstance(handler_filter, type) else handler_filter
+            filter_instance = (
+                handler_filter(func=None)
+                if isinstance(handler_filter, type)
+                else handler_filter
+            )
             # بررسی ناهمگام یا همگام بودن فیلتر و اجرای آن
-            status = await filter_instance(self, result=None) if self.is_async(filter_instance) else filter_instance(self, result=None)
+            status = (
+                await filter_instance(self, result=None)
+                if self.is_async(filter_instance)
+                else filter_instance(self, result=None)
+            )
 
             if status and self.__any_handler:
                 return True
@@ -100,10 +113,12 @@ class BaseHandlers(Update):
 
         return True
 
+
 class Handlers:
     """
     کلاس برای مدیریت و ایجاد handlerهای خاص.
     """
+
     def __init__(self, name: str) -> None:
         self.__name__ = name
 
@@ -117,7 +132,7 @@ class Handlers:
         خروجی:
         True اگر برابر با BaseHandlers باشد، در غیر این صورت False.
         """
-        return BaseHandlers in getattr(value, '__bases__', ())
+        return BaseHandlers in getattr(value, "__bases__", ())
 
     def __dir__(self) -> List[str]:
         """
@@ -128,7 +143,7 @@ class Handlers:
         """
         return sorted(AUTHORIZED_HANDLERS)
 
-    def __call__(self, name: str, *args, **kwargs) -> Type['BaseHandlers']:
+    def __call__(self, name: str, *args, **kwargs) -> Type["BaseHandlers"]:
         """
         فراخوانی handler بر اساس نام.
 
@@ -142,7 +157,7 @@ class Handlers:
         """
         return self.__getattr__(name)(*args, **kwargs)
 
-    def __getattr__(self, name: str) -> Type['BaseHandlers']:
+    def __getattr__(self, name: str) -> Type["BaseHandlers"]:
         """
         دریافت handler ایجادشده دینامیک بر اساس نام.
 
@@ -153,6 +168,7 @@ class Handlers:
         کلاس handler ایجادشده.
         """
         return create_handler(name, (BaseHandlers,), AUTHORIZED_HANDLERS)
+
 
 # جایگزینی ماژول جاری با نمونه‌ای از Handlers
 sys.modules[__name__] = Handlers(__name__)

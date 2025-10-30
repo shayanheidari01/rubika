@@ -6,7 +6,7 @@ from .parser import Markdown
 from .methods import Methods
 
 class Client(Methods):
-    """کلاینت اصلی برای تعامل با API روبیکا."""
+    """Main client for interacting with the Rubika API."""
 
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
@@ -36,79 +36,80 @@ class Client(Methods):
         proxy: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
         display_welcome: bool = False,
-        platform: Literal['Web', 'Android'] = 'Web',
+        platform: Literal['PWA', 'Android'] = 'PWA',
         max_retries: int = 5
     ) -> None:
         """
-        مقداردهی اولیه کلاینت روبیکا.
+        Initialize the Rubika client.
 
-        پارامترها:
-        - name: نام یا مسیر فایل سشن (str) یا نمونه StringSession.
-        - auth: کلید احراز هویت (اختیاری).
-        - private_key: کلید خصوصی RSA (اختیاری، رشته یا بایت).
-        - phone_number: شماره تلفن (اختیاری).
-        - user_agent: رشته User-Agent (اختیاری، پیش‌فرض مرورگر کروم).
-        - timeout: زمان انتظار درخواست‌ها (ثانیه، پیش‌فرض 20).
-        - lang_code: کد زبان (پیش‌فرض 'fa').
-        - parse_mode: حالت تجزیه پیام (html، markdown، mk یا None).
-        - proxy: آدرس پروکسی (مثال: 'http://127.0.0.1:80').
-        - logger: شیء Logger برای لاگ‌گیری (اختیاری).
-        - display_welcome: نمایش پیام خوش‌آمدگویی (پیش‌فرض False).
-        - platform: پلتفرم کلاینت ('Web' یا 'Android').
+        Parameters:
+        - name: Session name or file path (str) or a StringSession instance.
+        - auth: Authentication key (optional).
+        - private_key: RSA private key (optional, str or bytes).
+        - phone_number: Phone number (optional).
+        - user_agent: User-Agent string (optional, defaults to Chrome).
+        - timeout: Request timeout in seconds (default: 20).
+        - lang_code: Language code (default: 'fa').
+        - parse_mode: Message parsing mode ('html', 'markdown', 'mk', or None).
+        - proxy: Proxy address (example: 'http://127.0.0.1:80').
+        - logger: Logger instance for logging (optional).
+        - display_welcome: Show welcome message (default: False).
+        - platform: Client platform ('PWA' or 'Android').
+        - max_retries: Maximum number of retries for requests (default: 5).
 
-        خطاها:
-        - ValueError: در صورت نامعتبر بودن ورودی‌ها.
-        - TypeError: در صورت نادرست بودن نوع name.
+        Raises:
+        - ValueError: If any input is invalid.
+        - TypeError: If the 'name' parameter is not str or StringSession.
         """
         super().__init__()
 
-        # تنظیم پلتفرم
+        # Configure platform
         self.DEFAULT_PLATFORM = self.DEFAULT_PLATFORM.copy()
         if platform.lower() == 'android':
             self.DEFAULT_PLATFORM['platform'] = 'Android'
 
-        # اعتبارسنجی ورودی‌ها
+        # Validate inputs
         if auth and not isinstance(auth, str):
-            raise ValueError('پارامتر auth باید رشته باشد.')
+            raise ValueError("The 'auth' parameter must be a string.")
         if phone_number and not isinstance(phone_number, str):
-            raise ValueError('پارامتر phone_number باید رشته باشد.')
+            raise ValueError("The 'phone_number' parameter must be a string.")
         if user_agent and not isinstance(user_agent, str):
-            raise ValueError('پارامتر user_agent باید رشته باشد.')
+            raise ValueError("The 'user_agent' parameter must be a string.")
         if not isinstance(timeout, (int, float)):
             try:
                 timeout = float(timeout)
             except (ValueError, TypeError):
-                raise ValueError('پارامتر timeout باید عدد باشد.')
+                raise ValueError("The 'timeout' parameter must be a number.")
 
-        # تنظیم سشن
+        # Setup session
         if isinstance(name, str):
             session = SQLiteSession(name)
         elif isinstance(name, StringSession):
             session = name
         else:
-            raise TypeError('پارامتر name باید رشته یا نمونه StringSession باشد.')
+            raise TypeError("The 'name' parameter must be a string or StringSession instance.")
 
-        # تنظیم parse_mode
+        # Configure parse_mode
         valid_parse_modes = {'html', 'markdown', 'mk'}
         if parse_mode is not None:
             parse_mode = parse_mode.lower()
             if parse_mode not in valid_parse_modes:
-                raise ValueError(f'پارامتر parse_mode باید یکی از {valid_parse_modes} یا None باشد.')
+                raise ValueError(f"The 'parse_mode' parameter must be one of {valid_parse_modes} or None.")
         else:
             parse_mode = 'markdown'
 
-        # تنظیم logger
+        # Configure logger
         if not isinstance(logger, logging.Logger):
             logger = logging.getLogger(__name__)
 
-        # تنظیم کلید خصوصی
+        # Format private key if necessary
         if isinstance(private_key, str):
             if not private_key.startswith('-----BEGIN RSA PRIVATE KEY-----'):
                 private_key = f'-----BEGIN RSA PRIVATE KEY-----\n{private_key}'
             if not private_key.endswith('\n-----END RSA PRIVATE KEY-----'):
                 private_key += '\n-----END RSA PRIVATE KEY-----'
 
-        # مقداردهی متغیرها
+        # Assign variables
         self.name = name
         self.auth = auth
         self.logger = logger
@@ -132,28 +133,33 @@ class Client(Methods):
         self.DEFAULT_PLATFORM['lang_code'] = lang_code
         self.max_retries = max_retries
 
-        # حذف پیام خوش‌آمدگویی برای بهینه‌سازی
+        # Welcome message (optional)
         if display_welcome:
-            self.logger.info("کلاینت روبیکا با موفقیت مقداردهی شد.")
+            self.logger.info("Rubika client initialized successfully.")
 
     def __enter__(self) -> "Client":
-        """پشتیبانی از context manager برای شروع کلاینت."""
+        """Support for context manager to start the client."""
         return self.start()
 
     def __exit__(self, *args, **kwargs) -> None:
-        """پشتیبانی از context manager برای قطع اتصال."""
+        """Support for context manager to disconnect the client."""
         try:
             self.disconnect()
         except Exception as e:
-            self.logger.warning(f"خطا در قطع اتصال: {e}")
+            self.logger.warning(f"Error while disconnecting: {e}")
 
     async def __aenter__(self) -> "Client":
-        """پشتیبانی از async context manager برای شروع کلاینت."""
+        """Support for async context manager to start the client."""
         return await self.start()
 
     async def __aexit__(self, *args, **kwargs) -> None:
-        """پشتیبانی از async context manager برای قطع اتصال."""
+        """Support for async context manager to disconnect the client."""
         try:
             await self.disconnect()
         except Exception as e:
-            self.logger.warning(f"خطا در قطع اتصال: {e}")
+            self.logger.warning(f"Error while disconnecting: {e}")
+
+    async def stop(self) -> None:
+        if self.connection.session.closed:
+            return
+        await self.disconnect()

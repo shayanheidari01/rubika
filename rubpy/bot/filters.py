@@ -1,16 +1,64 @@
 # Filters
+import asyncio
 import re
-from typing import List, Optional, Union
-import warnings
+from typing import Any, Dict, List, Optional, Union
 
-from rubpy.bot.enums.forwarded_from_type import ForwardedFromType
 from rubpy.bot.models import Update
 from rubpy.bot.models import InlineMessage
 
 
+def maybe_instance(f):
+    return f() if isinstance(f, type) else f
+
+
 class Filter:
-    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+    async def check(self, update):
+        raise NotImplementedError
+
+    def __and__(self, other):
+        return AndFilter(maybe_instance(self), maybe_instance(other))
+
+    def __or__(self, other):
+        return OrFilter(maybe_instance(self), maybe_instance(other))
+
+    def __invert__(self):
+        instance = self() if isinstance(self, type) else self
+        return NotFilter(instance)
+
+
+class AndFilter(Filter):
+    def __init__(self, *filters: Filter):
+        self.filters = filters
+
+    async def check(self, update: Union["Update", "InlineMessage"]) -> bool:
+        for f in self.filters:
+            if isinstance(f, type):  # اگر کلاس دادیم
+                f = f()
+            if not await f.check(update):
+                return False
         return True
+
+
+class OrFilter(Filter):
+    def __init__(self, *filters: Filter):
+        self.filters = filters
+
+    async def check(self, update):
+        for f in self.filters:
+            if isinstance(f, type):
+                f = f()
+            if await f.check(update):
+                return True
+        return False
+
+
+class NotFilter(Filter):
+    def __init__(self, f: Filter):
+        self.f = f if not isinstance(f, type) else f()
+
+    async def check(self, update):
+        return not await self.f.check(update)
+
 
 class text(Filter):
     """
@@ -53,57 +101,99 @@ class text(Filter):
     def __init__(self, text: Optional[str] = None, regex: bool = False):
         self.text = text
         self.regex = regex
+        self._compiled = re.compile(text) if regex and text else None
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        text = update.find_key('text')
+        text = update.find_key("text")
         if not text:
             return False
-        if not self.text and not self.regex:
+
+        if not self.text:
             return True
-        return bool(re.match(self.text, text)) if self.regex else text == self.text
+
+        if self.regex:
+            return bool(self._compiled.match(text))
+
+        return text == self.text
+
 
 class commands(Filter):
     """
-    Filter for detecting command messages (e.g. /start, /help).
+    Advanced filter for detecting bot commands (e.g. /start, !help, test).
 
-    This filter checks whether the message text starts with one of the specified slash commands.
-    It is useful for handling bot commands in both private and group chats.
+    Features:
+        - Supports multiple command prefixes (default: / and !).
+        - Case-insensitive option.
+        - Matches both exact commands and commands with arguments.
+        - Supports single or multiple commands.
 
     Args:
-        command (Union[str, List[str]]): A single command or list of command names (without the leading slash).
-
-    Returns:
-        bool: True if the message text starts with one of the specified commands.
+        commands (Union[str, List[str]]): Command or list of commands (without prefix).
+        prefixes (List[str], optional): Allowed prefixes (default: ["/", "!"]).
+        case_sensitive (bool, optional): Whether command matching is case-sensitive. Default False.
+        allow_no_prefix (bool, optional): If True, matches commands even without prefix. Default False.
 
     Example:
-        >>> from rubpy import BotClient
-        >>> from rubpy.bot.filters import commands
-        >>>
-        >>> bot = BotClient("your_bot_token")
-        >>>
         >>> @bot.on_update(commands("start"))
         ... async def handle_start(c, update):
-        ...     await c.send_message(update.chat_id, "Welcome to the bot!")
-        >>>
-        >>> @bot.on_update(commands(["help", "about"]))
-        ... async def handle_help_about(c, update):
-        ...     await c.send_message(update.chat_id, "Help or About command detected!")
+        ...     await update.reply("Welcome to the bot!")
+
+        >>> @bot.on_update(commands(["help", "about"], prefixes=["/", ".", "!"]))
+        ... async def handle_help(c, update):
+        ...     await update.reply("Help/About detected!")
+
+        >>> @bot.on_update(commands("test", allow_no_prefix=True))
+        ... async def handle_test(c, update):
+        ...     await update.reply("Matched with or without prefix")
     """
 
-    def __init__(self, command: Union[str, List[str]]):
-        self.commands = [command] if isinstance(command, str) else command
+    def __init__(
+        self,
+        commands: Union[str, List[str]],
+        prefixes: List[str] = ["/"],
+        case_sensitive: bool = False,
+        allow_no_prefix: bool = False,
+    ):
+        self.commands = [commands] if isinstance(commands, str) else commands
+        self.prefixes = prefixes
+        self.case_sensitive = case_sensitive
+        self.allow_no_prefix = allow_no_prefix
+
+        if not case_sensitive:
+            self.commands = [cmd.lower() for cmd in self.commands]
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         text = (
             update.new_message.text
             if isinstance(update, Update) and update.new_message
-            else update.text
-            if isinstance(update, InlineMessage)
-            else ""
+            else update.text if isinstance(update, InlineMessage) else ""
         )
         if not text:
             return False
-        return any(text.startswith(f"/{cmd}") for cmd in self.commands)
+
+        # prepare text for matching
+        check_text = text if self.case_sensitive else text.lower()
+
+        # split into command + args
+        parts = check_text.split(maxsplit=1)
+        command_part = parts[0]
+
+        # check with prefixes
+        for cmd in self.commands:
+            for prefix in self.prefixes:
+                if command_part == f"{prefix}{cmd}" or command_part.startswith(
+                    f"{prefix}{cmd}"
+                ):
+                    return True
+
+            # allow matching without prefix
+            if self.allow_no_prefix and (
+                command_part == cmd or command_part.startswith(cmd)
+            ):
+                return True
+
+        return False
+
 
 class update_type(Filter):
     """
@@ -137,16 +227,18 @@ class update_type(Filter):
     """
 
     def __init__(self, update_types: Union[str, List[str]]):
-        self.update_types = [update_types] if isinstance(update_types, str) else update_types
+        self.update_types = (
+            [update_types] if isinstance(update_types, str) else update_types
+        )
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        result = (
-            (isinstance(update, Update) and update.type in self.update_types)
-            or (isinstance(update, InlineMessage) and "InlineMessage" in self.update_types)
+        result = (isinstance(update, Update) and update.type in self.update_types) or (
+            isinstance(update, InlineMessage) and "InlineMessage" in self.update_types
         )
         # logger.info(f"UpdateTypeFilter check for types={self.update_types}, update={type(update).__name__}: {result}")
         return result
-    
+
+
 class private(Filter):
     """
     Filter for detecting messages sent in private (one-on-one) chats.
@@ -161,16 +253,17 @@ class private(Filter):
         >>> from rubpy import BotClient
         >>> from rubpy.bot.models import Update
         >>> from rubpy.bot.filters import private
-        >>> 
+        >>>
         >>> bot_client = BotClient("your_bot_token")
-        >>> 
+        >>>
         >>> @bot_client.on_update(private)
         ... async def handle_private_message(c, update):
         ...     await c.send_message(update.chat_id, "You are chatting privately with the bot.")
     """
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        return update.new_message.sender_type == 'User'
+        return bool(update.chat_id.startswith("b0"))
+
 
 class group(Filter):
     """
@@ -187,24 +280,44 @@ class group(Filter):
         >>> from rubpy import BotClient
         >>> from rubpy.bot.models import Update
         >>> from rubpy.bot.filters import group
-        >>> 
+        >>>
         >>> bot_client = BotClient("your_bot_token")
-        >>> 
+        >>>
         >>> @bot_client.on_update(group)
         ... async def handle_group_messages(c, update):
         ...     await c.send_message(update.chat_id, "This message came from a group!")
     """
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        sender_type = (
-            update.new_message.sender_type
-            if isinstance(update, Update) and update.new_message
-            else update.updated_message.sender_type
-            if update.updated_message else ""
-        )
-        if not sender_type:
-            return False
-        return sender_type == 'Group'
+        return bool(update.chat_id.startswith("g0"))
+
+
+class channel(Filter):
+    """
+    Filter for detecting messages sent from groups.
+
+    This filter checks whether the sender of the message is of type `'Group'`.
+    It's useful when you want a handler to be triggered only for messages
+    originating from group chats.
+
+    Returns:
+        bool: True if the message was sent from a group, otherwise False.
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot.models import Update
+        >>> from rubpy.bot.filters import group
+        >>>
+        >>> bot_client = BotClient("your_bot_token")
+        >>>
+        >>> @bot_client.on_update(group)
+        ... async def handle_group_messages(c, update):
+        ...     await c.send_message(update.chat_id, "This message came from a group!")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        return bool(update.chat_id.startswith("c0"))
+
 
 class bot(Filter):
     """
@@ -220,9 +333,9 @@ class bot(Filter):
         >>> from rubpy import BotClient
         >>> from rubpy.bot.models import Update
         >>> from rubpy.bot.filters import bot
-        >>> 
+        >>>
         >>> bot_client = BotClient("your_bot_token")
-        >>> 
+        >>>
         >>> @bot_client.on_update(bot)
         ... async def handle_bot_messages(c, update):
         ...     await c.send_message(update.chat_id, "A bot sent this message!")
@@ -232,12 +345,12 @@ class bot(Filter):
         sender_type = (
             update.new_message.sender_type
             if isinstance(update, Update) and update.new_message
-            else update.updated_message.sender_type
-            if update.updated_message else ""
+            else update.updated_message.sender_type if update.updated_message else ""
         )
         if not sender_type:
             return False
-        return sender_type == 'Bot'
+        return sender_type == "Bot"
+
 
 class chat(Filter):
     """
@@ -253,13 +366,13 @@ class chat(Filter):
         >>> from rubpy import BotClient
         >>> from rubpy.bot.models import Update
         >>> from rubpy.bot.filters import chat
-        >>> 
+        >>>
         >>> bot = BotClient("your_bot_token")
-        >>> 
+        >>>
         >>> @bot.on_update(chat("b0_test_chat"))
         ... async def only_for_test_chat(c, update):
         ...     await c.send_message(update.chat_id, "Hello from test chat!")
-        >>> 
+        >>>
         >>> @bot.on_update(chat(["b0_admin", "b0_mod"]))
         ... async def for_admins_and_mods(c, update):
         ...     await c.send_message(update.chat_id, "Hello admins and moderators!")
@@ -270,6 +383,7 @@ class chat(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         return update.chat_id in self.chats
+
 
 class button(Filter):
     """
@@ -286,13 +400,13 @@ class button(Filter):
         >>> from rubpy import BotClient
         >>> from rubpy.bot.models import Update
         >>> from rubpy.bot.filters import button
-        >>> 
+        >>>
         >>> bot = BotClient("your_bot_token")
-        >>> 
+        >>>
         >>> @bot.on_update(button("btn_123"))
         ... async def handle_btn(c, update):
         ...     await c.send_message(update.chat_id, "Button 123 clicked!")
-        >>> 
+        >>>
         >>> @bot.on_update(button(r"btn_\\d+", regex=True))
         ... async def handle_regex_btn(c, update):
         ...     await c.send_message(update.chat_id, "Numbered button clicked!")
@@ -334,6 +448,7 @@ class button(Filter):
         else:
             return button_id == self.button_id
 
+
 class forward(Filter):
     """
     Filter for checking forwarded messages.
@@ -355,12 +470,13 @@ class forward(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            if bool(update.find_key('forwarded_no_link')):
+            if bool(update.find_key("forwarded_no_link")):
                 return True
-            return bool(update.find_key('forwarded_from'))
-        
+            return bool(update.find_key("forwarded_from"))
+
         except KeyError:
             return False
+
 
 class is_edited(Filter):
     """
@@ -383,10 +499,11 @@ class is_edited(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('is_edited'))
+            return bool(update.find_key("is_edited"))
 
         except KeyError:
             return False
+
 
 class sender_type(Filter):
     """
@@ -414,16 +531,17 @@ class sender_type(Filter):
         ... async def handle_bots_or_channels(c, update):
         ...     await c.send_message(update.chat_id, "Hello bot or channel!")
     """
-    
+
     def __init__(self, types: Union[List[str], str]):
         self.types = [types] if isinstance(types, str) else types
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            sender_type = update.find_key('sender_type')
+            sender_type = update.find_key("sender_type")
             return bool(sender_type in self.types)
         except KeyError:
             return False
+
 
 class has_aux_data(Filter):
     """
@@ -446,10 +564,11 @@ class has_aux_data(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('aux_data'))
+            return bool(update.find_key("aux_data"))
 
         except KeyError:
             return False
+
 
 class file(Filter):
     """
@@ -472,10 +591,11 @@ class file(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('file'))
+            return bool(update.find_key("file"))
 
         except KeyError:
             return False
+
 
 class location(Filter):
     """
@@ -498,10 +618,11 @@ class location(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('location'))
+            return bool(update.find_key("location"))
 
         except KeyError:
             return False
+
 
 class sticker(Filter):
     """
@@ -524,10 +645,11 @@ class sticker(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('sticker'))
+            return bool(update.find_key("sticker"))
 
         except KeyError:
             return False
+
 
 class contact_message(Filter):
     """
@@ -550,10 +672,11 @@ class contact_message(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('contact_message'))
+            return bool(update.find_key("contact_message"))
 
         except KeyError:
             return False
+
 
 class poll(Filter):
     """
@@ -576,10 +699,11 @@ class poll(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('poll'))
+            return bool(update.find_key("poll"))
 
         except KeyError:
             return False
+
 
 class live_location(Filter):
     """
@@ -602,7 +726,260 @@ class live_location(Filter):
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
         try:
-            return bool(update.find_key('live_location'))
+            return bool(update.find_key("live_location"))
 
         except KeyError:
             return False
+
+
+class replied(Filter):
+    async def check(self, update):
+        return bool(update.find_key("reply_to_message_id"))
+
+
+class states(Filter):
+    """
+    Self-contained states filter that stores states in-memory (no external libs).
+
+    - Use as a filter instance: `s = states("awaiting_email"); @bot.on_update(s) ...`
+    - Also exposes methods to set/get/clear state for a given update:
+        await s.set_state_for(update, "awaiting_email", expire=300)
+        await s.get_state_for(update)
+        await s.clear_state_for(update)
+
+    Args:
+        targets: None|str|List[str] - states to match (None => match any existing state).
+        match_mode: "exact"|"regex"|"contains"|"any" (default "exact")
+        scope: "user"|"chat"|"both" - where to look up the state keys in internal store
+        check_keys: list of keys to check inside update payload before checking internal store
+        auto_clear: bool - if True and matched => automatically clear stored state
+        set_on_match: Optional[str] - if provided, set this new state on match
+        expire: Optional[int] - default TTL (seconds) when using set_on_match (or when set_state_for uses expire)
+        invert: bool - invert the match result
+    """
+
+    # in-memory stores shared between instances (module-level)
+    _STORE: Dict[str, str] = {}
+    _TTL_TASKS: Dict[str, asyncio.Task] = {}
+
+    def __init__(
+        self,
+        targets: Optional[Union[str, List[str]]] = None,
+        match_mode: str = "exact",
+        scope: str = "user",
+        check_keys: Optional[List[str]] = None,
+        auto_clear: bool = False,
+        set_on_match: Optional[str] = None,
+        expire: Optional[int] = None,
+        invert: bool = False,
+    ):
+        # normalize targets
+        self.targets = [targets] if isinstance(targets, str) else (targets or None)
+        assert match_mode in ("exact", "regex", "contains", "any")
+        assert scope in ("user", "chat", "both")
+        self.match_mode = match_mode
+        self.scope = scope
+        self.check_keys = check_keys or [
+            "state",
+            "fsm_state",
+            "user_state",
+            "session_state",
+        ]
+        self.auto_clear = auto_clear
+        self.set_on_match = set_on_match
+        self.default_expire = expire
+        self.invert = invert
+
+        if self.match_mode == "regex" and self.targets:
+            self._patterns = [re.compile(p) for p in self.targets]
+        else:
+            self._patterns = None
+
+    # -------------------------
+    # Helper store / TTL logic
+    # -------------------------
+    @classmethod
+    async def _schedule_expiry(cls, key: str, seconds: int):
+        # cancel existing
+        old = cls._TTL_TASKS.get(key)
+        if old and not old.done():
+            old.cancel()
+
+        async def _job():
+            try:
+                await asyncio.sleep(seconds)
+                cls._STORE.pop(key, None)
+                cls._TTL_TASKS.pop(key, None)
+            except asyncio.CancelledError:
+                return
+
+        t = asyncio.create_task(_job())
+        cls._TTL_TASKS[key] = t
+
+    @classmethod
+    async def _set_store(cls, key: str, value: str, expire: Optional[int] = None):
+        cls._STORE[key] = value
+        if expire:
+            await cls._schedule_expiry(key, expire)
+
+    @classmethod
+    async def _get_store(cls, key: str) -> Optional[str]:
+        return cls._STORE.get(key)
+
+    @classmethod
+    async def _clear_store(cls, key: str):
+        cls._STORE.pop(key, None)
+        task = cls._TTL_TASKS.pop(key, None)
+        if task and not task.done():
+            task.cancel()
+
+    # -------------------------
+    # Public helper APIs
+    # -------------------------
+    async def set_state_for(
+        self,
+        update: Union[Update, InlineMessage, Any],
+        value: str,
+        expire: Optional[int] = None,
+    ):
+        """
+        Set a state for the update's scope (user/chat) according to filter.scope.
+        """
+        klist = self._keys_for_update(update)
+        if not klist:
+            raise RuntimeError("Cannot determine key from update to set state")
+        for k in klist:
+            await self._set_store(k, value, expire or self.default_expire)
+
+    async def get_state_for(
+        self, update: Union[Update, InlineMessage, Any]
+    ) -> Optional[str]:
+        """Get first available state from storage for the update (according to scope)."""
+        klist = self._keys_for_update(update)
+        if not klist:
+            return None
+        for k in klist:
+            v = await self._get_store(k)
+            if v is not None:
+                return v
+        return None
+
+    async def clear_state_for(self, update: Union[Update, InlineMessage, Any]):
+        """Clear states (all keys derived from update)."""
+        klist = self._keys_for_update(update)
+        if not klist:
+            return
+        for k in klist:
+            await self._clear_store(k)
+
+    # -------------------------
+    # internal helpers
+    # -------------------------
+    def _keys_for_update(self, update: Union[Update, InlineMessage, Any]) -> List[str]:
+        """
+        Build one or two keys to try based on scope and available ids on update.
+        Keys look like "user:{sender_id}" and/or "chat:{chat_id}".
+        """
+        keys = []
+        # try attributes first
+        sender_id = getattr(update, "sender_id", None)
+        chat_id = getattr(update, "chat_id", None)
+        # fallback to find_key if exists
+        try:
+            if not sender_id and hasattr(update, "find_key"):
+                sender_id = (
+                    update.find_key("sender_id")
+                    or update.find_key("from_id")
+                    or sender_id
+                )
+        except Exception:
+            pass
+        try:
+            if not chat_id and hasattr(update, "find_key"):
+                chat_id = update.find_key("chat_id") or chat_id
+        except Exception:
+            pass
+
+        if self.scope in ("user", "both") and sender_id:
+            keys.append(f"user:{sender_id}")
+        if self.scope in ("chat", "both") and chat_id:
+            keys.append(f"chat:{chat_id}")
+        return keys
+
+    async def _extract_local_state(
+        self, update: Union[Update, InlineMessage, Any]
+    ) -> Optional[str]:
+        """
+        Try to read state directly from update payload keys (without using internal store).
+        Returns first found string value or None.
+        """
+        for k in self.check_keys:
+            try:
+                if hasattr(update, "find_key"):
+                    val = update.find_key(k)
+                else:
+                    val = getattr(update, k, None)
+            except Exception:
+                val = None
+            if val:
+                # if it's collection, pick first str
+                if isinstance(val, (list, tuple, set)):
+                    val = next((x for x in val if isinstance(x, str)), None)
+                if isinstance(val, (str, int, float)):
+                    return str(val)
+        # also look inside aux_data if present
+        try:
+            aux = (
+                update.find_key("aux_data")
+                if hasattr(update, "find_key")
+                else getattr(update, "aux_data", None)
+            )
+            if aux and isinstance(aux, dict):
+                for k in ("state", "fsm_state"):
+                    v = aux.get(k)
+                    if v:
+                        return str(v)
+        except Exception:
+            pass
+        return None
+
+    def _matches(self, value: str) -> bool:
+        if self.match_mode == "any":
+            return True if value else False
+        if self.match_mode == "contains":
+            return any(t in value for t in (self.targets or []))
+        if self.match_mode == "regex" and self._patterns:
+            return any(p.match(value) for p in self._patterns)
+        # exact
+        return value in (self.targets or [])
+
+    # -------------------------
+    # Filter entry point
+    # -------------------------
+    async def check(self, update: Union[Update, InlineMessage, Any]) -> bool:
+        # 1. local payload
+        local = await self._extract_local_state(update)
+        state_val = None
+        if local:
+            state_val = local
+
+        # 2. fallback to internal store
+        if state_val is None:
+            state_val = await self.get_state_for(update)
+
+        matched = False if state_val is None else self._matches(state_val)
+
+        # apply invert
+        matched = (not matched) if self.invert else matched
+
+        # side-effects
+        if matched:
+            # auto clear or set_on_match
+            if self.auto_clear:
+                await self.clear_state_for(update)
+            if self.set_on_match:
+                await self.set_state_for(
+                    update, self.set_on_match, expire=self.default_expire
+                )
+
+        return matched

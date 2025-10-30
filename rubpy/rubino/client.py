@@ -13,9 +13,9 @@ import rubpy
 class Rubino:
     DEFAULT_PLATFORM = {
         'app_name': 'Main',
-        'app_version': '4.4.9',
+        'app_version': '2.4.6',
         'platform': 'PWA',
-        'package': 'web.rubika.ir',
+        'package': 'm.rubika.ir',
     }
 
     def __init__(self, client: "rubpy.Client") -> None:

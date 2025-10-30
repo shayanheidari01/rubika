@@ -13,6 +13,7 @@ from .get_join_links import GetJoinLinks
 from .create_join_link import CreateJoinLink
 from .get_join_requests import GetJoinRequests
 from .action_on_join_request import ActionOnJoinRequest
+from .get_time import GetTime
 
 class Exctras(
     GetObjectByUsername,
@@ -21,6 +22,7 @@ class Exctras(
     BanMember,
     GetInfo,
     Join,
+    GetTime,
     GetRelatedObjects,
     GetTranscription,
     UserIsAdmin,

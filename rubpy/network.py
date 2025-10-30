@@ -11,6 +11,7 @@ from .types import Update
 from .crypto import Crypto
 from . import exceptions
 
+
 def capitalize(text: str) -> str:
     """
     تبدیل رشته snake_case به CamelCase.
@@ -21,14 +22,15 @@ def capitalize(text: str) -> str:
     خروجی:
     رشته با فرمت CamelCase.
     """
-    return ''.join(word.title() for word in text.split('_'))
+    return "".join(word.title() for word in text.split("_"))
+
 
 class Network:
     HEADERS = {
-        'origin': 'https://m.rubika.ir',
-        'referer': 'https://m.rubika.ir/',
-        'content-type': 'application/json',
-        'connection': 'keep-alive'
+        "origin": "https://m.rubika.ir",
+        "referer": "https://m.rubika.ir/",
+        "content-type": "application/json",
+        "connection": "keep-alive",
     }
 
     def __init__(self, client: "rubpy.Client") -> None:
@@ -42,20 +44,20 @@ class Network:
         self.max_retries = client.max_retries
         self.logger = logging.getLogger(__name__)
         self.headers = self.HEADERS.copy()
-        self.headers['user-agent'] = client.user_agent
+        self.headers["user-agent"] = client.user_agent
 
-        if client.DEFAULT_PLATFORM['platform'] == 'Android':
-            self.headers.pop('origin', None)
-            self.headers.pop('referer', None)
-            self.headers['user-agent'] = 'okhttp/3.12.1'
-            client.DEFAULT_PLATFORM['package'] = 'app.rbmain.a'
-            client.DEFAULT_PLATFORM['app_version'] = '3.8.2'
+        if client.DEFAULT_PLATFORM["platform"] == "Android":
+            self.headers.pop("origin", None)
+            self.headers.pop("referer", None)
+            self.headers["user-agent"] = "okhttp/3.12.1"
+            client.DEFAULT_PLATFORM["package"] = "app.rbmain.a"
+            client.DEFAULT_PLATFORM["app_version"] = "3.8.2"
 
         connector = aiohttp.TCPConnector(verify_ssl=False, limit=100)
         self.session = aiohttp.ClientSession(
             connector=connector,
             headers=self.headers,
-            timeout=aiohttp.ClientTimeout(total=client.timeout)
+            timeout=aiohttp.ClientTimeout(total=client.timeout),
         )
 
         self.api_url = None
@@ -87,18 +89,18 @@ class Network:
         Raises:
             NetworkError: If all retry attempts fail to fetch the data centers.
         """
-        url = 'https://getdcmess.iranlms.ir/'
+        url = "https://getdcmess.iranlms.ir/"
         for attempt in range(max_retries):
             try:
                 async with self.session.get(url, proxy=self.client.proxy) as response:
                     response.raise_for_status()
                     json_data = await response.json()
-                    data = json_data.get('data', {})
-                    api_list = data.get('API', {})
-                    socket_list = data.get('socket', {})
+                    data = json_data.get("data", {})
+                    api_list = data.get("API", {})
+                    socket_list = data.get("socket", {})
 
                     self.api_url = f"{api_list.get(data.get('default_api'))}/"
-                    self.wss_url = socket_list.get(data.get('default_socket'))
+                    self.wss_url = socket_list.get(data.get("default_socket"))
 
                     if self.api_url and self.wss_url:
                         return True
@@ -106,18 +108,18 @@ class Network:
                         raise ValueError("Incomplete data received from server.")
 
             except Exception as e:
-                self.logger.warning(f"Failed to retrieve Data Centers (attempt {attempt + 1}/{max_retries}): {e}")
+                self.logger.warning(
+                    f"Failed to retrieve Data Centers (attempt {attempt + 1}/{max_retries}): {e}"
+                )
                 if attempt < max_retries - 1:
-                    await asyncio.sleep(backoff * (2 ** attempt))
+                    await asyncio.sleep(backoff * (2**attempt))
 
-        raise exceptions.NetworkError("Failed to fetch Data Centers after multiple attempts.")
+        raise exceptions.NetworkError(
+            "Failed to fetch Data Centers after multiple attempts."
+        )
 
     async def request(
-        self,
-        url: str,
-        data: Dict,
-        max_retries: int = 3,
-        backoff: float = 1.0
+        self, url: str, data: Dict, max_retries: int = 3, backoff: float = 1.0
     ) -> Dict:
         """
         Sends an HTTP POST request with retry logic and exponential backoff.
@@ -140,7 +142,9 @@ class Network:
         """
         for attempt in range(max_retries):
             try:
-                async with self.session.post(url, json=data, proxy=self.client.proxy) as response:
+                async with self.session.post(
+                    url, json=data, proxy=self.client.proxy
+                ) as response:
                     response.raise_for_status()
                     return await response.json()
             except Exception as e:
@@ -148,9 +152,15 @@ class Network:
                     f"Request to {url} failed (attempt {attempt + 1}/{max_retries}): {e}"
                 )
                 if attempt < max_retries - 1:
-                    await asyncio.sleep(backoff * (2 ** attempt))
+                    await asyncio.sleep(backoff * (2**attempt))
 
-        raise exceptions.NetworkError(f"Request to {url} failed after {max_retries} attempts.")
+        self.logger.error(
+                    f"Request to {url} failed after {max_retries} attempts.",
+                    exc_info=True,
+                )
+        # raise exceptions.NetworkError(
+        #     f"Request to {url} failed after {max_retries} attempts."
+        # )
 
     async def send(self, **kwargs) -> dict:
         """
@@ -162,33 +172,37 @@ class Network:
         Returns:
         - JSON-decoded response.
         """
-        api_version = str(kwargs.get('api_version', self.client.API_VERSION))
-        auth = kwargs.get('auth', self.client.auth)
-        client = kwargs.get('client', self.client.DEFAULT_PLATFORM)
-        input_data = kwargs.get('input', {})
-        method = kwargs.get('method', 'getUserInfo')
-        encrypt = kwargs.get('encrypt', True)
-        tmp_session = kwargs.get('tmp_session', False)
-        url = kwargs.get('url', self.api_url)
+        api_version = str(kwargs.get("api_version", self.client.API_VERSION))
+        auth = kwargs.get("auth", self.client.auth)
+        client = kwargs.get("client", self.client.DEFAULT_PLATFORM)
+        input_data = kwargs.get("input", {})
+        method = kwargs.get("method", "getUserInfo")
+        encrypt = kwargs.get("encrypt", True)
+        tmp_session = kwargs.get("tmp_session", False)
+        url = kwargs.get("url", self.api_url)
 
-        data = {'api_version': api_version}
-        key = 'tmp_session' if tmp_session else 'auth'
+        data = {"api_version": api_version}
+        key = "tmp_session" if tmp_session else "auth"
         data[key] = auth if tmp_session else self.client.decode_auth
 
-        if api_version == '6':
-            data_enc = {'client': client, 'method': method, 'input': input_data}
+        if api_version == "6":
+            data_enc = {"client": client, "method": method, "input": input_data}
             if encrypt:
-                data['data_enc'] = Crypto.encrypt(data_enc, key=self.client.key)
+                data["data_enc"] = Crypto.encrypt(data_enc, key=self.client.key)
                 if not tmp_session:
-                    data['sign'] = Crypto.sign(self.client.import_key, data['data_enc'])
+                    data["sign"] = Crypto.sign(self.client.import_key, data["data_enc"])
             return await self.request(url, data, max_retries=self.max_retries)
 
-        elif api_version == '0':
-            data.update({'auth': auth, 'client': client, 'data': input_data, 'method': method})
-        elif api_version == '4':
-            data.update({'client': client, 'method': method})
-        elif api_version == 'bot':
-            return await self.request(f"{self.bot_api_url}{method}", input_data, max_retries=self.max_retries)
+        elif api_version == "0":
+            data.update(
+                {"auth": auth, "client": client, "data": input_data, "method": method}
+            )
+        elif api_version == "4":
+            data.update({"client": client, "method": method})
+        elif api_version == "bot":
+            return await self.request(
+                f"{self.bot_api_url}{method}", input_data, max_retries=self.max_retries
+            )
 
         return await self.request(url, data, max_retries=self.max_retries)
 
@@ -232,10 +246,10 @@ class Network:
             except Exception as e:
                 self.logger.error(
                     f"Error in handler for '{name}': {e}",
-                    extra={'data': update},
-                    exc_info=True
+                    extra={"data": update},
+                    exc_info=True,
                 )
-                #self.logger.error(f"خطا در handler برای {name}: {e}", extra={'data': update}, exc_info=True)
+                # self.logger.error(f"خطا در handler برای {name}: {e}", extra={'data': update}, exc_info=True)
 
     async def get_updates(self) -> None:
         """
@@ -258,28 +272,36 @@ class Network:
         while True:
             try:
                 async with self.session.ws_connect(
-                    self.wss_url,
-                    proxy=self.client.proxy
+                    self.wss_url, proxy=self.client.proxy
                 ) as ws:
                     self.ws = ws
 
                     # Send initial handshake
-                    await ws.send_json({
-                        'method': 'handShake',
-                        'auth': self.client.auth,
-                        'api_version': '6',
-                        'data': ''
-                    })
+                    await ws.send_json(
+                        {
+                            "method": "handShake",
+                            "auth": self.client.auth,
+                            "api_version": "6",
+                            "data": "",
+                        }
+                    )
 
                     async for msg in ws:
                         if msg.type == aiohttp.WSMsgType.TEXT:
                             asyncio.create_task(self.handle_text_message(msg.json()))
-                        elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
-                            self.logger.warning("WebSocket closed or errored; reconnecting...")
+                        elif msg.type in (
+                            aiohttp.WSMsgType.CLOSED,
+                            aiohttp.WSMsgType.ERROR,
+                        ):
+                            self.logger.warning(
+                                "WebSocket closed or errored; reconnecting..."
+                            )
                             break
 
             except (aiohttp.ServerTimeoutError, TimeoutError, aiohttp.ClientError) as e:
-                self.logger.warning(f"WebSocket connection lost: {e}. Retrying in 3 seconds...")
+                self.logger.warning(
+                    f"WebSocket connection lost: {e}. Retrying in 3 seconds..."
+                )
                 await asyncio.sleep(3)
 
     async def keep_socket(self) -> None:
@@ -298,6 +320,9 @@ class Network:
             - Warning if the connection check or ping fails.
         """
         while True:
+            if self.session.closed:
+                break
+
             try:
                 await asyncio.sleep(10)
 
@@ -307,7 +332,9 @@ class Network:
                 else:
                     self.logger.warning("WebSocket is not connected or already closed.")
             except Exception as e:
-                self.logger.warning(f"Exception while keeping WebSocket alive: {e}", exc_info=True)
+                self.logger.warning(
+                    f"Exception while keeping WebSocket alive: {e}", exc_info=True
+                )
 
     async def handle_text_message(self, msg_data: Dict) -> None:
         """
@@ -326,17 +353,21 @@ class Network:
             - Debug message if `data_enc` is missing.
             - Error message if decryption or handling fails.
         """
-        data_enc = msg_data.get('data_enc')
+        data_enc = msg_data.get("data_enc")
         if not data_enc:
-            self.logger.debug("Missing 'data_enc' key in message", extra={'data': msg_data})
+            self.logger.debug(
+                "Missing 'data_enc' key in message", extra={"data": msg_data}
+            )
             return
 
         try:
             decrypted_data = Crypto.decrypt(data_enc, key=self.client.key)
-            user_guid = decrypted_data.pop('user_guid')
+            user_guid = decrypted_data.pop("user_guid")
 
             tasks = [
-                self.handle_update(name, {**update, 'client': self.client, 'user_guid': user_guid})
+                self.handle_update(
+                    name, {**update, "client": self.client, "user_guid": user_guid}
+                )
                 for name, updates in decrypted_data.items()
                 if isinstance(updates, list)
                 for update in updates
@@ -344,9 +375,11 @@ class Network:
 
             await asyncio.gather(*tasks)
         except Exception as e:
-            self.logger.error("Exception while handling WebSocket message",
-                            extra={'data': msg_data},
-                            exc_info=True)
+            self.logger.error(
+                "Exception while handling WebSocket message",
+                extra={"data": msg_data},
+                exc_info=True,
+            )
 
     async def upload_file(
         self,
@@ -357,7 +390,8 @@ class Network:
         callback: Optional[Callable[[int, int], Union[None, asyncio.Future]]] = None,
         max_retries: int = 3,
         backoff: float = 1.0,
-        *args, **kwargs
+        *args,
+        **kwargs,
     ) -> Update:
         """
         Uploads a file to Rubika with chunked transfer and retry logic.
@@ -392,12 +426,14 @@ class Network:
             file_size = os.path.getsize(file)
         elif isinstance(file, bytes):
             if not file_name:
-                raise ValueError("file_name must be specified when uploading from bytes.")
+                raise ValueError(
+                    "file_name must be specified when uploading from bytes."
+                )
             file_size = len(file)
         else:
             raise TypeError("file must be a file path (str) or raw bytes.")
 
-        mime = mime or file_name.split('.')[-1]
+        mime = mime or file_name.split(".")[-1]
 
         async def handle_callback(total: int, current: int):
             if not callable(callback):
@@ -418,62 +454,80 @@ class Network:
                     async with self.session.post(
                         url=upload_url,
                         headers={
-                            'auth': self.client.auth,
-                            'file-id': file_id,
-                            'total-part': str(total_parts),
-                            'part-number': str(part_number),
-                            'chunk-size': str(len(data)),
-                            'access-hash-send': access_hash_send
+                            "auth": self.client.auth,
+                            "file-id": file_id,
+                            "total-part": str(total_parts),
+                            "part-number": str(part_number),
+                            "chunk-size": str(len(data)),
+                            "access-hash-send": access_hash_send,
                         },
                         data=data,
-                        proxy=self.client.proxy
+                        proxy=self.client.proxy,
                     ) as response:
                         return await response.json()
                 except Exception as e:
                     self.logger.warning(
-                        f"Error uploading chunk {part_number} (attempt {attempt + 1}/{max_retries}): {e}")
+                        f"Error uploading chunk {part_number} (attempt {attempt + 1}/{max_retries}): {e}"
+                    )
                     if attempt < max_retries - 1:
-                        await asyncio.sleep(backoff * (2 ** attempt))
+                        await asyncio.sleep(backoff * (2**attempt))
                     else:
                         raise
 
         # Initial request to get upload metadata
         result = await self.client.request_send_file(file_name, file_size, mime)
-        file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
+        file_id, dc_id, upload_url, access_hash_send = (
+            result.id,
+            result.dc_id,
+            result.upload_url,
+            result.access_hash_send,
+        )
         total_parts = (file_size + chunk - 1) // chunk
 
         index = 0
         while index < total_parts:
             if isinstance(file, str):
-                async with aiofiles.open(file, 'rb') as f:
+                async with aiofiles.open(file, "rb") as f:
                     await f.seek(index * chunk)
                     data = await f.read(chunk)
             else:
-                data = file[index * chunk:(index + 1) * chunk]
+                data = file[index * chunk : (index + 1) * chunk]
 
             upload_result = await upload_chunk(data, index + 1)
 
-            if upload_result.get('status') == 'ERROR_TRY_AGAIN':
-                self.logger.warning("Server requested reinitialization. Restarting upload.")
+            if upload_result.get("status") == "ERROR_TRY_AGAIN":
+                self.logger.warning(
+                    "Server requested reinitialization. Restarting upload."
+                )
                 result = await self.client.request_send_file(file_name, file_size, mime)
-                file_id, dc_id, upload_url, access_hash_send = result.id, result.dc_id, result.upload_url, result.access_hash_send
+                file_id, dc_id, upload_url, access_hash_send = (
+                    result.id,
+                    result.dc_id,
+                    result.upload_url,
+                    result.access_hash_send,
+                )
                 index = 0
                 continue
 
             await handle_callback(file_size, min((index + 1) * chunk, file_size))
             index += 1
 
-        if upload_result.get('status') == 'OK' and upload_result.get('status_det') == 'OK':
-            return Update({
-                'mime': mime,
-                'size': file_size,
-                'dc_id': dc_id,
-                'file_id': file_id,
-                'file_name': file_name,
-                'access_hash_rec': upload_result['data']['access_hash_rec']
-            })
+        if (
+            upload_result.get("status") == "OK"
+            and upload_result.get("status_det") == "OK"
+        ):
+            return Update(
+                {
+                    "mime": mime,
+                    "size": file_size,
+                    "dc_id": dc_id,
+                    "file_id": file_id,
+                    "file_name": file_name,
+                    "access_hash_rec": upload_result["data"]["access_hash_rec"],
+                }
+            )
 
-        raise exceptions(upload_result.get('status_det'))(upload_result)
+        raise exceptions(upload_result.get("status_det"))(upload_result)
 
     async def download(
         self,
@@ -487,7 +541,8 @@ class Network:
         save_as: Optional[str] = None,
         max_retries: int = 3,
         backoff: float = 1.0,
-        *args, **kwargs
+        *args,
+        **kwargs,
     ) -> Union[bytes, str]:
         """
         Download a file from Rubika using its file ID and access hash.
@@ -517,25 +572,35 @@ class Network:
             None explicitly, but logs warnings and errors internally on failed retries or callback exceptions.
         """
         headers = {
-            'auth': self.client.auth,
-            'access-hash-rec': access_hash,
-            'file-id': str(file_id),
-            'user-agent': self.client.user_agent
+            "auth": self.client.auth,
+            "access-hash-rec": access_hash,
+            "file-id": str(file_id),
+            "user-agent": self.client.user_agent,
         }
-        base_url = f'https://messenger{dc_id}.iranlms.ir'
+        base_url = f"https://messenger{dc_id}.iranlms.ir"
 
         async def fetch_chunk(session, start: int, end: int) -> bytes:
-            chunk_headers = {**headers, 'start-index': str(start), 'last-index': str(end)}
+            chunk_headers = {
+                **headers,
+                "start-index": str(start),
+                "last-index": str(end),
+            }
             for attempt in range(max_retries):
                 try:
-                    async with session.post('/GetFile.ashx', headers=chunk_headers, proxy=self.client.proxy) as resp:
+                    async with session.post(
+                        "/GetFile.ashx", headers=chunk_headers, proxy=self.client.proxy
+                    ) as resp:
                         if resp.status == 200:
                             return await resp.read()
-                        self.logger.warning(f"Download failed with status {resp.status}")
+                        self.logger.warning(
+                            f"Download failed with status {resp.status}"
+                        )
                 except Exception as e:
-                    self.logger.warning(f"Error downloading chunk {start}-{end} (Attempt {attempt+1}): {e}")
-                await asyncio.sleep(backoff * (2 ** attempt))
-            return b''
+                    self.logger.warning(
+                        f"Error downloading chunk {start}-{end} (Attempt {attempt+1}): {e}"
+                    )
+                await asyncio.sleep(backoff * (2**attempt))
+            return b""
 
         async def handle_callback(total: int, current: int):
             if not callable(callback):
@@ -548,9 +613,11 @@ class Network:
             except Exception as e:
                 self.logger.error(f"Callback error: {e}")
 
-        async with aiohttp.ClientSession(base_url=base_url, connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+        async with aiohttp.ClientSession(
+            base_url=base_url, connector=aiohttp.TCPConnector(verify_ssl=False)
+        ) as session:
             if save_as:
-                async with aiofiles.open(save_as, 'wb') as f:
+                async with aiofiles.open(save_as, "wb") as f:
                     for start in range(0, size, chunk):
                         end = min(start + chunk, size) - 1
                         data = await fetch_chunk(session, start, end)
@@ -566,7 +633,7 @@ class Network:
                     for start in range(0, size, chunk)
                 ]
                 chunks = await asyncio.gather(*tasks)
-                result = b''.join(filter(None, chunks))
+                result = b"".join(filter(None, chunks))
                 await handle_callback(size, len(result))
                 return result
 

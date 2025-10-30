@@ -6,7 +6,7 @@ from .bot import BotClient
 from . import bot
 
 __author__ = 'Rubpy Project'
-__version__ = '7.1.11'
+__version__ = '7.1.24'
 __license__ = 'GNU Lesser General Public License v3 (LGPLv3)'
 __welcome__ = (
     f'Welcome to Rubpy (version {__version__})\n'

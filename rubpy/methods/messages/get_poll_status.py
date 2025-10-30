@@ -24,7 +24,7 @@ class GetPollStatus:
         Returns:
         - rubpy.types.Update: The status of the specified poll.
         """
-        return self.builder(name='getPollStatus',
+        return await self.builder(name='getPollStatus',
                             input={
                                 'poll_id': poll_id,
                             })

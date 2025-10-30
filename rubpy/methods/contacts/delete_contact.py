@@ -20,4 +20,4 @@ class DeleteContact:
         Note:
             - The `user_guid` parameter should be the GUID of the contact to be deleted.
         """
-        return self.builder(name='deleteContact', input={'user_guid': user_guid})
+        return await self.builder(name='deleteContact', input={'user_guid': user_guid})

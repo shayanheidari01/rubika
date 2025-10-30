@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: rubpy
-Version: 7.1.11
-Summary: A powerful, fast and optimal library for making robots in Rubika with sync and async support.
+Version: 7.1.24
+Summary: Elegant, modern and asynchronous Rubika API framework in Python for users and bots
 Home-page: https://github.com/shayanheidari01/rubika
 Author: Shayan Heidari
 Author-email: contact@shayanheidari.info
@@ -58,9 +58,9 @@ Dynamic: summary
   <em>Asynchronous & elegant Python framework for the Rubika API</em>
   <br><br>
   <a href="https://github.com/shayanheidari01/rubika">🏠 Homepage</a> •
-  <a href="https://github.com/shayanheidari01/rubika/tree/master/docs">📘 Documentation</a> •
+  <a href="https://rubpy.shayan-heidari.ir/">📘 Documentation</a> •
   <a href="https://pypi.org/project/rubpy/#history">📦 Releases</a> •
-  <a href="https://t.me/rubikapy">🗞 News</a>
+  <a href="https://rubika.ir/rubikapy">🗞 News</a>
 </p>
 
 ---
@@ -71,6 +71,21 @@ Dynamic: summary
 > A clean Pythonic interface to interact with Rubika's API — for both **users** and **bots**.
 
 ---
+
+### 🚀 Async Example
+```python
+from rubpy.bot import BotClient, filters
+
+app = BotClient("bot_token")
+
+
+@app.on_update(filters.private)
+async def hello(client, message):
+    await message.reply("Hello from Rubpy!")
+
+
+app.run()
+```
 
 ### 🚀 Async Example
 ```python
@@ -148,5 +163,5 @@ pip install -U rubpy
 
 ### 📣 Stay Connected
 
-- [Telegram Channel](https://t.me/rubikapy)
+- [Rubika Channel](https://rubika.ir/rubikapy)
 - [Project Homepage](https://github.com/shayanheidari01/rubika)

@@ -7,9 +7,6 @@ class ClientError(Exception):
 class StopHandler(ClientError):
     pass
 
-class APIException(Exception):
-    pass
-
 class CancelledError(ClientError):
     pass
 

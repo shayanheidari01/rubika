@@ -16,4 +16,6 @@ class GetContacts:
         Returns:
             rubpy.types.Update: The result of the API call.
         """
-        return self.builder(name='getContacts', input={'start_id': str(start_id)})
+        return await self.builder(name='getContacts', input={
+            'start_id': str(start_id) if start_id else None
+            })
