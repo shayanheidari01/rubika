@@ -13,7 +13,7 @@ with open('README.md', encoding='UTF-8') as f:
 
 setup(
     name = 'rubpy',
-    version = '7.1.28',
+    version = '7.1.29',
     author='Shayan Heidari',
     author_email = 'contact@shayanheidari.info',
     description = 'Elegant, modern and asynchronous Rubika API framework in Python for users and bots',

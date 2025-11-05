@@ -20,6 +20,7 @@ from .message import (
     ContactMessage,
     LiveLocation
 )
+from rubpy.bot.enums import ButtonTypeEnum
 
 
 __all__ = [
@@ -41,5 +42,6 @@ __all__ = [
     "Sticker",
     "ContactMessage",
     "LiveLocation",
-    "DictLike"
+    "DictLike",
+    "ButtonTypeEnum",
 ]
