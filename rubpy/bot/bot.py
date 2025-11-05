@@ -6,6 +6,11 @@ from pathlib import Path
 import threading
 import aiohttp
 from aiohttp import web
+from aiohttp.client_exceptions import (
+    ClientError,
+    ClientResponseError,
+    ContentTypeError,
+)
 import json
 from typing import Any, Callable, Dict, List, Literal, Optional, Union, Tuple
 import logging
@@ -49,7 +54,10 @@ class BotClient:
             rate_limit: float = 0.5,
             use_webhook: bool = False,
             timeout: Union[int, float] = 10.0,
-            connector: "aiohttp.TCPConnector" = None
+            connector: "aiohttp.TCPConnector" = None,
+            max_retries: int = 3,
+            backoff_factor: float = 0.5,
+            retry_statuses: Optional[Tuple[int, ...]] = None,
     ) -> None:
 
         self.token = token
@@ -68,6 +76,10 @@ class BotClient:
         self.use_webhook = use_webhook
         self.timeout = timeout
         self.connector = connector
+        self.max_retries = max(1, int(max_retries))
+        self.backoff_factor = max(0.0, float(backoff_factor))
+        self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
+        self._session_lock = asyncio.Lock()
         logger.info("Rubika client initialized, use_webhook=%s", use_webhook)
 
     def on_start(self):
@@ -105,10 +117,7 @@ class BotClient:
         self.last_request_time = time.time()
 
     async def start(self):
-        if self.session is None or self.session.closed:
-            timeout = aiohttp.ClientTimeout(total=self.timeout)
-            connector = self.connector or aiohttp.TCPConnector(limit=50, limit_per_host=10)
-            self.session = aiohttp.ClientSession(timeout=timeout, connector=connector)
+        await self._ensure_session()
         self.running = True
 
         for handler in self.start_handlers:
@@ -120,8 +129,7 @@ class BotClient:
         logger.info("RubikaPY bot client started")
 
     async def stop(self):
-        if self.session and not self.session.closed:
-            await self.session.close()
+        await self._close_session()
         self.running = False
 
         for handler in self.shutdown_handlers:
@@ -168,21 +176,98 @@ class BotClient:
     async def _make_request(self, method: str, data: Dict) -> Dict:
         await self._rate_limit_delay()
         url = f"{self.base_url}{method}"
-        
-        async with self.session.post(url, json=data) as response:
-            if not response.ok:
-                raise
 
-            result = await response.json()
-            logger.debug(f"API response for {method}: {result}")
+        last_error: Optional[BaseException] = None
 
-            if result["status"] != "OK":
-                raise APIException(
-                    status=result["status"],
-                    dev_message=result.get("dev_message")
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                await self._ensure_session()
+                if not self.session:
+                    raise RuntimeError("Client session is not initialized")
+
+                async with self.session.post(url, json=data) as response:
+                    try:
+                        response.raise_for_status()
+                    except ClientResponseError as exc:
+                        body = await response.text()
+                        if self._is_retryable_status(exc.status) and attempt < self.max_retries:
+                            last_error = exc
+                            logger.warning(
+                                "Retryable HTTP error %s on %s attempt %s: %s",
+                                exc.status,
+                                method,
+                                attempt,
+                                body,
+                            )
+                            await self._sleep_backoff(attempt)
+                            continue
+                        raise APIException(status=str(exc.status), dev_message=body or exc.message)
+
+                    try:
+                        result = await response.json(content_type=None)
+                    except ContentTypeError:
+                        text = await response.text()
+                        raise APIException(status="InvalidResponse", dev_message=text)
+
+                    logger.debug(f"API response for {method}: {result}")
+
+                    if result.get("status") != "OK":
+                        raise APIException(
+                            status=result.get("status", "ERROR"),
+                            dev_message=result.get("dev_message"),
+                        )
+
+                    return result["data"]
+
+            except (ClientError, asyncio.TimeoutError) as exc:
+                last_error = exc
+                if attempt >= self.max_retries:
+                    break
+                logger.warning(
+                    "Network error on %s attempt %s: %s", method, attempt, str(exc)
                 )
-            
-            return result["data"]
+                await self._sleep_backoff(attempt)
+
+        if last_error:
+            raise last_error
+
+        raise APIException(status="UnknownError", dev_message=f"Failed to call {method}")
+
+    async def _ensure_session(self) -> None:
+        if self.session and not self.session.closed:
+            return
+
+        async with self._session_lock:
+            if self.session and not self.session.closed:
+                return
+
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
+            connector = self.connector or aiohttp.TCPConnector(
+                limit=50,
+                limit_per_host=10,
+                ttl_dns_cache=300,
+                enable_cleanup_closed=True,
+            )
+            connector_owner = self.connector is None
+            self.session = aiohttp.ClientSession(
+                timeout=timeout,
+                connector=connector,
+                connector_owner=connector_owner,
+            )
+
+    async def _close_session(self) -> None:
+        if self.session and not self.session.closed:
+            await self.session.close()
+        self.session = None
+
+    def _is_retryable_status(self, status: Optional[int]) -> bool:
+        return status in self.retry_statuses if status is not None else False
+
+    async def _sleep_backoff(self, attempt: int) -> None:
+        if self.backoff_factor <= 0:
+            return
+        delay = self.backoff_factor * (2 ** (attempt - 1))
+        await asyncio.sleep(delay)
 
     async def get_me(self) -> Bot:
         result = await self._make_request("getMe", {})
@@ -982,8 +1067,7 @@ class BotClient:
                     logger.error(f"Polling error: {str(e)}")
 
     async def close(self):
-        if not self.session.closed:
-            await self.session.close()
+        await self._close_session()
 
     async def download_file(
         self,

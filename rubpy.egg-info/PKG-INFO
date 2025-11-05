@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: rubpy
-Version: 7.1.24
+Version: 7.1.28
 Summary: Elegant, modern and asynchronous Rubika API framework in Python for users and bots
 Home-page: https://github.com/shayanheidari01/rubika
 Author: Shayan Heidari
@@ -22,6 +22,7 @@ Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
 Requires-Python: ~=3.7
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: aiohttp
 Requires-Dist: pycryptodome
 Requires-Dist: aiofiles
@@ -44,6 +45,7 @@ Dynamic: description
 Dynamic: description-content-type
 Dynamic: home-page
 Dynamic: keywords
+Dynamic: license-file
 Dynamic: provides-extra
 Dynamic: requires-dist
 Dynamic: requires-python

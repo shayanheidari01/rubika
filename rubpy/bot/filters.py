@@ -11,15 +11,38 @@ def maybe_instance(f):
     return f() if isinstance(f, type) else f
 
 
-class Filter:
+class FilterMeta(type):
+    def __and__(cls, other):
+        return AndFilter(maybe_instance(cls), maybe_instance(other))
+
+    def __rand__(cls, other):
+        return AndFilter(maybe_instance(other), maybe_instance(cls))
+
+    def __or__(cls, other):
+        return OrFilter(maybe_instance(cls), maybe_instance(other))
+
+    def __ror__(cls, other):
+        return OrFilter(maybe_instance(other), maybe_instance(cls))
+
+    def __invert__(cls):
+        return NotFilter(maybe_instance(cls))
+
+
+class Filter(metaclass=FilterMeta):
     async def check(self, update):
         raise NotImplementedError
 
     def __and__(self, other):
         return AndFilter(maybe_instance(self), maybe_instance(other))
 
+    def __rand__(self, other):
+        return AndFilter(maybe_instance(other), maybe_instance(self))
+
     def __or__(self, other):
         return OrFilter(maybe_instance(self), maybe_instance(other))
+
+    def __ror__(self, other):
+        return OrFilter(maybe_instance(other), maybe_instance(self))
 
     def __invert__(self):
         instance = self() if isinstance(self, type) else self

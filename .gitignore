@@ -21,7 +21,12 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.whl
+*.tar.gz
 MANIFEST
+
+# Local package clones
+rubpy-*/
 
 # PyInstaller
 *.manifest
@@ -52,6 +57,8 @@ pytestdebug.log
 
 # Sphinx documentation
 /docs/_build/
+site/
+docs/site/
 
 # PyBuilder
 target/

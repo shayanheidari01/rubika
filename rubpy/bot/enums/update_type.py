@@ -8,3 +8,11 @@ class UpdateTypeEnum(str, Enum):
     STARTED_BOT = "StartedBot"
     STOPPED_BOT = "StoppedBot"
     UPDATED_PAYMENT = "UpdatedPayment"
+
+    # Backwards-compatible camelCase aliases
+    NewMessage = NEW_MESSAGE
+    UpdatedMessage = UPDATED_MESSAGE
+    RemovedMessage = REMOVED_MESSAGE
+    StartedBot = STARTED_BOT
+    StoppedBot = STOPPED_BOT
+    UpdatedPayment = UPDATED_PAYMENT
