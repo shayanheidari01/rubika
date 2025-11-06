@@ -1,9 +1,10 @@
+"""Client utilities for interacting with the Rubika bot API."""
+
 import asyncio
 import dataclasses
 import inspect
 import mimetypes
 from pathlib import Path
-import threading
 import aiohttp
 from aiohttp import web
 from aiohttp.client_exceptions import (
@@ -35,8 +36,17 @@ from rubpy.bot.exceptions import APIException
 # logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
-
 def has_time_passed(last_time, seconds: int = 5) -> bool:
+    """
+    Check if a certain amount of time has passed since the last time.
+
+    Args:
+        last_time: The last time in seconds.
+        seconds: The amount of time to check for.
+
+    Returns:
+        bool: True if the time has passed, False otherwise.
+    """
     try:
         timestamp = int(float(last_time))
         now = time.time()
@@ -46,19 +56,58 @@ def has_time_passed(last_time, seconds: int = 5) -> bool:
 
 
 class BotClient:
+    """
+    Asynchronous client for managing Rubika bot interactions.
+
+    Attributes:
+        token: Bot authentication token provided by Rubika.
+        base_url: The base URL for API requests.
+        handlers: A dictionary of registered handlers.
+        start_handlers: A list of registered startup handlers.
+        shutdown_handlers: A list of registered shutdown handlers.
+        middlewares: A list of registered middleware functions.
+        session: The active aiohttp session.
+        running: A flag indicating whether the client is running.
+        next_offset_id: The next offset ID for API requests.
+        processed_messages: A deque of processed messages.
+        rate_limit: The minimum delay in seconds between API requests.
+        last_request_time: The last time an API request was made.
+        first_get_updates: A flag indicating whether this is the first get updates request.
+        use_webhook: A flag indicating whether the client should operate in webhook mode.
+        timeout: The overall timeout for API requests.
+        connector: An optional shared aiohttp connector instance.
+        max_retries: The maximum number of retries for retryable responses.
+        backoff_factor: The base delay in seconds for exponential backoff.
+        retry_statuses: A set of HTTP status codes that should trigger retries.
+    """
+
     BASE_URL = "https://botapi.rubika.ir/v3/{}/"
 
     def __init__(
-            self,
-            token: str,
-            rate_limit: float = 0.5,
-            use_webhook: bool = False,
-            timeout: Union[int, float] = 10.0,
-            connector: "aiohttp.TCPConnector" = None,
-            max_retries: int = 3,
-            backoff_factor: float = 0.5,
-            retry_statuses: Optional[Tuple[int, ...]] = None,
+        self,
+        token: str,
+        rate_limit: float = 0.5,
+        use_webhook: bool = False,
+        timeout: Union[int, float] = 10.0,
+        connector: "aiohttp.TCPConnector" = None,
+        max_retries: int = 3,
+        backoff_factor: float = 0.5,
+        retry_statuses: Optional[Tuple[int, ...]] = None,
+        poll_interval: float = 0.5,
     ) -> None:
+        """
+        Initialize a new :class:`BotClient` instance.
+
+        Args:
+            token: Bot authentication token provided by Rubika.
+            rate_limit: Minimum delay in seconds between API requests.
+            use_webhook: Whether the client should operate in webhook mode.
+            timeout: Overall timeout for API requests.
+            connector: Optional shared aiohttp connector instance.
+            max_retries: Maximum number of retries for retryable responses.
+            backoff_factor: Base delay (in seconds) for exponential backoff.
+            retry_statuses: HTTP status codes that should trigger retries.
+        """
 
         self.token = token
         self.base_url = self.BASE_URL.format(token)
@@ -80,12 +129,17 @@ class BotClient:
         self.backoff_factor = max(0.0, float(backoff_factor))
         self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
         self._session_lock = asyncio.Lock()
-        logger.info("Rubika client initialized, use_webhook=%s", use_webhook)
+        self.poll_interval = max(0.1, float(poll_interval))
+        logger.info(
+            "Rubika client initialized (use_webhook=%s, rate_limit=%.2fs)",
+            use_webhook,
+            rate_limit,
+        )
 
     def on_start(self):
         """
         Decorator to register startup handlers.
-        
+
         Example:
             @bot.on_start()
             async def hello(bot):
@@ -97,26 +151,37 @@ class BotClient:
         return decorator
 
     async def __aenter__(self) -> "BotClient":
+        """Asynchronous context manager entry point."""
         await self.start()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        """Ensure the client stops when leaving an async context."""
         await self.stop()
-    
+
     def __enter__(self) -> "BotClient":
+        """Synchronous context manager entry point."""
         self.start()
         return self
-    
+
     def __exit__(self, exc_type, exc_value, traceback) -> None:
+        """Ensure the client stops when leaving a sync context."""
         self.stop()
 
     async def _rate_limit_delay(self):
+        """
+        Enforce the rate limit by waiting for a certain amount of time.
+
+        This method checks the time elapsed since the last request and waits
+        for the remaining time if necessary.
+        """
         elapsed = time.time() - self.last_request_time
         if elapsed < self.rate_limit:
             await asyncio.sleep(self.rate_limit - elapsed)
         self.last_request_time = time.time()
 
     async def start(self):
+        """Start the client session and execute registered startup hooks."""
         await self._ensure_session()
         self.running = True
 
@@ -129,6 +194,7 @@ class BotClient:
         logger.info("RubikaPY bot client started")
 
     async def stop(self):
+        """Stop the client and run shutdown hooks."""
         await self._close_session()
         self.running = False
 
@@ -169,11 +235,12 @@ class BotClient:
         """
         def decorator(func: Callable):
             self.middlewares.append(func)
-            logger.info(f"Middleware {func.__name__} registered")
+            logger.info("Middleware %s registered", func.__name__)
             return func
         return decorator
 
     async def _make_request(self, method: str, data: Dict) -> Dict:
+        """Perform an API request with retry and response validation."""
         await self._rate_limit_delay()
         url = f"{self.base_url}{method}"
 
@@ -209,7 +276,11 @@ class BotClient:
                         text = await response.text()
                         raise APIException(status="InvalidResponse", dev_message=text)
 
-                    logger.debug(f"API response for {method}: {result}")
+                    logger.debug(
+                        "API response for %s returned status=%s",
+                        method,
+                        result.get("status"),
+                    )
 
                     if result.get("status") != "OK":
                         raise APIException(
@@ -234,6 +305,7 @@ class BotClient:
         raise APIException(status="UnknownError", dev_message=f"Failed to call {method}")
 
     async def _ensure_session(self) -> None:
+        """Ensure there is an open aiohttp session available for use."""
         if self.session and not self.session.closed:
             return
 
@@ -256,6 +328,7 @@ class BotClient:
             )
 
     async def _close_session(self) -> None:
+        """Close the active aiohttp session if it exists."""
         if self.session and not self.session.closed:
             await self.session.close()
         self.session = None
@@ -264,6 +337,7 @@ class BotClient:
         return status in self.retry_statuses if status is not None else False
 
     async def _sleep_backoff(self, attempt: int) -> None:
+        """Wait for an exponentially increasing delay between retries."""
         if self.backoff_factor <= 0:
             return
         delay = self.backoff_factor * (2 ** (attempt - 1))
@@ -461,7 +535,7 @@ class BotClient:
             name="file",
             value=open(file_path, "rb"),
             filename=file_name,
-            content_type="application/octet-stream",  # یا نوع فایل واقعی مثل image/png
+            content_type="application/octet-stream",  # Replace if the real MIME type is known.
         )
 
         async with aiohttp.ClientSession() as session:
@@ -473,7 +547,7 @@ class BotClient:
                     )
 
                 data = await res.json()
-                return data["data"]["file_id"]  # اطمینان حاصل کن که ساختار JSON این‌طوریه
+                return data["data"]["file_id"]  # Ensure this matches the upstream JSON shape.
 
     async def get_file(self, file_id: str) -> str:
         result = await self._make_request("getFile", {"file_id": file_id})
@@ -584,7 +658,7 @@ class BotClient:
         Returns:
             List[Update]: Parsed updates as Update objects.
         """
-        # ساخت دیتا به صورت مستقیم (کاهش شرط اضافی)
+        # Build payload inline to avoid redundant conditionals.
         data = {"limit": limit, **({"offset_id": offset_id} if offset_id else {})}
 
         response = await self._make_request("getUpdates", data)
@@ -592,7 +666,7 @@ class BotClient:
         if not updates_raw:
             return []
 
-        # ساخت لیست با list comprehension (سریع‌تر از for)
+        # Use list comprehension to parse updates efficiently.
         return [
             Update(
                 type=u.get("type", ""),
@@ -627,14 +701,14 @@ class BotClient:
                         and update.updated_message.time
                     )
 
-                    # اگر از آخرین پیام بیشتر از 5 ثانیه گذشته، لیست update رو پاک کن
+                    # Skip stale updates older than the configured threshold.
                     if has_time_passed(last_time, 5):
                         continue
 
                     updates.append(update)
 
         except Exception as e:
-            logger.exception(f"Failed to get updates: {str(e)}")
+            logger.exception("Failed to get updates: %s", e)
 
         if self.first_get_updates:
             self.first_get_updates = False
@@ -775,7 +849,9 @@ class BotClient:
                 self.handlers[filter_key] = []
             self.handlers[filter_key].append((filters, handler))
             logger.info(
-                f"Registered handler {handler.__name__} with filters: {filters}"
+                "Registered handler %s with filters: %s",
+                handler.__name__,
+                filters,
             )
             return handler
 
@@ -800,7 +876,10 @@ class BotClient:
             self.handlers[handler_key] = []
         self.handlers[handler_key].append((filters, handler))
         logger.info(
-            f"Handler {handler.__name__} added with key {handler_key}, filters: {filters}"
+            "Handler %s added with key %s, filters: %s",
+            handler.__name__,
+            handler_key,
+            filters,
         )
         return handler_key
 
@@ -839,7 +918,7 @@ class BotClient:
     def _parse_update(self, item: Dict) -> Optional[Union[Update, InlineMessage]]:
         update_type = item.get("type")
         if not update_type:
-            logger.debug(f"Skipping update with no type: {item}")
+            logger.debug("Skipping update with no type: %r", item)
             return None
 
         chat_id = item.get("chat_id", "")
@@ -861,7 +940,7 @@ class BotClient:
             )
             msg_data = item.get(msg_key)
             if not msg_data:
-                logger.debug(f"Skipping {msg_key} with no message data: {item}")
+                logger.debug("Skipping %s with no message data: %r", msg_key, item)
                 return None
 
             msg_data["message_id"] = str(msg_data.get("message_id", ""))
@@ -884,7 +963,7 @@ class BotClient:
                     ),
                 )
             except Exception as e:
-                logger.error(f"Failed to parse message: {msg_data}, error: {str(e)}")
+                logger.exception("Failed to parse message: %r", msg_data)
                 return None
         elif update_type == "InlineMessage":
             try:
@@ -898,29 +977,35 @@ class BotClient:
                     aux_data=item.get("aux_data"),
                     client=self,
                 )
-                logger.info(f"Parsed InlineMessage: {inline_msg}")
+                logger.info("Parsed InlineMessage: %s", inline_msg)
                 return inline_msg
             except Exception as e:
-                logger.error(f"Failed to parse InlineMessage: {item}, error: {str(e)}")
+                logger.exception("Failed to parse InlineMessage: %r", item)
                 return None
         else:
-            logger.debug(f"Unhandled update type: {update_type}, data: {item}")
+            logger.debug("Unhandled update type: %s, data: %r", update_type, item)
             return None
 
     async def process_update(self, update: Union[Update, InlineMessage]):
+        """Run middlewares in order before dispatching the update."""
         async def run_middlewares(index: int):
             if index < len(self.middlewares):
                 mw = self.middlewares[index]
                 if inspect.iscoroutinefunction(mw):
                     await mw(self, update, lambda: run_middlewares(index + 1))
                 else:
-                    mw(self, update, lambda: asyncio.create_task(run_middlewares(index + 1)))
+                    mw(
+                        self,
+                        update,
+                        lambda: asyncio.create_task(run_middlewares(index + 1)),
+                    )
             else:
                 await self._dispatch_update(update)
 
         await run_middlewares(0)
 
     async def _dispatch_update(self, update: Union[Update, InlineMessage]):
+        """Invoke the first matching handler for the provided update."""
         update_type = "InlineMessage" if isinstance(update, InlineMessage) else update.type
         message_id = self._extract_message_id(update)
 
@@ -929,13 +1014,15 @@ class BotClient:
         if message_id and isinstance(update, Update):
             self.processed_messages.append(message_id)
 
+        loop = asyncio.get_running_loop()
+
         for filter_key, handler_list in self.handlers.items():
             for filters, handler in handler_list:
                 if await self._filters_pass(update, filters):
                     if asyncio.iscoroutinefunction(handler):
                         asyncio.create_task(handler(self, update))
                     else:
-                        threading.Thread(target=handler, args=(self, update)).start()
+                        loop.run_in_executor(None, handler, self, update)
                     return
 
     def _extract_message_id(
@@ -962,22 +1049,30 @@ class BotClient:
                 f = f()
 
             result = await f.check(update)
-            logger.info(f"Filter {f.__class__.__name__} check for update {update_type}: {result}")
+            logger.debug(
+                "Filter %s check for update %s: %s",
+                f.__class__.__name__,
+                update_type,
+                result,
+            )
             if not result:
                 return False
 
-        logger.info(f"All filters passed for update {update_type}")
+        logger.debug("All filters passed for update %s", update_type)
         return True
 
     async def handle_webhook(self, request: web.Request) -> web.Response:
+        """Process incoming webhook requests and queue updates for handling."""
         if request.method != "POST":
-            logger.error(f"Invalid method: {request.method}")
+            logger.error("Invalid method: %s", request.method)
             return web.Response(status=405, text="Method Not Allowed")
 
         try:
             data = await request.json()
             logger.debug(
-                f"Webhook payload for {request.path}: {json.dumps(data, ensure_ascii=False)}"
+                "Webhook payload for %s: %s",
+                request.path,
+                json.dumps(data, ensure_ascii=False),
             )
             updates = []
 
@@ -994,20 +1089,20 @@ class BotClient:
                         aux_data=data["inline_message"].get("aux_data"),
                         client=self,
                     )
-                    logger.info(f"Received InlineMessage: {inline_msg}")
+                    logger.info("Received InlineMessage: %s", inline_msg)
                     updates.append(inline_msg)
-                except Exception as e:
-                    logger.error(f"Failed to parse InlineMessage: {str(e)}")
+                except Exception:
+                    logger.exception("Failed to parse InlineMessage payload")
 
             # Handle updates
             elif "update" in data:
                 update = self._parse_update(data["update"])
                 if update:
-                    logger.info(f"Received Update: {update}")
+                    logger.info("Received Update: %s", update)
                     updates.append(update)
 
             for update in updates:
-                logger.info(f"Queuing update for processing: {update}")
+                logger.debug("Queuing update for processing: %s", update)
                 asyncio.create_task(self.process_update(update))
 
             return web.json_response({"status": "OK"})
@@ -1017,7 +1112,7 @@ class BotClient:
                 {"status": "ERROR", "error": "Invalid JSON"}, status=400
             )
         except Exception as e:
-            logger.error(f"Webhook error for {request.path}: {str(e)}")
+            logger.error("Webhook error for %s: %s", request.path, e)
             return web.json_response({"status": "ERROR", "error": str(e)}, status=500)
 
     async def run(
@@ -1025,8 +1120,9 @@ class BotClient:
         webhook_url: Optional[str] = None,
         path: Optional[str] = "/webhook",
         host: str = "0.0.0.0",
-        port: int = 8080
+        port: int = 8080,
     ):
+        """Run the client in either webhook or polling mode."""
         self.use_webhook = bool(webhook_url)
         await self.start()
         if self.use_webhook:
@@ -1040,33 +1136,58 @@ class BotClient:
             app.router.add_post(f"{webhook_base}/searchSelectionItems", self.handle_webhook)
 
             webhook_url = f"{webhook_url.rstrip('/')}{webhook_base}"
-            for endpoint_type in ["ReceiveUpdate", "ReceiveInlineMessage", "ReceiveQuery", "GetSelectionItem", "SearchSelectionItems"]:
+            for endpoint_type in [
+                "ReceiveUpdate",
+                "ReceiveInlineMessage",
+                "ReceiveQuery",
+                "GetSelectionItem",
+                "SearchSelectionItems",
+            ]:
                 response = await self.update_bot_endpoints(webhook_url, endpoint_type)
                 logger.info(
-                    f"Webhook set for {endpoint_type} to {webhook_url}: {response}"
+                    "Webhook set for %s to %s: %s",
+                    endpoint_type,
+                    webhook_url,
+                    response,
                 )
 
             runner = web.AppRunner(app)
             await runner.setup()
             site = web.TCPSite(runner, host, port)
             await site.start()
-            logger.info(f"Webhook server running at http://{host}:{port}{webhook_base}")
+            logger.info(
+                "Webhook server running at http://%s:%s%s",
+                host,
+                port,
+                webhook_base,
+            )
             try:
                 while self.running:
                     await asyncio.sleep(1)
             finally:
                 await runner.cleanup()
         else:
+            idle_delay = self.poll_interval
+            max_idle_delay = max(self.poll_interval, self.poll_interval * 8)
             while self.running:
                 try:
                     updates = await self.updater(limit=100)
+                    if not updates:
+                        await asyncio.sleep(idle_delay)
+                        idle_delay = min(max_idle_delay, idle_delay * 2)
+                        continue
+
+                    idle_delay = self.poll_interval
                     for update in updates:
-                        logger.info(f"Processing polled update: {update}")
+                        logger.debug("Processing polled update: %s", update)
                         asyncio.create_task(self.process_update(update))
                 except Exception as e:
-                    logger.error(f"Polling error: {str(e)}")
+                    logger.error("Polling error: %s", e)
+                    await asyncio.sleep(idle_delay)
+                    idle_delay = min(max_idle_delay, idle_delay * 2)
 
     async def close(self):
+        """Close the underlying HTTP session."""
         await self._close_session()
 
     async def download_file(
@@ -1076,7 +1197,7 @@ class BotClient:
         progress: Optional[Callable[[int, int], None]] = None,
         chunk_size: int = 65536,
         as_bytes: bool = False,
-        timeout: Optional[Union[int, float]] = 20.0
+        timeout: Optional[Union[int, float]] = 20.0,
     ) -> Union[str, bytes, None]:
         """
         Downloads a file by file_id.
