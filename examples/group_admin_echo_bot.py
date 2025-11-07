@@ -1,11 +1,25 @@
 from rubpy.bot import BotClient, filters
 from rubpy.bot.models import Update
 
-app = BotClient("Your-Bot-Token")
-GROUP_CHAT_IDS = ["group-chat-id"]
-ADMIN_SENDER_ID = "your-sender-id"
+app = BotClient(
+    token="BOT_TOKEN",
+    rate_limit=0,
+    timeout=1,)
 
-@app.on_update(filters.chat(GROUP_CHAT_IDS), filters.forward())
+GROUP_CHAT_IDS = ["GROUP_CHAT_ID"]
+ADMIN_SENDER_ID = "ADMIN_SENDER_ID"
+
+@app.middleware()
+async def logger(bot, update, call_next):
+    print("🔹 Update received:", update)
+    await call_next()
+
+@app.on_start()
+async def hello(bot):
+    print(await bot.get_me())
+    print("Bot started!")
+
+@app.on_update(filters.chat(GROUP_CHAT_IDS))
 async def group_handler(client: BotClient, update: Update):
     if update.new_message.sender_id == ADMIN_SENDER_ID:
         if update.new_message.text:
@@ -14,20 +28,6 @@ async def group_handler(client: BotClient, update: Update):
                 chat_id=update.chat_id,
                 text=update.new_message.text,
                 reply_to_message_id=update.new_message.reply_to_message_id)
-        
-        elif bool(update.find_key("forwarded_no_link")):
-            await update.delete()
-            await client.forward_message(
-                from_chat_id=update.chat_id,
-                message_id=update.new_message.message_id,
-                to_chat_id=update.chat_id)
-        
-        elif bool(update.find_key("forwarded_from")):
-            await update.delete()
-            await client.forward_message(
-                from_chat_id=update.chat_id,
-                message_id=update.new_message.message_id,
-                to_chat_id=update.chat_id)
 
 
 app.run()

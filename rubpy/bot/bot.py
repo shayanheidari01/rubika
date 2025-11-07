@@ -325,6 +325,7 @@ class BotClient:
                 timeout=timeout,
                 connector=connector,
                 connector_owner=connector_owner,
+                headers={"user-agent": "rubpy-7.1.31"}
             )
 
     async def _close_session(self) -> None:
