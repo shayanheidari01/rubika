@@ -93,7 +93,7 @@ class Markdown:
                     elif md_type == "Link":
                         # پردازش لینک‌ها و منشن‌ها
                         url = match.group(9)
-                        mention_types = {"u": "User", "g": "Group", "c": "Channel"}
+                        mention_types = {"u": "User", "g": "Group", "c": "Channel", "b": "Bot"}
                         mention_type = mention_types.get(url[0], "hyperlink")
 
                         if mention_type == "hyperlink":

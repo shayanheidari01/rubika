@@ -10,6 +10,7 @@ from .get_suggested_folders import GetSuggestedFolders
 from .set_setting import SetSetting
 from .update_profile import UpdateProfile
 from .update_username import UpdateUsername
+from .terminate_other_sessions import TerminateOtherSessions
 
 
 class Settings(
@@ -25,5 +26,6 @@ class Settings(
     SetSetting,
     UpdateProfile,
     UpdateUsername,
+    TerminateOtherSessions,
 ):
     pass

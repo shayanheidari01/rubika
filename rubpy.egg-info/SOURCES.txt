@@ -196,6 +196,7 @@ rubpy/methods/settings/get_suggested_folders.py
 rubpy/methods/settings/get_two_passcode_status.py
 rubpy/methods/settings/set_setting.py
 rubpy/methods/settings/setup_two_step_verification.py
+rubpy/methods/settings/terminate_other_sessions.py
 rubpy/methods/settings/terminate_session.py
 rubpy/methods/settings/update_profile.py
 rubpy/methods/settings/update_username.py
