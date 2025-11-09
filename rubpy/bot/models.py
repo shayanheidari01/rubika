@@ -187,7 +187,6 @@ class AuxData(DictLike):
     start_id: Optional[str] = None
     button_id: Optional[str] = None
 
-
 @dataclass
 class JoinChannelData(DictLike):
     username: Optional[str] = None
@@ -195,14 +194,12 @@ class JoinChannelData(DictLike):
 
     def __post_init__(self):
         if self.username:
-            self.username = self.username.replace("@", "")
-
+            self.username = self.username.replace('@', '')
 
 @dataclass
 class OpenChatData(DictLike):
     object_guid: Optional[str] = None
     object_type: Optional[ChatTypeEnum] = None
-
 
 @dataclass
 class ButtonLink(DictLike):
@@ -219,15 +216,14 @@ class ButtonLink(DictLike):
         mappings = {
             "https://rubika.ir/joing/": "rubika://g.rubika.ir/",
             "https://rubika.ir/joinc/": "rubika://c.rubika.ir/",
-            "https://rubika.ir/post/": "rubika://p.rubika.ir/",
+            "https://rubika.ir/post/": "rubika://p.rubika.ir/"
         }
 
         for prefix, deep_prefix in mappings.items():
             if self.link_url.startswith(prefix):
-                code = self.link_url[len(prefix) :]
+                code = self.link_url[len(prefix):]
                 self.link_url = deep_prefix + code
                 break
-
 
 @dataclass
 class Button(DictLike):
@@ -281,12 +277,25 @@ class MessageId(DictLike):
 
 
 @dataclass
+class MetaDataParts(DictLike):
+    from_index: Optional[int] = None
+    length: Optional[int] = None
+    type: Optional[str] = None
+    link_url: Optional[str] = None
+    mention_text_user_id: Optional[str] = None
+
+@dataclass
+class Metadata(DictLike):
+    meta_data_parts: Optional[List[MetaDataParts]] = None
+
+
+@dataclass
 class Message(DictLike):
     message_id: Optional[MessageId] = None
+    time: Optional[str] = None
     text: Optional[str] = None
-    time: Optional[int] = None
     is_edited: Optional[bool] = None
-    sender_type: Optional[MessageSenderEnum] = None
+    sender_type: Optional[str] = None
     sender_id: Optional[str] = None
     aux_data: Optional[AuxData] = None
     file: Optional[File] = None
@@ -298,6 +307,7 @@ class Message(DictLike):
     contact_message: Optional[ContactMessage] = None
     poll: Optional[Poll] = None
     live_location: Optional[LiveLocation] = None
+    metadata: Optional[Metadata] = None
 
 
 @dataclass
@@ -429,11 +439,12 @@ class Update(DictLike):
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
-        return await self.client.send_voice(
+        return await self.client.send_file(
             chat_id=chat_id or self.chat_id,
             file=file,
             file_id=file_id,
             text=text,
+            type="Image",
             chat_keypad=chat_keypad,
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
@@ -456,11 +467,12 @@ class Update(DictLike):
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
-        return await self.client.send_music(
+        return await self.client.send_file(
             chat_id=chat_id or self.chat_id,
             file=file,
             file_id=file_id,
             text=text,
+            type="Music",
             chat_keypad=chat_keypad,
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
@@ -537,6 +549,7 @@ class Update(DictLike):
             progress=progress,
             chunk_size=chunk_size,
             as_bytes=as_bytes,
+            file_name=self.find_key("file_name"),
         )
 
 
@@ -638,7 +651,7 @@ class InlineMessage(DictLike):
             file=file,
             file_id=file_id,
             text=text,
-            type="Voice",
+            type="Image",
             chat_keypad=chat_keypad,
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,

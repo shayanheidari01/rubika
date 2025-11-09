@@ -1,5 +1,6 @@
 # Filters
 import asyncio
+import mimetypes
 import re
 from typing import Any, Dict, List, Optional, Union
 
@@ -619,6 +620,129 @@ class file(Filter):
         except KeyError:
             return False
 
+class photo(Filter):
+    """
+    Filter for checking photo messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any photo message
+        >>> @bot.on_update(filters.photo)
+        ... async def any_photo(c, update):
+        ...     await update.reply("new photo")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            result = update.find_key("file")
+            if result:
+                result = mimetypes.guess_type(result.file_name)[0]
+                if result:
+                    return result.startswith("image/")
+            return result
+
+        except KeyError:
+            return False
+
+class video(Filter):
+    """
+    Filter for checking video messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any video message
+        >>> @bot.on_update(filters.video)
+        ... async def any_video(c, update):
+        ...     await update.reply("new video")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            result = update.find_key("file")
+            if result:
+                result = mimetypes.guess_type(result.file_name)[0]
+                if result:
+                    return result.startswith("video/")
+            return result
+
+        except KeyError:
+            return False
+
+class audio(Filter):
+    """
+    Filter for checking audio messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any audio message
+        >>> @bot.on_update(filters.audio)
+        ... async def any_audio(c, update):
+        ...     await update.reply("new audio")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            result = update.find_key("file")
+            if result:
+                result = mimetypes.guess_type(result.file_name)[0]
+                if result:
+                    return result.startswith("audio/") and not result.endswith("ogg")
+            return result
+
+        except KeyError:
+            return False
+
+class voice(Filter):
+    """
+    Filter for checking voice messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any voice message
+        >>> @bot.on_update(filters.voice)
+        ... async def any_voice(c, update):
+        ...     await update.reply("new voice")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            result = update.find_key("file")
+            if result:
+                result = mimetypes.guess_type(result.file_name)[0]
+                if result:
+                    return result == "audio/ogg"
+            return result
+
+        except KeyError:
+            return False
 
 class location(Filter):
     """
@@ -759,6 +883,9 @@ class replied(Filter):
     async def check(self, update):
         return bool(update.find_key("reply_to_message_id"))
 
+class metadata(Filter):
+    async def check(self, update):
+        return bool(update.find_key("metadata"))
 
 class states(Filter):
     """

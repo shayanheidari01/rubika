@@ -94,6 +94,7 @@ class BotClient:
         backoff_factor: float = 0.5,
         retry_statuses: Optional[Tuple[int, ...]] = None,
         poll_interval: float = 0.5,
+        long_poll_timeout: float = 30.0,
     ) -> None:
         """
         Initialize a new :class:`BotClient` instance.
@@ -130,6 +131,7 @@ class BotClient:
         self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
         self._session_lock = asyncio.Lock()
         self.poll_interval = max(0.1, float(poll_interval))
+        self.long_poll_timeout = max(self.poll_interval, float(long_poll_timeout))
         logger.info(
             "Rubika client initialized (use_webhook=%s, rate_limit=%.2fs)",
             use_webhook,
@@ -239,7 +241,9 @@ class BotClient:
             return func
         return decorator
 
-    async def _make_request(self, method: str, data: Dict) -> Dict:
+    async def _make_request(
+        self, method: str, data: Dict, *, extra_timeout: Optional[float] = None
+    ) -> Dict:
         """Perform an API request with retry and response validation."""
         await self._rate_limit_delay()
         url = f"{self.base_url}{method}"
@@ -252,7 +256,12 @@ class BotClient:
                 if not self.session:
                     raise RuntimeError("Client session is not initialized")
 
-                async with self.session.post(url, json=data) as response:
+                timeout = None
+                if extra_timeout is not None:
+                    total_timeout = self.timeout + max(0.0, float(extra_timeout))
+                    timeout = aiohttp.ClientTimeout(total=total_timeout)
+
+                async with self.session.post(url, json=data, timeout=timeout) as response:
                     try:
                         response.raise_for_status()
                     except ClientResponseError as exc:
@@ -679,15 +688,26 @@ class BotClient:
         ]
 
     async def updater(
-        self, limit: int = 100, offset_id: str = ""
+        self,
+        limit: int = 100,
+        offset_id: str = "",
+        poll_timeout: Optional[float] = None,
     ) -> List[Union[Update, InlineMessage]]:
         data = {"limit": limit}
         updates = []
         if offset_id or self.next_offset_id:
             data["offset_id"] = self.next_offset_id if not offset_id else offset_id
 
+        if poll_timeout:
+            timeout_seconds = max(1, int(poll_timeout))
+            data["timeout"] = timeout_seconds
+
         try:
-            response = await self._make_request("getUpdates", data)
+            response = await self._make_request(
+                "getUpdates",
+                data,
+                extra_timeout=poll_timeout if poll_timeout else None,
+            )
             self.next_offset_id = response.get("next_offset_id", self.next_offset_id)
             for item in response.get("updates", []):
                 update = self._parse_update(item)
@@ -1169,13 +1189,15 @@ class BotClient:
                 await runner.cleanup()
         else:
             idle_delay = self.poll_interval
-            max_idle_delay = max(self.poll_interval, self.poll_interval * 8)
+            max_idle_delay = max(self.long_poll_timeout, self.poll_interval * 8)
             while self.running:
                 try:
-                    updates = await self.updater(limit=100)
+                    updates = await self.updater(
+                        limit=100, poll_timeout=self.long_poll_timeout
+                    )
                     if not updates:
                         await asyncio.sleep(idle_delay)
-                        idle_delay = min(max_idle_delay, idle_delay * 2)
+                        idle_delay = min(max_idle_delay, idle_delay * 1.5)
                         continue
 
                     idle_delay = self.poll_interval
@@ -1198,6 +1220,7 @@ class BotClient:
         progress: Optional[Callable[[int, int], None]] = None,
         chunk_size: int = 65536,
         as_bytes: bool = False,
+        file_name: Optional[str] = None,
         timeout: Optional[Union[int, float]] = 20.0,
     ) -> Union[str, bytes, None]:
         """
@@ -1209,7 +1232,8 @@ class BotClient:
             progress (Optional[Callable[[int, int], None]]): Optional progress callback.
             chunk_size (int): Download chunk size in bytes.
             as_bytes (bool): If True, returns the content as bytes instead of saving.
-
+            file_name (Optional[str]): File name to save. Ignored if save_as is provided.
+            timeout (Optional[Union[int, float]]): Timeout for the download request.
         Returns:
             str: Path to saved file (if as_bytes=False)
             bytes: Content of the file (if as_bytes=True)
@@ -1246,7 +1270,7 @@ class BotClient:
                     return bytes(content)
                 else:
                     if save_as is None:
-                        save_as = f"{file_id}{ext}"
+                        save_as = file_name
 
                     with open(save_as, "wb") as f:
                         async for chunk in response.content.iter_chunked(chunk_size):

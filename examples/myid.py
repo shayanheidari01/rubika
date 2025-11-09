@@ -9,6 +9,7 @@ async def handle_start(c: BotClient, update: Update):
         text = (
             "🆔 شناسه کاربری شما:\n{user_id}\n\n"
             "💬 شناسه چت شما:\n{chat_id}\n\n"
+            "\n\n👨‍💻 سورس‌کد این ربات:\nhttps://rubpy.shayan-heidari.ir/bot_examples/#_4"
         ).format(
             user_id=update.new_message.sender_id,
             chat_id=update.chat_id
