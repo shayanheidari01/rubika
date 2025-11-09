@@ -25,6 +25,7 @@ from rubpy.bot.filters import Filter
 from rubpy.bot.models import (
     Keypad,
     InlineMessage,
+    Metadata,
     Update,
     Message,
     MessageId,
@@ -175,20 +176,49 @@ class BotClient:
             else self.parse_mode
         )
 
-    def _apply_text_parse_mode(
+    def _apply_text_formatting(
         self,
         payload: Dict[str, Any],
         text: Optional[str],
         parse_mode: Optional[Union[ParseMode, str]],
+        metadata: Optional[Metadata] = None,
     ) -> Optional[ParseMode]:
+        """
+        Apply text formatting (parse_mode) and metadata to the payload.
+        
+        Args:
+            payload: The request payload dictionary to update.
+            text: The text content to format.
+            parse_mode: The parse mode to use (Markdown, HTML, or None).
+            metadata: Optional metadata to include in the payload.
+            
+        Returns:
+            The resolved parse mode that was applied.
+        """
         resolved_parse_mode = self._resolve_parse_mode(parse_mode)
+        
+        # Apply parse mode formatting
         if isinstance(text, str):
             if resolved_parse_mode is ParseMode.MARKDOWN:
                 payload.update(self._markdown.to_metadata(text))
             elif resolved_parse_mode is ParseMode.HTML:
                 markdown_text = self._markdown.to_markdown(text)
                 payload.update(self._markdown.to_metadata(markdown_text))
+        
+        # Apply metadata if provided
+        if isinstance(metadata, Metadata):
+            payload["metadata"] = dataclasses.asdict(metadata)
+            
         return resolved_parse_mode
+    
+    def _apply_text_parse_mode(
+        self,
+        payload: Dict[str, Any],
+        text: Optional[str],
+        parse_mode: Optional[Union[ParseMode, str]],
+    ) -> Optional[ParseMode]:
+        """Deprecated: Use _apply_text_formatting instead."""
+        return self._apply_text_formatting(payload, text, parse_mode, None)
 
     def on_start(self):
         """
@@ -419,6 +449,7 @@ class BotClient:
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         payload = {
             "chat_id": chat_id,
@@ -434,8 +465,8 @@ class BotClient:
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
         if text:
-            self._apply_text_parse_mode(payload, text, parse_mode)
-            
+            self._apply_text_formatting(payload, text, parse_mode, metadata)
+
         result = await self._make_request("sendMessage", payload)
         result["chat_id"] = chat_id
         result["client"] = self
@@ -483,6 +514,7 @@ class BotClient:
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if file:
             file_name = file_name or Path(file).name
@@ -502,7 +534,7 @@ class BotClient:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
-        self._apply_text_parse_mode(payload, text, parse_mode)
+        self._apply_text_formatting(payload, text, parse_mode, metadata)
         
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -523,6 +555,7 @@ class BotClient:
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if file:
             file_name = file_name or Path(file).name
@@ -543,7 +576,7 @@ class BotClient:
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
         if text:
-            self._apply_text_parse_mode(payload, text, parse_mode)
+            self._apply_text_formatting(payload, text, parse_mode, metadata)
 
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -563,6 +596,8 @@ class BotClient:
         disable_notification: bool = False,
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
+        parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if file:
             file_name = file_name or Path(file).name
@@ -582,7 +617,8 @@ class BotClient:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
-        self._apply_text_parse_mode(payload, text, parse_mode)
+        if text:
+            self._apply_text_formatting(payload, text, parse_mode, metadata)
 
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -829,13 +865,14 @@ class BotClient:
         message_id: str,
         text: str,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> bool:
         payload = {
             "chat_id": chat_id,
             "message_id": str(message_id),
             "text": text,
         }
-        self._apply_text_parse_mode(payload, text, parse_mode)
+        self._apply_text_formatting(payload, text, parse_mode, metadata)
 
         result = await self._make_request(
             "editMessageText",

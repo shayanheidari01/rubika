@@ -744,6 +744,37 @@ class voice(Filter):
         except KeyError:
             return False
 
+class gif(Filter):
+    """
+    Filter for checking gif messages.
+
+    Returns:
+        bool: False or True
+
+    Example:
+        >>> from rubpy import BotClient
+        >>> from rubpy.bot import filters
+        >>>
+        >>> bot = BotClient("your_bot_token")
+        >>>
+        >>> # Match any gif message
+        >>> @bot.on_update(filters.gif)
+        ... async def any_gif(c, update):
+        ...     await update.reply("new gif")
+    """
+
+    async def check(self, update: Union[Update, InlineMessage]) -> bool:
+        try:
+            result = update.find_key("file")
+            if result:
+                result = mimetypes.guess_type(result.file_name)[0]
+                if result:
+                    return result.endswith("gif")
+            return result
+
+        except KeyError:
+            return False
+
 class location(Filter):
     """
     Filter for checking location messages.

@@ -329,6 +329,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -343,6 +344,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_file(
@@ -356,6 +358,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -372,6 +375,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_photo(
@@ -385,6 +389,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -402,6 +407,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_video(
@@ -415,6 +421,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -432,6 +439,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_voice(
@@ -445,6 +453,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -453,7 +462,7 @@ class Update(DictLike):
             file=file,
             file_id=file_id,
             text=text,
-            type="Image",
+            type="Voice",
             chat_keypad=chat_keypad,
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
@@ -462,6 +471,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_music(
@@ -475,6 +485,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -492,6 +503,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_gif(
@@ -505,6 +517,7 @@ class Update(DictLike):
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ) -> MessageId:
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -522,6 +535,7 @@ class Update(DictLike):
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def delete(
@@ -587,6 +601,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "rubpy.bot.enums.ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -598,6 +613,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_file(
@@ -611,6 +627,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -624,6 +641,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_photo(
@@ -637,6 +655,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -651,6 +670,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_voice(
@@ -664,6 +684,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -678,6 +699,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_music(
@@ -691,6 +713,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -705,6 +728,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_gif(
@@ -718,6 +742,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -732,6 +757,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def reply_video(
@@ -745,6 +771,7 @@ class InlineMessage(DictLike):
         chat_keypad_type: "ChatKeypadTypeEnum" = ChatKeypadTypeEnum.NONE,
         chat_id: str = None,
         parse_mode: Optional[Union[ParseMode, str]] = None,
+        metadata: Optional[Metadata] = None,
     ):
         if not self.client:
             raise ValueError("Client not set for Update")
@@ -759,6 +786,7 @@ class InlineMessage(DictLike):
             disable_notification=disable_notification,
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
+            metadata=metadata,
         )
 
     async def delete(
