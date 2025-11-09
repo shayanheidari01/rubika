@@ -19,6 +19,7 @@ from collections import deque
 import time
 import uuid
 
+from rubpy.parser.markdown import Markdown
 from rubpy.bot.enums import ChatKeypadTypeEnum, UpdateTypeEnum
 from rubpy.bot.filters import Filter
 from rubpy.bot.models import (
@@ -31,6 +32,7 @@ from rubpy.bot.models import (
     Bot,
 )
 from rubpy.bot.exceptions import APIException
+from rubpy.enums import ParseMode
 
 # Setup logging
 # logging.basicConfig(level=logging.ERROR)
@@ -95,6 +97,7 @@ class BotClient:
         retry_statuses: Optional[Tuple[int, ...]] = None,
         poll_interval: float = 0.5,
         long_poll_timeout: float = 30.0,
+        parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
     ) -> None:
         """
         Initialize a new :class:`BotClient` instance.
@@ -120,6 +123,7 @@ class BotClient:
         self.running = False
         self.next_offset_id = None
         self.processed_messages = deque(maxlen=500)
+        self._markdown = Markdown()
         self.rate_limit = rate_limit
         self.last_request_time = 0
         self.first_get_updates = True
@@ -137,6 +141,54 @@ class BotClient:
             use_webhook,
             rate_limit,
         )
+        self.parse_mode = self._normalize_parse_mode(parse_mode)
+
+    @staticmethod
+    def _normalize_parse_mode(
+        parse_mode: Optional[Union[ParseMode, str]]
+    ) -> Optional[ParseMode]:
+        if parse_mode is None:
+            return None
+        if isinstance(parse_mode, ParseMode):
+            return parse_mode
+        if isinstance(parse_mode, str):
+            value = parse_mode.strip()
+            if not value:
+                return None
+            try:
+                return ParseMode(value.lower())
+            except ValueError as exc:  # pragma: no cover - defensive
+                allowed = ", ".join(mode.value for mode in ParseMode)
+                raise ValueError(
+                    f"Unsupported parse_mode {parse_mode!r}. Expected one of: {allowed}"
+                ) from exc
+        raise TypeError(
+            "parse_mode must be an instance of ParseMode, a string, or None"
+        )
+
+    def _resolve_parse_mode(
+        self, parse_mode: Optional[Union[ParseMode, str]]
+    ) -> Optional[ParseMode]:
+        return (
+            self._normalize_parse_mode(parse_mode)
+            if parse_mode is not None
+            else self.parse_mode
+        )
+
+    def _apply_text_parse_mode(
+        self,
+        payload: Dict[str, Any],
+        text: Optional[str],
+        parse_mode: Optional[Union[ParseMode, str]],
+    ) -> Optional[ParseMode]:
+        resolved_parse_mode = self._resolve_parse_mode(parse_mode)
+        if isinstance(text, str):
+            if resolved_parse_mode is ParseMode.MARKDOWN:
+                payload.update(self._markdown.to_metadata(text))
+            elif resolved_parse_mode is ParseMode.HTML:
+                markdown_text = self._markdown.to_markdown(text)
+                payload.update(self._markdown.to_metadata(markdown_text))
+        return resolved_parse_mode
 
     def on_start(self):
         """
@@ -366,6 +418,7 @@ class BotClient:
         disable_notification: bool = False,
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
+        parse_mode: Optional[Union[ParseMode, str]] = None,
     ) -> MessageId:
         payload = {
             "chat_id": chat_id,
@@ -373,13 +426,16 @@ class BotClient:
             "disable_notification": disable_notification,
             "chat_keypad_type": chat_keypad_type.value,
         }
+
         if chat_keypad:
             payload["chat_keypad"] = dataclasses.asdict(chat_keypad)
         if inline_keypad:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
-
+        if text:
+            self._apply_text_parse_mode(payload, text, parse_mode)
+            
         result = await self._make_request("sendMessage", payload)
         result["chat_id"] = chat_id
         result["client"] = self
@@ -426,6 +482,7 @@ class BotClient:
         disable_notification: bool = False,
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
+        parse_mode: Optional[Union[ParseMode, str]] = None,
     ) -> MessageId:
         if file:
             file_name = file_name or Path(file).name
@@ -445,6 +502,7 @@ class BotClient:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
+        self._apply_text_parse_mode(payload, text, parse_mode)
         
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -464,6 +522,7 @@ class BotClient:
         disable_notification: bool = False,
         reply_to_message_id: Optional[str] = None,
         chat_keypad_type: ChatKeypadTypeEnum = ChatKeypadTypeEnum.NONE,
+        parse_mode: Optional[Union[ParseMode, str]] = None,
     ) -> MessageId:
         if file:
             file_name = file_name or Path(file).name
@@ -483,6 +542,8 @@ class BotClient:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
+        if text:
+            self._apply_text_parse_mode(payload, text, parse_mode)
 
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -521,6 +582,7 @@ class BotClient:
             payload["inline_keypad"] = dataclasses.asdict(inline_keypad)
         if reply_to_message_id:
             payload["reply_to_message_id"] = str(reply_to_message_id)
+        self._apply_text_parse_mode(payload, text, parse_mode)
 
         result = await self._make_request("sendFile", payload)
         result["chat_id"] = chat_id
@@ -761,10 +823,23 @@ class BotClient:
         result["client"] = self
         return MessageId(**result)
 
-    async def edit_message_text(self, chat_id: str, message_id: str, text: str) -> bool:
+    async def edit_message_text(
+        self,
+        chat_id: str,
+        message_id: str,
+        text: str,
+        parse_mode: Optional[Union[ParseMode, str]] = None,
+    ) -> bool:
+        payload = {
+            "chat_id": chat_id,
+            "message_id": str(message_id),
+            "text": text,
+        }
+        self._apply_text_parse_mode(payload, text, parse_mode)
+
         result = await self._make_request(
             "editMessageText",
-            {"chat_id": chat_id, "message_id": str(message_id), "text": text},
+            payload,
         )
         return not bool(result)
 
