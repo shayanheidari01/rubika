@@ -1,11 +1,14 @@
 # Filters
 import asyncio
+import logging
 import mimetypes
 import re
 from typing import Any, Dict, List, Optional, Union
 
 from rubpy.bot.models import Update
 from rubpy.bot.models import InlineMessage
+
+logger = logging.getLogger(__name__)
 
 
 def maybe_instance(f):
@@ -263,7 +266,7 @@ class update_type(Filter):
         result = (isinstance(update, Update) and update.type in self.update_types) or (
             isinstance(update, InlineMessage) and "InlineMessage" in self.update_types
         )
-        # logger.info(f"UpdateTypeFilter check for types={self.update_types}, update={type(update).__name__}: {result}")
+        logger.debug(f"UpdateTypeFilter check: types={self.update_types}, update.type={update.type if isinstance(update, Update) else 'InlineMessage'}, result={result}")
         return result
 
 

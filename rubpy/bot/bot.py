@@ -817,7 +817,7 @@ class BotClient:
                         getattr(update, "new_message", None) and update.new_message.time
                     ) or (
                         getattr(update, "updated_message", None)
-                        and update.updated_message.time
+                        and round(time.time())
                     )
 
                     # Skip stale updates older than the configured threshold.
@@ -1142,21 +1142,37 @@ class BotClient:
         update_type = "InlineMessage" if isinstance(update, InlineMessage) else update.type
         message_id = self._extract_message_id(update)
 
-        if isinstance(update, Update) and message_id and message_id in self.processed_messages:
-            return
-        if message_id and isinstance(update, Update):
+        # Create a unique key combining message_id and update_type to allow
+        # processing both NewMessage and UpdatedMessage for the same message_id
+        if isinstance(update, Update) and message_id:
+            dedup_key = f"{message_id}:{update.type}"
+            if dedup_key in self.processed_messages:
+                logger.debug("Skipping duplicate update: %s", dedup_key)
+                return
+            self.processed_messages.append(dedup_key)
+            logger.debug("Processing update: %s", dedup_key)
+        elif message_id and isinstance(update, InlineMessage):
+            if message_id in self.processed_messages:
+                logger.debug("Skipping duplicate InlineMessage: %s", message_id)
+                return
             self.processed_messages.append(message_id)
 
         loop = asyncio.get_running_loop()
 
+        handler_found = False
         for filter_key, handler_list in self.handlers.items():
             for filters, handler in handler_list:
                 if await self._filters_pass(update, filters):
+                    handler_found = True
+                    logger.debug("Handler %s matched for update %s", handler.__name__, update_type)
                     if asyncio.iscoroutinefunction(handler):
                         asyncio.create_task(handler(self, update))
                     else:
                         loop.run_in_executor(None, handler, self, update)
                     return
+        
+        if not handler_found:
+            logger.debug("No handler found for update type: %s", update_type)
 
     def _extract_message_id(
         self, update: Union[Update, InlineMessage]

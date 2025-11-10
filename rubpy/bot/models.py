@@ -320,6 +320,14 @@ class Update(DictLike):
     updated_payment: Optional[PaymentStatus] = None
     client: Optional["rubpy.BotClient"] = None
 
+    @property
+    def message_id(self) -> str:
+        if self.new_message:
+            return self.new_message.message_id
+        if self.updated_message:
+            return self.updated_message.message_id
+        return None
+
     async def reply(
         self,
         text: str,
@@ -340,7 +348,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -371,7 +379,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -403,7 +411,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -435,7 +443,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -467,7 +475,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -499,7 +507,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -531,7 +539,7 @@ class Update(DictLike):
             inline_keypad=inline_keypad,
             disable_notification=disable_notification,
             reply_to_message_id=(
-                self.new_message.message_id if self.new_message else None
+                self.message_id
             ),
             chat_keypad_type=chat_keypad_type,
             parse_mode=parse_mode,
@@ -543,9 +551,14 @@ class Update(DictLike):
     ):
         return await self.client.delete_message(
             chat_id or self.chat_id,
-            message_id
-            or self.new_message.message_id
-            or self.updated_message.message_id,
+            message_id or self.message_id,
+        )
+    
+    async def edit_keypad(self, chat_keypad: Optional["rubpy.bot.models.Keypad"] = None, message_id: Optional[str] = None):
+        return await self.client.edit_chat_keypad(
+            chat_id=self.chat_id,
+            message_id=message_id or self.message_id,
+            chat_keypad=chat_keypad,
         )
 
     async def download(
@@ -591,6 +604,20 @@ class InlineMessage(DictLike):
     message_id: Optional[str] = None
     chat_id: Optional[str] = None
     client: "rubpy.BotClient" = None
+
+    async def edit_text(self, text: str, message_id: Optional[str] = None):
+        return await self.client.edit_message_text(
+            chat_id=self.chat_id,
+            message_id=message_id or self.message_id,
+            text=text,
+        )
+    
+    async def edit_keypad(self, inline_keypad: Optional["rubpy.bot.models.Keypad"] = None, message_id: Optional[str] = None):
+        return await self.client.edit_message_keypad(
+            chat_id=self.chat_id,
+            message_id=message_id or self.message_id,
+            inline_keypad=inline_keypad,
+        )
 
     async def reply(
         self,
