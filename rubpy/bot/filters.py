@@ -128,7 +128,11 @@ class text(Filter):
         self._compiled = re.compile(text) if regex and text else None
 
     async def check(self, update: Union[Update, InlineMessage]) -> bool:
-        text = update.find_key("text")
+        try:
+            text = update.find_key("text")
+        except KeyError:
+            return False
+            
         if not text:
             return False
 
@@ -912,11 +916,17 @@ class live_location(Filter):
 
 class replied(Filter):
     async def check(self, update):
-        return bool(update.find_key("reply_to_message_id"))
+        try:
+            return bool(update.find_key("reply_to_message_id"))
+        except KeyError:
+            return False
 
 class metadata(Filter):
     async def check(self, update):
-        return bool(update.find_key("metadata"))
+        try:
+            return bool(update.find_key("metadata"))
+        except KeyError:
+            return False
 
 class states(Filter):
     """
