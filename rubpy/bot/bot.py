@@ -1151,11 +1151,6 @@ class BotClient:
                 return
             self.processed_messages.append(dedup_key)
             logger.debug("Processing update: %s", dedup_key)
-        elif message_id and isinstance(update, InlineMessage):
-            if message_id in self.processed_messages:
-                logger.debug("Skipping duplicate InlineMessage: %s", message_id)
-                return
-            self.processed_messages.append(message_id)
 
         loop = asyncio.get_running_loop()
 
