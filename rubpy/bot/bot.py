@@ -13,7 +13,7 @@ from aiohttp.client_exceptions import (
     ContentTypeError,
 )
 import json
-from typing import Any, Callable, Dict, List, Literal, Optional, Union, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Set, Union, Tuple
 import logging
 from collections import deque
 import time
@@ -85,6 +85,17 @@ class BotClient:
     """
 
     BASE_URL = "https://botapi.rubika.ir/v3/{}/"
+    FALLBACK_URLS: Tuple[str, ...] = ("https://messengerg2b1.iranlms.ir/v3/{}/",)
+
+    @staticmethod
+    def _format_base_url(template: str, token: str) -> str:
+        try:
+            url = template.format(token)
+        except (IndexError, KeyError):
+            url = template
+        if not url.endswith("/"):
+            url = f"{url}/"
+        return url
 
     def __init__(
         self,
@@ -99,6 +110,7 @@ class BotClient:
         poll_interval: float = 0.5,
         long_poll_timeout: float = 30.0,
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
+        fallback_urls: Optional[Sequence[str]] = None,
     ) -> None:
         """
         Initialize a new :class:`BotClient` instance.
@@ -112,10 +124,22 @@ class BotClient:
             max_retries: Maximum number of retries for retryable responses.
             backoff_factor: Base delay (in seconds) for exponential backoff.
             retry_statuses: HTTP status codes that should trigger retries.
+            fallback_urls: Additional base URL templates to try if the primary URL fails.
         """
 
         self.token = token
-        self.base_url = self.BASE_URL.format(token)
+
+        fallback_url_templates = fallback_urls or self.FALLBACK_URLS
+        self._base_urls: List[str] = []
+        for template in (self.BASE_URL, *fallback_url_templates):
+            url = self._format_base_url(template, token)
+            if url not in self._base_urls:
+                self._base_urls.append(url)
+
+        if not self._base_urls:
+            raise ValueError("No base URLs configured for BotClient")
+
+        self._set_base_url_index(0)
         self.handlers: Dict[str, List[Tuple[Tuple[Filter, ...], Callable]]] = {}
         self.start_handlers: list[Callable] = []
         self.shutdown_handlers: list[Callable] = []
@@ -328,67 +352,95 @@ class BotClient:
     ) -> Dict:
         """Perform an API request with retry and response validation."""
         await self._rate_limit_delay()
-        url = f"{self.base_url}{method}"
 
         last_error: Optional[BaseException] = None
 
         for attempt in range(1, self.max_retries + 1):
-            try:
-                await self._ensure_session()
-                if not self.session:
-                    raise RuntimeError("Client session is not initialized")
+            attempted_indices: Set[int] = set()
 
-                timeout = None
-                if extra_timeout is not None:
-                    total_timeout = self.timeout + max(0.0, float(extra_timeout))
-                    timeout = aiohttp.ClientTimeout(total=total_timeout)
+            while True:
+                attempted_indices.add(self._base_url_index)
+                url = f"{self.base_url}{method}"
 
-                async with self.session.post(url, json=data, timeout=timeout) as response:
-                    try:
-                        response.raise_for_status()
-                    except ClientResponseError as exc:
-                        body = await response.text()
-                        if self._is_retryable_status(exc.status) and attempt < self.max_retries:
-                            last_error = exc
-                            logger.warning(
-                                "Retryable HTTP error %s on %s attempt %s: %s",
-                                exc.status,
-                                method,
-                                attempt,
-                                body,
+                try:
+                    await self._ensure_session()
+                    if not self.session:
+                        raise RuntimeError("Client session is not initialized")
+
+                    timeout = None
+                    if extra_timeout is not None:
+                        total_timeout = self.timeout + max(0.0, float(extra_timeout))
+                        timeout = aiohttp.ClientTimeout(total=total_timeout)
+
+                    async with self.session.post(url, json=data, timeout=timeout) as response:
+                        try:
+                            response.raise_for_status()
+                        except ClientResponseError as exc:
+                            body = await response.text()
+                            if self._is_retryable_status(exc.status):
+                                last_error = exc
+                                failed_base = url
+                                if self._try_next_base_url(
+                                    attempted_indices,
+                                    reason=f"HTTP {exc.status} on {method}",
+                                ):
+                                    continue
+                                if attempt < self.max_retries:
+                                    logger.warning(
+                                        "Retryable HTTP error %s on %s attempt %s (base=%s): %s",
+                                        exc.status,
+                                        method,
+                                        attempt,
+                                        failed_base,
+                                        body,
+                                    )
+                                    await self._sleep_backoff(attempt)
+                                    break
+                            raise APIException(
+                                status=str(exc.status),
+                                dev_message=body or exc.message,
                             )
-                            await self._sleep_backoff(attempt)
-                            continue
-                        raise APIException(status=str(exc.status), dev_message=body or exc.message)
 
-                    try:
-                        result = await response.json(content_type=None)
-                    except ContentTypeError:
-                        text = await response.text()
-                        raise APIException(status="InvalidResponse", dev_message=text)
+                        try:
+                            result = await response.json(content_type=None)
+                        except ContentTypeError:
+                            text = await response.text()
+                            raise APIException(status="InvalidResponse", dev_message=text)
 
-                    logger.debug(
-                        "API response for %s returned status=%s",
-                        method,
-                        result.get("status"),
-                    )
-
-                    if result.get("status") != "OK":
-                        raise APIException(
-                            status=result.get("status", "ERROR"),
-                            dev_message=result.get("dev_message"),
+                        logger.debug(
+                            "API response for %s returned status=%s",
+                            method,
+                            result.get("status"),
                         )
 
-                    return result["data"]
+                        if result.get("status") != "OK":
+                            raise APIException(
+                                status=result.get("status", "ERROR"),
+                                dev_message=result.get("dev_message"),
+                            )
 
-            except (ClientError, asyncio.TimeoutError) as exc:
-                last_error = exc
-                if attempt >= self.max_retries:
+                        return result["data"]
+
+                except (ClientError, asyncio.TimeoutError) as exc:
+                    last_error = exc
+                    failed_base = url
+                    if self._try_next_base_url(
+                        attempted_indices, reason=str(exc)
+                    ):
+                        continue
+                    if attempt < self.max_retries:
+                        logger.warning(
+                            "Network error on %s attempt %s (base=%s): %s",
+                            method,
+                            attempt,
+                            failed_base,
+                            str(exc),
+                        )
+                        await self._sleep_backoff(attempt)
+                        break
                     break
-                logger.warning(
-                    "Network error on %s attempt %s: %s", method, attempt, str(exc)
-                )
-                await self._sleep_backoff(attempt)
+
+                break
 
         if last_error:
             raise last_error
@@ -424,6 +476,25 @@ class BotClient:
         if self.session and not self.session.closed:
             await self.session.close()
         self.session = None
+
+    def _set_base_url_index(self, index: int) -> None:
+        self._base_url_index = index
+        self.base_url = self._base_urls[index]
+
+    def _try_next_base_url(self, attempted_indices: Set[int], *, reason: str) -> bool:
+        for idx, _ in enumerate(self._base_urls):
+            if idx in attempted_indices:
+                continue
+            previous_url = self.base_url
+            self._set_base_url_index(idx)
+            logger.warning(
+                "Switching BotClient base URL from %s to %s due to %s",
+                previous_url,
+                self.base_url,
+                reason,
+            )
+            return True
+        return False
 
     def _is_retryable_status(self, status: Optional[int]) -> bool:
         return status in self.retry_statuses if status is not None else False
