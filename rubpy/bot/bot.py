@@ -84,8 +84,8 @@ class BotClient:
         retry_statuses: A set of HTTP status codes that should trigger retries.
     """
 
-    BASE_URL = "https://botapi.rubika.ir/v3/{}/"
-    FALLBACK_URLS: Tuple[str, ...] = ("https://messengerg2b1.iranlms.ir/v3/{}/",)
+    BASE_URL = "https://messengerg2b1.iranlms.ir/v3/{}/"
+    FALLBACK_URLS: Tuple[str, ...] = ("https://botapi.rubika.ir/v3/{}/",)
 
     @staticmethod
     def _format_base_url(template: str, token: str) -> str:
@@ -111,6 +111,7 @@ class BotClient:
         long_poll_timeout: float = 30.0,
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
         fallback_urls: Optional[Sequence[str]] = None,
+        ignore_timeout: bool = False,
     ) -> None:
         """
         Initialize a new :class:`BotClient` instance.
@@ -125,6 +126,7 @@ class BotClient:
             backoff_factor: Base delay (in seconds) for exponential backoff.
             retry_statuses: HTTP status codes that should trigger retries.
             fallback_urls: Additional base URL templates to try if the primary URL fails.
+            ignore_timeout: Whether to keep retrying indefinitely on Bot API Timeout errors.
         """
 
         self.token = token
@@ -158,6 +160,7 @@ class BotClient:
         self.max_retries = max(1, int(max_retries))
         self.backoff_factor = max(0.0, float(backoff_factor))
         self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
+        self.ignore_timeout = bool(ignore_timeout)
         self._session_lock = asyncio.Lock()
         self.poll_interval = max(0.1, float(poll_interval))
         self.long_poll_timeout = max(self.poll_interval, float(long_poll_timeout))
@@ -355,7 +358,8 @@ class BotClient:
 
         last_error: Optional[BaseException] = None
 
-        for attempt in range(1, self.max_retries + 1):
+        attempt = 1
+        while True:
             attempted_indices: Set[int] = set()
 
             while True:
@@ -414,10 +418,21 @@ class BotClient:
                         )
 
                         if result.get("status") != "OK":
-                            raise APIException(
+                            error = APIException(
                                 status=result.get("status", "ERROR"),
                                 dev_message=result.get("dev_message"),
                             )
+                            if self._should_force_retry(error):
+                                last_error = error
+                                logger.warning(
+                                    "Bot API Timeout on %s attempt %s: %s",
+                                    method,
+                                    attempt,
+                                    error.dev_message,
+                                )
+                                await self._sleep_backoff(attempt)
+                                break
+                            raise error
 
                         return result["data"]
 
@@ -441,6 +456,15 @@ class BotClient:
                     break
 
                 break
+
+            should_retry = attempt < self.max_retries
+            if not should_retry and self._should_force_retry(last_error):
+                should_retry = True
+
+            if not should_retry:
+                break
+
+            attempt += 1
 
         if last_error:
             raise last_error
@@ -498,6 +522,12 @@ class BotClient:
 
     def _is_retryable_status(self, status: Optional[int]) -> bool:
         return status in self.retry_statuses if status is not None else False
+
+    def _should_force_retry(self, error: Optional[BaseException]) -> bool:
+        if not (self.ignore_timeout and isinstance(error, APIException)):
+            return False
+        status = getattr(error, "status", "")
+        return isinstance(status, str) and status.lower() == "timeout"
 
     async def _sleep_backoff(self, attempt: int) -> None:
         """Wait for an exponentially increasing delay between retries."""
