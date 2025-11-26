@@ -16,6 +16,15 @@ __models__ = [
     'contact', 'location', 'poll', 'gif', 'is_event'
 ]
 
+# Map user-friendly aliases (e.g. ``filters.private``) to their canonical
+# counterparts (e.g. ``filters.is_private``). This keeps backward
+# compatibility with documented usages while reusing the existing models.
+__model_aliases__ = {
+    'private': 'is_private',
+    'group': 'is_group',
+    'channel': 'is_channel',
+}
+
 def create_model(
     name: str,
     base: tuple,
@@ -276,9 +285,15 @@ class Models:
 
     def __getattr__(self, name: str) -> Type['BaseModel']:
         """دریافت مدل دینامیک بر اساس نام."""
-        if name in __all__:
-            return globals()[name]
-        return create_model(name, (BaseModel,), authorize=__models__, exception=False)
+        canonical_name = __model_aliases__.get(name, name)
+        if canonical_name in __all__:
+            return globals()[canonical_name]
+        return create_model(
+            canonical_name,
+            (BaseModel,),
+            authorize=__models__,
+            exception=False,
+        )
 
 # جایگزینی ماژول جاری با نمونه‌ای از Models
 sys.modules[__name__] = Models(__name__)

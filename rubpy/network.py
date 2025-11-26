@@ -237,10 +237,22 @@ class Network:
                     continue
 
                 update_obj = Update(update.copy())
+                handler_executed = False
                 if not inspect.iscoroutinefunction(func):
-                    threading.Thread(target=func, args=(update_obj,)).start()
+                    if self.client.sequential_handlers:
+                        await asyncio.to_thread(func, update_obj)
+                    else:
+                        threading.Thread(target=func, args=(update_obj,)).start()
+                    handler_executed = True
                 else:
-                    asyncio.create_task(func(update_obj))
+                    if self.client.sequential_handlers:
+                        await func(update_obj)
+                    else:
+                        asyncio.create_task(func(update_obj))
+                    handler_executed = True
+
+                if handler_executed and self.client.sequential_handlers:
+                    break
             except exceptions.StopHandler:
                 break
             except Exception as e:

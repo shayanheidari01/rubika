@@ -37,7 +37,8 @@ class Client(Methods):
         logger: Optional[logging.Logger] = None,
         display_welcome: bool = False,
         platform: Literal['PWA', 'Android'] = 'PWA',
-        max_retries: int = 5
+        max_retries: int = 5,
+        sequential_handlers: bool = False,
     ) -> None:
         """
         Initialize the Rubika client.
@@ -56,6 +57,7 @@ class Client(Methods):
         - display_welcome: Show welcome message (default: False).
         - platform: Client platform ('PWA' or 'Android').
         - max_retries: Maximum number of retries for requests (default: 5).
+        - sequential_handlers: If True, run registered handlers sequentially and stop after the first match (default: False).
 
         Raises:
         - ValueError: If any input is invalid.
@@ -132,6 +134,7 @@ class Client(Methods):
         self.handlers = {}
         self.DEFAULT_PLATFORM['lang_code'] = lang_code
         self.max_retries = max_retries
+        self.sequential_handlers = sequential_handlers
 
         # Welcome message (optional)
         if display_welcome:

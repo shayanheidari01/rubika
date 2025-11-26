@@ -1414,12 +1414,17 @@ class BotClient:
         else:
             idle_delay = self.poll_interval
             max_idle_delay = max(self.long_poll_timeout, self.poll_interval * 8)
+            long_polling_active = self.long_poll_timeout > self.poll_interval
             while self.running:
                 try:
                     updates = await self.updater(
                         limit=100, poll_timeout=self.long_poll_timeout
                     )
                     if not updates:
+                        if long_polling_active:
+                            idle_delay = self.poll_interval
+                            continue
+
                         await asyncio.sleep(idle_delay)
                         idle_delay = min(max_idle_delay, idle_delay * 1.5)
                         continue
@@ -1507,9 +1512,3 @@ class BotClient:
                                     pass
 
                     return save_as
-
-
-def get_extension(content_type: str) -> str:
-    """Convert MIME type to file extension (e.g., image/jpeg -> .jpg)."""
-    ext = mimetypes.guess_extension(content_type)
-    return ext if ext else ""
