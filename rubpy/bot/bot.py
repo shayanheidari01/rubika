@@ -13,7 +13,7 @@ from aiohttp.client_exceptions import (
     ContentTypeError,
 )
 import json
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Set, Union, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Set, Union, Tuple, Type
 import logging
 from collections import deque
 import time
@@ -34,6 +34,7 @@ from rubpy.bot.models import (
 )
 from rubpy.bot.exceptions import APIException
 from rubpy.enums import ParseMode
+from rubpy.plugins import PluginManager, Plugin
 
 # Setup logging
 # logging.basicConfig(level=logging.ERROR)
@@ -107,11 +108,16 @@ class BotClient:
         max_retries: int = 3,
         backoff_factor: float = 0.5,
         retry_statuses: Optional[Tuple[int, ...]] = None,
-        poll_interval: float = 0.5,
         long_poll_timeout: float = 30.0,
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
         fallback_urls: Optional[Sequence[str]] = None,
         ignore_timeout: bool = False,
+        plugins: Optional[Sequence[str]] = None,
+        auto_enable_plugins: bool = False,
+        plugin_entry_point_group: str = "rubpy.plugins",
+        plugin_manager_class: Type[PluginManager] = PluginManager,
+        auto_discover_plugins: bool = True,
+        plugin_configs: Optional[Dict[str, Dict[str, Any]]] = None,
     ) -> None:
         """
         Initialize a new :class:`BotClient` instance.
@@ -149,7 +155,7 @@ class BotClient:
         self.session = None
         self.running = False
         self.next_offset_id = None
-        self.processed_messages = deque(maxlen=500)
+        self.processed_messages = deque(maxlen=1000)
         self._markdown = Markdown()
         self.rate_limit = rate_limit
         self.last_request_time = 0
@@ -162,8 +168,15 @@ class BotClient:
         self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
         self.ignore_timeout = bool(ignore_timeout)
         self._session_lock = asyncio.Lock()
-        self.poll_interval = max(0.1, float(poll_interval))
-        self.long_poll_timeout = max(self.poll_interval, float(long_poll_timeout))
+        self.long_poll_timeout = float(long_poll_timeout)
+        self._default_plugins = list(plugins or [])
+        self.auto_enable_plugins = bool(auto_enable_plugins)
+        self.plugin_manager = plugin_manager_class(
+            self,
+            entry_point_group=plugin_entry_point_group,
+            auto_discover=auto_discover_plugins,
+            plugin_configs=plugin_configs,
+        )
         logger.info(
             "Rubika client initialized (use_webhook=%s, rate_limit=%.2fs)",
             use_webhook,
@@ -296,6 +309,9 @@ class BotClient:
         await self._ensure_session()
         self.running = True
 
+        if self.auto_enable_plugins:
+            await self.enable_plugins()
+
         for handler in self.start_handlers:
             if inspect.iscoroutinefunction(handler):
                 await handler(self)
@@ -306,6 +322,7 @@ class BotClient:
 
     async def stop(self):
         """Stop the client and run shutdown hooks."""
+        await self.plugin_manager.disable_all()
         await self._close_session()
         self.running = False
 
@@ -349,6 +366,34 @@ class BotClient:
             logger.info("Middleware %s registered", func.__name__)
             return func
         return decorator
+
+    async def enable_plugins(self, identifiers: Optional[Sequence[str]] = None) -> List[Plugin]:
+        """Enable the given plugins or the configured defaults."""
+        plugins_to_enable: Sequence[str]
+        if identifiers is not None:
+            plugins_to_enable = identifiers
+        elif self._default_plugins:
+            plugins_to_enable = self._default_plugins
+        else:
+            plugins_to_enable = self.plugin_manager.registered_plugins
+
+        if not plugins_to_enable:
+            return []
+
+        return await self.plugin_manager.enable_many(plugins_to_enable)
+
+    async def disable_plugins(self, identifiers: Optional[Sequence[str]] = None) -> None:
+        """Disable provided plugins or all enabled plugins when omitted."""
+        if identifiers is None:
+            await self.plugin_manager.disable_all()
+            return
+
+        for identifier in identifiers:
+            await self.plugin_manager.disable(identifier)
+
+    def register_plugin(self, plugin_cls: Type[Plugin], *, name: Optional[str] = None) -> str:
+        """Register a plugin class with the internal manager."""
+        return self.plugin_manager.register_plugin(plugin_cls, name=name)
 
     async def _make_request(
         self, method: str, data: Dict, *, extra_timeout: Optional[float] = None
@@ -1412,31 +1457,21 @@ class BotClient:
             finally:
                 await runner.cleanup()
         else:
-            idle_delay = self.poll_interval
-            max_idle_delay = max(self.long_poll_timeout, self.poll_interval * 8)
-            long_polling_active = self.long_poll_timeout > self.poll_interval
             while self.running:
+                await asyncio.sleep(1)
                 try:
                     updates = await self.updater(
                         limit=100, poll_timeout=self.long_poll_timeout
                     )
                     if not updates:
-                        if long_polling_active:
-                            idle_delay = self.poll_interval
-                            continue
-
-                        await asyncio.sleep(idle_delay)
-                        idle_delay = min(max_idle_delay, idle_delay * 1.5)
                         continue
 
-                    idle_delay = self.poll_interval
                     for update in updates:
                         logger.debug("Processing polled update: %s", update)
                         asyncio.create_task(self.process_update(update))
+
                 except Exception as e:
                     logger.error("Polling error: %s", e)
-                    await asyncio.sleep(idle_delay)
-                    idle_delay = min(max_idle_delay, idle_delay * 2)
 
     async def close(self):
         """Close the underlying HTTP session."""

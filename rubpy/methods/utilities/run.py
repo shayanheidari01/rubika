@@ -1,5 +1,5 @@
 from typing import Optional, Coroutine
-from asyncio import run
+import asyncio
 
 import rubpy
 
@@ -24,9 +24,14 @@ class Run:
 
         async def main_runner():
             await self.start(phone_number=phone_number)
+            if coroutine is not None:
+                await coroutine
             await self.get_updates()
+            return self
 
-        if coroutine:
-            run(coroutine)
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(main_runner())
 
-        run(main_runner())
+        return loop.create_task(main_runner())

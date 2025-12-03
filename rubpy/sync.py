@@ -23,7 +23,13 @@ def async_to_sync(obj, name):
     Wrapped synchronous function or generator.
     """
     function = getattr(obj, name)
-    main_loop = asyncio.get_event_loop()
+
+    try:
+        main_loop = asyncio.get_event_loop()
+    except RuntimeError:
+        # Create and register a loop if none exists for the current thread.
+        main_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(main_loop)
 
     def async_to_sync_gen(agen, loop, is_main_thread):
         async def anext(agen):

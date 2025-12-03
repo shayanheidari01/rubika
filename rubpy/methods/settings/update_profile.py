@@ -17,6 +17,7 @@ class UpdateProfile:
             first_name: Optional[str] = None,
             last_name: Optional[str] = None,
             bio: Optional[str] = None,
+            birth_date: Optional[str] = None,
     ) -> rubpy.types.Update:
         """
         Update user profile information.
@@ -29,8 +30,8 @@ class UpdateProfile:
         Returns:
         - rubpy.types.Update: The updated user information after the profile update.
         """
-        if first_name is None and last_name is None and bio is None:
-            raise ValueError('At least one parameter (first_name, last_name, bio) should be provided for update.')
+        if first_name is None and last_name is None and bio is None and birth_date is None:
+            raise ValueError('At least one parameter (first_name, last_name, bio, birth_date) should be provided for update.')
 
         input_data = {'updated_parameters': []}
 
@@ -45,5 +46,9 @@ class UpdateProfile:
         if bio is not None:
             input_data['updated_parameters'].append('bio')
             input_data['bio'] = bio
+
+        if birth_date is not None:
+            input_data['updated_parameters'].append('birth_date')
+            input_data['birth_date'] = birth_date
 
         return await self.builder(name='updateProfile', input=input_data)  # type: ignore

@@ -9,8 +9,30 @@ client = BotClient(
     use_webhook=False        # True برای وبهوک
 )
 ```
----
 
+### پارامترهای سازنده
+| پارامتر | نوع | پیش‌فرض | توضیحات |
+| --- | --- | --- | --- |
+| `token` | `str` | — | توکن صادرشده توسط روبیکا. |
+| `rate_limit` | `float` | `0.5` | حداقل فاصله بین درخواست‌ها برای جلوگیری از محدودیت. |
+| `use_webhook` | `bool` | `False` | تعیین حالت اجرا (وب‌هوک یا پولینگ). |
+| `timeout` | `float` | `10.0` | تایم‌اوت کلی هر درخواست HTTP. |
+| `connector` | `aiohttp.TCPConnector` | `None` | اشتراک‌گذاری کانکشن با اپلیکیشن‌های دیگر. |
+| `max_retries` | `int` | `3` | تعداد تلاش مجدد برای خطاهای قابل بازیابی. |
+| `backoff_factor` | `float` | `0.5` | ضریب تصاعدی برای تأخیر بین تلاش‌های مجدد. |
+| `retry_statuses` | `Tuple[int,...]` | `(408,425,429,500,502,503,504)` | کدهای HTTP که باعث تلاش مجدد می‌شوند. |
+| `long_poll_timeout` | `float` | `30.0` | افزودن تایم‌اوت به درخواست (`getUpdates`) برای پولینگ طولانی. |
+| `parse_mode` | `ParseMode \| str` | `ParseMode.MARKDOWN` | حالت پیش‌فرض قالب‌بندی متن. |
+| `fallback_urls` | `Sequence[str]` | `("https://botapi.rubika.ir/v3/{}/",)` | URLهای جایگزین در صورت قطعی آدرس اصلی. |
+| `ignore_timeout` | `bool` | `False` | ادامهٔ تلاش در خطاهای Timeout. |
+| `plugins` | `Sequence[str]` | `None` | فهرست پلاگین‌های فعال شوندهٔ خودکار. |
+| `auto_enable_plugins` | `bool` | `False` | فعال‌سازی خودکار پلاگین‌ها هنگام `start`. |
+| `plugin_entry_point_group` | `str` | `"rubpy.plugins"` | گروه entry point برای کشف پلاگین‌ها. |
+| `plugin_manager_class` | `Type[PluginManager]` | `PluginManager` | کلاس مدیریت پلاگین. |
+
+**نکته:** از کانتکست‌منیجرهای `async with BotClient(...)` و `with BotClient(...)` نیز می‌توان برای مدیریت خودکار `start/stop` استفاده کرد.
+
+---
 ## چرخهٔ حیات
 
 ### شروع بات
@@ -24,8 +46,25 @@ client = BotClient(
 
 **بازگشت:** `None` (async)
 
----
+### مدیریت پلاگین‌ها
 
+| متد | توضیحات |
+| --- | --- |
+| `enable_plugins(identifiers: Optional[Sequence[str]] = None)` | پلاگین‌های مشخص‌شده یا فهرست پیش‌فرضِ سازنده را فعال می‌کند. خروجی: `List[Plugin]`. |
+| `disable_plugins(identifiers: Optional[Sequence[str]] = None)` | اگر شناسه ندهید تمام پلاگین‌های فعال غیرفعال می‌شوند. |
+| `register_plugin(plugin_cls, name=None)` | پلاگین جدید را به مدیر داخلی ثبت می‌کند و نام یکتا بازمی‌گرداند. |
+
+**نکته:** این API با سیستم `entry points` پایتون سازگار است؛ با فعال بودن `auto_enable_plugins` پلاگین‌ها هنگام `start` فعال می‌شوند.
+
+### مدیریت کیپد چت
+- `edit_chat_keypad`: برای تغییر کیبورد نمایشی چت.
+- `middleware` + `process_update`: امکان ساخت کیبوردهای تعاملی پیچیده را فراهم می‌کند.
+
+### فرمت‌دهی متن و متادیتا
+- `_apply_text_formatting`: براساس `parse_mode` متن را به Markdown داخلی تبدیل کرده و `metadata` را (در صورت ارسال `Metadata` از rubpy.bot.models) به payload اضافه می‌کند.
+- حالت‌های معتبر: `ParseMode.MARKDOWN`, `ParseMode.HTML`, یا `None` (متن خام).
+
+---
 ### غیرفعال کردن بات
 متد: `stop`
 
@@ -38,20 +77,6 @@ client = BotClient(
 **بازگشت:** `None` (async)
 
 ---
-
-### بستن نشست
-متد: `close`
-
-| پارامتر | نوع | توضیحات                     |
-| ------- | --: | --------------------------- |
-| —       |   — | بستن `session` اگر باز باشد |
-
-**شرح کوتاه:** بستن سشن (شبیه stop بدون تغییر `running`).
-
-**بازگشت:** `None` (async)
-
----
-
 ### اجرای بات
 متد: `run`
 
@@ -71,8 +96,16 @@ client = BotClient(
 
 **نکات:** `run` خودش `start()` را فراخوانی می‌کند؛ در حالت وب‌هوک باید HTTPS و احیاناً مکانیزم اعتبارسنجی اضافه در نظر گرفته شود.
 
----
+### کانتکست‌منیجر
+- `__aenter__` / `__aexit__`: اجرای خودکار `start/stop` در محیط‌های async.
+- `__enter__` / `__exit__`: نسخهٔ همگام برای اسکریپت‌های ساده.
 
+### مدیریت سشن و محدودیت سرعت
+- `_ensure_session`: ایجاد `aiohttp.ClientSession` با هدر کاربری روبیکا و تنظیمات محدودیت اتصال.
+- `_rate_limit_delay`: قبل از هر درخواست، اختلاف زمان آخرین درخواست را بررسی کرده و در صورت نیاز `await asyncio.sleep` انجام می‌دهد.
+- `_make_request`: تمهیدات کامل برای تلاش مجدد، سوییچ خودکار بین `BASE_URL` و `FALLBACK_URLS` و تبدیل خطاها به `APIException`.
+
+---
 ## اطلاعات پایه‌ای بات
 
 ### دریافت اطلاعات بات
@@ -93,7 +126,6 @@ bot = await client.get_me()
 ```
 
 ---
-
 ## ارسال پیام‌ها و محتوا
 
 ### ارسال پیام متنی
@@ -120,7 +152,6 @@ mid = await client.send_message("chat_id", "سلام!", chat_keypad=keypad, chat
 ```
 
 ---
-
 ### ارسال استیکر
 متد: `send_sticker`
 
@@ -135,7 +166,6 @@ mid = await client.send_message("chat_id", "سلام!", chat_keypad=keypad, chat
 **بازگشت:** `MessageId` (async)
 
 ---
-
 ### ارسال فایل
 متد: `send_file`
 
@@ -160,7 +190,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 ```
 
 ---
-
 ### درخواست ارسال فایل
 متد: `request_send_file`
 
@@ -175,7 +204,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **خطا:** اگر `type` نامعتبر باشد `ValueError` خواهد داد.
 
 ---
-
 ### بارگذاری فایل
 متد: `upload_file`
 
@@ -190,7 +218,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `str` — `file_id`
 
 ---
-
 ### دریافت فایل
 متد: `get_file`
 
@@ -203,7 +230,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `str` — `download_url`
 
 ---
-
 ### بارگیری فایل
 متد: `download_file`
 
@@ -222,7 +248,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **خطاها:** اگر `get_file` شکست بخورد `ValueError` پرتاب می‌شود؛ اگر دانلود ناموفق باشد `Exception` پرتاب می‌شود.
 
 ---
-
 ## پیام‌های تعاملی
 
 ### ارسال نظرسنجی
@@ -239,7 +264,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `MessageId` (async)
 
 ---
-
 ### ارسال موقعیت مکانی
 متد: `send_location`
 
@@ -255,7 +279,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `MessageId` (async)
 
 ---
-
 ### ارسال مخاطب
 متد: `send_contact`
 
@@ -272,7 +295,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `MessageId` (async)
 
 ---
-
 ## خواندن آپدیت‌ها و پولینگ
 
 ### دریافت آپدیت ها
@@ -288,7 +310,36 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `List[Union[Update, InlineMessage]]` (async)
 
 ---
+### حلقهٔ پولینگ پیشرفته
+متد: `updater`
 
+| پارامتر | نوع | توضیحات |
+| --- | --- | --- |
+| `limit` | `int` | حداکثر تعداد آپدیت در هر درخواست. |
+| `offset_id` | `str` | آیدی ادامهٔ آپدیت‌ها؛ در صورت عدم مقدار از `next_offset_id` داخلی استفاده می‌شود. |
+| `poll_timeout` | `float` | افزودن تایم‌اوت به درخواست (`getUpdates`) برای پولینگ طولانی. |
+
+**شرح کوتاه:** wrapper هوشمند برای `getUpdates` که موارد قدیمی را حذف کرده، آپدیت‌های حذف‌شده را نادیده می‌گیرد و `self.next_offset_id` را نگه می‌دارد.
+
+**بازگشت:** `List[Union[Update, InlineMessage]]` (async) — هر آپدیت با `client` تزریق‌شده بازمی‌گردد تا بتوان متدهای پاسخ‌دهی مثل `update.reply` را صدا زد.
+
+### پردازش آپدیت
+متدها: `process_update`, `_dispatch_update`, `_filters_pass`
+
+1. `process_update`: زنجیرهٔ middlewareها را اجرا و سپس `_dispatch_update` را صدا می‌زند.
+2. `_dispatch_update`: deduplication بر اساس `message_id`، اجرای نخستین هندلر که تمام فیلترها را پاس کند و پشتیبانی از هندلرهای sync/async.
+3. `_filters_pass`: نمونه‌سازی خودکار فیلترهایی که کلاس پاس داده شده‌اند و اجرای `await filter.check(update)`.
+
+### دریافت وب‌هوک
+متد: `handle_webhook`
+
+- تنها درخواست‌های `POST` را می‌پذیرد و JSON را به `Update` یا `InlineMessage` تبدیل می‌کند.
+- برای هر آپدیت `asyncio.create_task(self.process_update(update))` فراخوانی می‌شود تا پاسخ سریع ارسال گردد.
+- پاسخ موفق: `{"status": "OK"}`.
+
+**نکته:** `run` هنگام فعال بودن وب‌هوک endpointهای `ReceiveUpdate`, `ReceiveInlineMessage`, ... را با آدرس جدید ثبت می‌کند.
+
+---
 ## اطلاعات چت و فوروارد
 
 ### دریافت اطلاعات گفتگو
@@ -303,8 +354,6 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 **بازگشت:** `Chat` (async)
 
 ---
-
-
 ### دریافت مدیران چت
 متد: `get_chat_administrators`
 
@@ -314,7 +363,7 @@ mid = await client.send_file("chat_id", file="/tmp/photo.jpg", type="Image", tex
 
 **شرح کوتاه:** دریافت لیست مدیران گروه. (در صورتی که بات در گروه مورد نظر مدیر باشد)
 
-**بازگشت:** ...
+**بازگشت:** `Dict[str, Any]` — پاسخ خام API شامل فهرست مدیران.
 
 **مثال:**
 
@@ -323,8 +372,6 @@ admins = await client.get_chat_administrators("chat_id")
 ```
 
 ---
-
-
 ### دریافت تعداد اعضای گروه
 متد: `get_chat_member_count`
 
@@ -334,7 +381,7 @@ admins = await client.get_chat_administrators("chat_id")
 
 **شرح کوتاه:** دریافت تعداد ممبرهای یک گروه، در صورتی که بات در گروه ادمین باشد.
 
-**بازگشت:** ...
+**بازگشت:** `int` — تعداد اعضا.
 
 **مثال:**
 
@@ -343,7 +390,6 @@ member_count = await client.get_chat_member_count("chat_id")
 ```
 
 ---
-
 ### حذف عضو از گروه
 متد: `ban_chat_member`
 
@@ -354,7 +400,7 @@ member_count = await client.get_chat_member_count("chat_id")
 
 **شرح کوتاه:** حذف یک عضو از گروه.
 
-**بازگشت:** ...
+**بازگشت:** `bool` — آیا حذف انجام شد؟
 
 **مثال:**
 
@@ -363,7 +409,6 @@ await client.ban_chat_member("chat_id", "user_id")
 ```
 
 ---
-
 ### حذف عضو از لیست سیاه
 متد: `unban_chat_member`
 
@@ -374,7 +419,7 @@ await client.ban_chat_member("chat_id", "user_id")
 
 **شرح کوتاه:** حذف یک عضو از لیست سیاه گروه.
 
-**بازگشت:** ...
+**بازگشت:** `bool` — آیا حذف انجام شد؟
 
 **مثال:**
 
@@ -383,7 +428,6 @@ await client.unban_chat_member("chat_id", "user_id")
 ```
 
 ---
-
 ### دریافت اطلاعات عضو
 متد: `get_chat_member`
 
@@ -394,7 +438,7 @@ await client.unban_chat_member("chat_id", "user_id")
 
 **شرح کوتاه:** دریافت اطلاعات عضو از گروه یا کانال در صورت عضو بودن.
 
-**بازگشت:** ...
+**بازگشت:** `ChatMember` — اطلاعات عضو.
 
 **مثال:**
 
@@ -403,7 +447,6 @@ await client.get_chat_member("chat_id", "user_id")
 ```
 
 ---
-
 ### ارتقای عضو
 متد: `promote_chat_member`
 
@@ -414,7 +457,7 @@ await client.get_chat_member("chat_id", "user_id")
 
 **شرح کوتاه:** ارتقا از عضو به مدیر در گروه یا کانال.
 
-**بازگشت:** ...
+**بازگشت:** `bool` — آیا ارتقا انجام شد؟
 
 **مثال:**
 
@@ -423,7 +466,6 @@ await client.promote_chat_member("chat_id", "user_id")
 ```
 
 ---
-
 ### تنظیم دسترسی کاربران در گفتگو
 متد: `set_chat_permissions`
 
@@ -433,7 +475,7 @@ await client.promote_chat_member("chat_id", "user_id")
 
 **شرح کوتاه:** تنظیم دسترسی های کاربران در گفتگو.
 
-**بازگشت:** ...
+**بازگشت:** `bool` — آیا تنظیم دسترسی انجام شد؟
 
 **مثال:**
 
@@ -442,113 +484,6 @@ await client.set_chat_permissions("chat_id", ...)
 ```
 
 ---
-
-### فوروارد پیام
-متد: `forward_message`
-
-| پارامتر                |    نوع | توضیحات               |
-| ---------------------- | -----: | --------------------- |
-| `from_chat_id`         |  `str` | شناسهٔ فرستنده        |
-| `message_id`           |  `str` | شناسهٔ پیام مبدا      |
-| `to_chat_id`           |  `str` | شناسه مقصد            |
-| `disable_notification` | `bool` | ارسال بدون نوتیفیکیشن |
-
-**شرح کوتاه:** فوروارد پیام از یک چت به چت دیگر.
-
-**بازگشت:** `MessageId` (async)
-
----
-
-## ویرایش و حذف پیام‌ها
-
-### ویرایش متن پیام
-متد: `edit_message_text`
-
-| پارامتر      |   نوع | توضیحات    |
-| ------------ | ----: | ---------- |
-| `chat_id`    | `str` | شناسه چت   |
-| `message_id` | `str` | شناسه پیام |
-| `text`       | `str` | متن جدید   |
-
-**شرح کوتاه:** ویرایش متن پیام.
-
-**بازگشت:** `bool` (async)
-
----
-
-### ویرایش کیپد پیام
-متد: `edit_message_keypad`
-
-| پارامتر         |      نوع | توضیحات           |
-| --------------- | -------: | ----------------- |
-| `chat_id`       |    `str` | شناسه چت          |
-| `message_id`    |    `str` | شناسه پیام        |
-| `inline_keypad` | `Keypad` | کیپد اینلاین جدید |
-
-**شرح کوتاه:** ویرایش کیپد پیام.
-
-**بازگشت:** `bool` (async)
-
----
-
-### حذف پیام
-متد: `delete_message`
-
-| پارامتر      |   نوع | توضیحات    |
-| ------------ | ----: | ---------- |
-| `chat_id`    | `str` | شناسه چت   |
-| `message_id` | `str` | شناسه پیام |
-
-**شرح کوتاه:** حذف یک پیام.
-
-**بازگشت:** `bool` (async)
-
----
-
-## دستورها و endpointها
-
-### ثبت دستورات
-متد: `set_commands`
-
-| پارامتر    |                   نوع | توضیحات                                               |
-| ---------- | --------------------: | ----------------------------------------------------- |
-| `commands` | `List[Dict[str,str]]` | لیستی از `{ "command": "...", "description": "..." }` |
-
-**شرح کوتاه:** ثبت لیست دستورات بات (`setCommands`).
-
-**بازگشت:** `bool` (async)
-
----
-
-### آپدیت endpointهای بات
-متد: `update_bot_endpoints`
-
-| پارامتر         |   نوع | توضیحات                                |
-| --------------- | ----: | -------------------------------------- |
-| `url`           | `str` | آدرس وب‌هوک                            |
-| `endpoint_type` | `str` | نوع endpoint (مثلاً `"ReceiveUpdate"`) |
-
-**شرح کوتاه:** به‌روزرسانی endpointهای بات در سرور.
-
-**بازگشت:** `Any` (async)
-
----
-
-### ویرایش کیپد گفتگو
-متد: `edit_chat_keypad`
-
-| پارامتر       |                  نوع | توضیحات             |
-| ------------- | -------------------: | ------------------- |
-| `chat_id`     |                `str` | شناسه چت            |
-| `keypad_type` | `ChatKeypadTypeEnum` | نوع کیپد چت         |
-| `keypad`      |   `Optional[Keypad]` | کیپد جدید (اختیاری) |
-
-**شرح کوتاه:** ویرایش کیپد نمایشی چت (غیراینلاین).
-
-**بازگشت:** `bool` (async)
-
----
-
 ## ثبت هندلرها و فیلترها
 
 ### دکوراتور هندلر آپدیت
@@ -570,9 +505,15 @@ async def echo(client, update):
 ```
 
 ---
-
 ### افزودن هندلر
 متد: `add_handler`
+
+| پارامتر | نوع | توضیحات |
+| --- | --- | --- |
+| `handler` | `Callable` | تابعی با امضای `(bot, update)` |
+| `*filters` | `Filter...` | فیلترهای اجرایی مشابه `on_update` |
+
+**بازگشت:** `str` — کلید یکتا برای حذف بعدی.
 
 **مثال:**
 
@@ -586,9 +527,15 @@ my_handler = client.add_handler(hello_world)
 ```
 
 ---
-
 ### حذف هندلر
 متد: `remove_handler`
+
+| پارامتر | نوع | توضیحات |
+| --- | --- | --- |
+| `handler_key` | `str` | خروجی `add_handler` یا `on_update`. |
+| `handler` | `Callable` | (اختیاری) حذف فقط یک تابع خاص زیر همان کلید. |
+
+**بازگشت:** `bool` — آیا هندلری حذف شد؟
 
 **مثال:**
 
@@ -598,7 +545,6 @@ client.remove_handler(my_handler)
 ```
 
 ---
-
 ### به محض شروع
 متد: `on_start`
 
@@ -612,7 +558,6 @@ async def greet(bot):
 ```
 
 ---
-
 ### به محض خاموش شدن
 متد: `on_shutdown`
 
@@ -625,7 +570,6 @@ async def bye(bot):
 ```
 
 ---
-
 ### میان‌افزار (Middleware)
 
 متد: `middleware`
@@ -652,7 +596,6 @@ async def middleware(bot, update, call_next):
 **بازگشت:** `None` (async)
 
 ---
-
 ## مثال‌های کاربردی
 
 ### مثال ۱ — ارسال پیام ساده
@@ -686,4 +629,17 @@ await client.run()  # اجرای پولینگ (یا use webhook اگر webhook_u
 ```py
 # فرض: سرویس شما در https://example.com است
 await client.run(webhook_url="https://example.com", path="/rubika/webhook", host="0.0.0.0", port=8080)
+```
+
+### مثال ۵ — استفاده از پلاگین و middleware
+
+```py
+client = BotClient("TOKEN", auto_enable_plugins=True, plugins=["echo"])
+
+@client.middleware()
+async def logger(bot, update, call_next):
+    print("Update arrived", update.type)
+    await call_next()
+
+await client.run()
 ```

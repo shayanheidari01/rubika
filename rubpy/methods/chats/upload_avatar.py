@@ -1,12 +1,14 @@
 import rubpy
 from pathlib import Path
-from typing import Union
+from typing import Union, Optional
 
 class UploadAvatar:
     async def upload_avatar(
             self: "rubpy.Client",
             object_guid: str,
-            image: Union[Path, bytes], *args, **kwargs,
+            image: Union[Path, bytes],
+            thumbnail_file_id: Optional[str] = None,
+            *args, **kwargs,
     ):
         """
         Uploads an avatar image for a specified object (user, group, or chat).
@@ -14,6 +16,7 @@ class UploadAvatar:
         Args:
             object_guid (str): The GUID of the object for which the avatar is being uploaded.
             image (Union[Path, bytes]): The image file or bytes to be used as the avatar.
+            thumbnail_file_id (Optional[str]): The file ID of the thumbnail image.
             *args, **kwargs: Additional arguments to be passed to the `upload` method.
 
         Returns:
@@ -36,11 +39,14 @@ class UploadAvatar:
         else:
             kwargs['file_name'] = kwargs.get('file_name', 'rubpy.jpg')
 
+        if thumbnail_file_id is not None:
+            kwargs['thumbnail_file_id'] = thumbnail_file_id
+
         upload = await self.upload(image, *args, **kwargs)
 
         input = dict(
             object_guid=object_guid,
-            thumbnail_file_id=upload.file_id,
+            thumbnail_file_id=thumbnail_file_id or upload.file_id,
             main_file_id=upload.file_id,
         )
 

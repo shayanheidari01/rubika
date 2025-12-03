@@ -64,6 +64,67 @@ class Network:
         self.wss_url = None
         self.ws = None
 
+        self.api_map: Dict[str, str] = {}
+        self.api_priority: list[str] = []
+        self._api_code_by_url: Dict[str, str] = {}
+
+    @staticmethod
+    def _normalize_url(url: Optional[str]) -> Optional[str]:
+        if not url:
+            return None
+        return url.rstrip("/")
+
+    @staticmethod
+    def _ensure_trailing_slash(url: str) -> str:
+        return url if not url or url.endswith("/") else f"{url}/"
+
+    def _is_managed_api(self, url: Optional[str]) -> bool:
+        normalized = self._normalize_url(url)
+        return normalized in self._api_code_by_url if normalized else False
+
+    def _candidate_api_urls(self, preferred_url: Optional[str]) -> list[str]:
+        candidates: list[str] = []
+        seen = set()
+
+        def add_candidate(candidate: Optional[str]) -> None:
+            if not candidate:
+                return
+            normalized = self._normalize_url(candidate)
+            if not normalized or normalized in seen:
+                return
+            seen.add(normalized)
+            if self._is_managed_api(candidate):
+                candidates.append(self._ensure_trailing_slash(normalized))
+            else:
+                candidates.append(candidate)
+
+        add_candidate(preferred_url)
+
+        if preferred_url and not self._is_managed_api(preferred_url):
+            return candidates
+
+        for code in self.api_priority:
+            add_candidate(self.api_map.get(code))
+
+        for endpoint in self.api_map.values():
+            add_candidate(endpoint)
+
+        return candidates
+
+    def _promote_api(self, url: Optional[str]) -> None:
+        normalized = self._normalize_url(url)
+        if not normalized:
+            return
+
+        code = self._api_code_by_url.get(normalized)
+        if not code:
+            return
+
+        if code in self.api_priority:
+            self.api_priority.remove(code)
+        self.api_priority.insert(0, code)
+        self.api_url = self.api_map.get(code, self._ensure_trailing_slash(normalized))
+
     async def close(self) -> None:
         """
         Close the aiphttp.ClientSession
@@ -99,7 +160,44 @@ class Network:
                     api_list = data.get("API", {})
                     socket_list = data.get("socket", {})
 
-                    self.api_url = f"{api_list.get(data.get('default_api'))}/"
+                    self.api_map = {}
+                    for code, endpoint in api_list.items():
+                        if not endpoint:
+                            continue
+                        normalized_code = str(code)
+                        normalized_endpoint = self._ensure_trailing_slash(endpoint.rstrip("/"))
+                        self.api_map[normalized_code] = normalized_endpoint
+
+                    self._api_code_by_url = {
+                        self._normalize_url(url): code
+                        for code, url in self.api_map.items()
+                        if self._normalize_url(url)
+                    }
+
+                    preferred_codes = []
+                    default_api_code = data.get("default_api")
+                    if default_api_code is not None:
+                        default_api_code = str(default_api_code)
+
+                    default_apis = data.get("default_apis") or []
+                    for code in default_apis:
+                        code_str = str(code)
+                        if code_str in self.api_map and code_str not in preferred_codes:
+                            preferred_codes.append(code_str)
+
+                    if (
+                        default_api_code
+                        and default_api_code in self.api_map
+                        and default_api_code not in preferred_codes
+                    ):
+                        preferred_codes.insert(0, default_api_code)
+
+                    if not preferred_codes:
+                        preferred_codes = list(self.api_map.keys())
+
+                    self.api_priority = preferred_codes
+                    self.api_url = self.api_map.get(self.api_priority[0]) if self.api_priority else None
+
                     self.wss_url = socket_list.get(data.get("default_socket"))
 
                     if self.api_url and self.wss_url:
@@ -119,7 +217,7 @@ class Network:
         )
 
     async def request(
-        self, url: str, data: Dict, max_retries: int = 3, backoff: float = 1.0
+        self, url: Optional[str], data: Dict, max_retries: int = 3, backoff: float = 1.0
     ) -> Dict:
         """
         Sends an HTTP POST request with retry logic and exponential backoff.
@@ -140,27 +238,43 @@ class Network:
         Raises:
             NetworkError: If the request fails after all retry attempts.
         """
-        for attempt in range(max_retries):
-            try:
-                async with self.session.post(
-                    url, json=data, proxy=self.client.proxy
-                ) as response:
-                    response.raise_for_status()
-                    return await response.json()
-            except Exception as e:
-                self.logger.warning(
-                    f"Request to {url} failed (attempt {attempt + 1}/{max_retries}): {e}"
-                )
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(backoff * (2**attempt))
+        candidate_urls = self._candidate_api_urls(url or self.api_url)
+        if not candidate_urls:
+            self.logger.error("No API endpoints available for the request.")
+            return None
+
+        last_error: Optional[Exception] = None
+
+        for candidate in candidate_urls:
+            for attempt in range(max_retries):
+                try:
+                    async with self.session.post(
+                        candidate, json=data, proxy=self.client.proxy
+                    ) as response:
+                        response.raise_for_status()
+                        result = await response.json()
+                        self._promote_api(candidate)
+                        return result
+                except Exception as e:
+                    last_error = e
+                    self.logger.warning(
+                        "Request to %s failed (attempt %d/%d): %s",
+                        candidate,
+                        attempt + 1,
+                        max_retries,
+                        e,
+                    )
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(backoff * (2**attempt))
+                    else:
+                        break
 
         self.logger.error(
-                    f"Request to {url} failed after {max_retries} attempts.",
-                    exc_info=True,
-                )
-        # raise exceptions.NetworkError(
-        #     f"Request to {url} failed after {max_retries} attempts."
-        # )
+            "Request failed after trying %d endpoint(s). Last error: %s",
+            len(candidate_urls),
+            last_error,
+        )
+        return None
 
     async def send(self, **kwargs) -> dict:
         """

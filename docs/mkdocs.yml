@@ -46,6 +46,7 @@ nav:
   - متدهای حساب کاربری: client_methods.md
   - فیلترهای حساب کاربری: account_filters.md
   - مثال های استفاده از حساب کاربری: account_examples.md
+  - سیستم پلاگین ها: plugins.md
 
 markdown_extensions:
   - pymdownx.superfences:
