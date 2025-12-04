@@ -15,4 +15,4 @@ class GetMessages:
             "max_id": max_id,
             "limit": limit,
         }
-        return self.builder("getMessages", input=input)
+        return await self.builder("getMessages", input=input)
