@@ -7,7 +7,7 @@ from . import bot
 from .plugins import Plugin, PluginManager, PluginMeta
 
 __author__ = 'Rubpy Project'
-__version__ = '7.2.8'
+__version__ = '7.2.9'
 __license__ = 'GNU Lesser General Public License v3 (LGPLv3)'
 __welcome__ = (
     f'Welcome to Rubpy (version {__version__})\n'

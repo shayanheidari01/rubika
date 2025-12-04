@@ -2,6 +2,7 @@
 
 import asyncio
 import dataclasses
+import hashlib
 import inspect
 import mimetypes
 from pathlib import Path
@@ -85,8 +86,8 @@ class BotClient:
         retry_statuses: A set of HTTP status codes that should trigger retries.
     """
 
-    BASE_URL = "https://messengerg2b1.iranlms.ir/v3/{}/"
-    FALLBACK_URLS: Tuple[str, ...] = ("https://botapi.rubika.ir/v3/{}/",)
+    BASE_URL = "https://botapi.rubika.ir/v3/{}/"
+    FALLBACK_URLS: Tuple[str, ...] = ("https://messengerg2b1.iranlms.ir/v3/{}/",)
 
     @staticmethod
     def _format_base_url(template: str, token: str) -> str:
@@ -112,6 +113,7 @@ class BotClient:
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
         fallback_urls: Optional[Sequence[str]] = None,
         ignore_timeout: bool = False,
+        persist_offset: bool = False,
         plugins: Optional[Sequence[str]] = None,
         auto_enable_plugins: bool = False,
         plugin_entry_point_group: str = "rubpy.plugins",
@@ -133,9 +135,12 @@ class BotClient:
             retry_statuses: HTTP status codes that should trigger retries.
             fallback_urls: Additional base URL templates to try if the primary URL fails.
             ignore_timeout: Whether to keep retrying indefinitely on Bot API Timeout errors.
+            persist_offset: Persist "next_offset_id" to disk during long polling when True.
         """
 
         self.token = token
+        self.persist_offset = bool(persist_offset)
+        self._offset_file: Optional[Path] = None
 
         fallback_url_templates = fallback_urls or self.FALLBACK_URLS
         self._base_urls: List[str] = []
@@ -154,7 +159,9 @@ class BotClient:
         self.middlewares: list[Callable] = []
         self.session = None
         self.running = False
-        self.next_offset_id = None
+        self.next_offset_id = (
+            self._load_persisted_offset() if self.persist_offset else None
+        )
         self.processed_messages = deque(maxlen=1000)
         self._markdown = Markdown()
         self.rate_limit = rate_limit
@@ -565,6 +572,45 @@ class BotClient:
             return True
         return False
 
+    def _offset_storage_path(self) -> Optional[Path]:
+        """Build and memoize the file path for persisting offset IDs."""
+        if not self.persist_offset:
+            return None
+        if self._offset_file is None:
+            token_hash = hashlib.sha256(self.token.encode("utf-8")).hexdigest()[:16]
+            self._offset_file = Path.cwd() / f".rubpy_offset_{token_hash}"
+        return self._offset_file
+
+    def _load_persisted_offset(self) -> Optional[str]:
+        """Load the last persisted offset ID from disk, if available."""
+        path = self._offset_storage_path()
+        if not path or not path.is_file():
+            return None
+        try:
+            value = path.read_text(encoding="utf-8").strip()
+            return value or None
+        except OSError as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to read offset from %s: %s", path, exc)
+            return None
+
+    def _persist_offset_id(self, offset_id: Optional[str]) -> None:
+        """Persist or clear the stored offset ID based on the provided value."""
+        path = self._offset_storage_path()
+        if not path:
+            return
+        if not offset_id:
+            try:
+                path.unlink()
+            except FileNotFoundError:
+                return
+            except OSError as exc:  # pragma: no cover - defensive
+                logger.warning("Failed to remove offset file %s: %s", path, exc)
+            return
+        try:
+            path.write_text(str(offset_id), encoding="utf-8")
+        except OSError as exc:  # pragma: no cover - defensive
+            logger.warning("Failed to persist offset to %s: %s", path, exc)
+
     def _is_retryable_status(self, status: Optional[int]) -> bool:
         return status in self.retry_statuses if status is not None else False
 
@@ -938,39 +984,53 @@ class BotClient:
         poll_timeout: Optional[float] = None,
     ) -> List[Union[Update, InlineMessage]]:
         data = {"limit": limit}
-        updates = []
-        if offset_id or self.next_offset_id:
-            data["offset_id"] = self.next_offset_id if not offset_id else offset_id
+        updates: List[Union[Update, InlineMessage]] = []
+
+        offset_value = offset_id or self.next_offset_id
+        if offset_value:
+            data["offset_id"] = offset_value
 
         if poll_timeout:
-            timeout_seconds = max(1, int(poll_timeout))
-            data["timeout"] = timeout_seconds
+            data["timeout"] = max(1, int(poll_timeout))
 
         try:
             response = await self._make_request(
-                "getUpdates",
-                data,
-                extra_timeout=poll_timeout if poll_timeout else None,
+                "getUpdates", data, extra_timeout=poll_timeout if poll_timeout else None
             )
-            self.next_offset_id = response.get("next_offset_id", self.next_offset_id)
-            for item in response.get("updates", []):
-                update = self._parse_update(item)
-                if update:
-                    if update.type == UpdateTypeEnum.RemovedMessage:
+
+            new_offset_id = response.get("next_offset_id", self.next_offset_id)
+            if new_offset_id != self.next_offset_id:
+                self.next_offset_id = new_offset_id
+                self._persist_offset_id(new_offset_id)
+
+            response_updates = response.get("updates") or ()
+            if response_updates:
+                current_time = round(time.time())
+                for item in response_updates:
+                    update_type = item.get("type")
+                    if update_type == UpdateTypeEnum.RemovedMessage:
                         continue
 
-                    last_time = (
-                        getattr(update, "new_message", None) and update.new_message.time
-                    ) or (
-                        getattr(update, "updated_message", None)
-                        and round(time.time())
-                    )
+                    if update_type in (
+                        UpdateTypeEnum.NewMessage,
+                        UpdateTypeEnum.UpdatedMessage,
+                    ):
+                        msg_key = (
+                            "new_message"
+                            if update_type == UpdateTypeEnum.NewMessage
+                            else "updated_message"
+                        )
+                        msg_data = item.get(msg_key) or {}
+                        last_time = msg_data.get("time")
+                        if last_time is None and update_type == UpdateTypeEnum.UpdatedMessage:
+                            last_time = current_time
 
-                    # Skip stale updates older than the configured threshold.
-                    if has_time_passed(last_time, 5):
-                        continue
+                        if last_time is not None and has_time_passed(last_time, 5):
+                            continue
 
-                    updates.append(update)
+                    update = self._parse_update(item)
+                    if update:
+                        updates.append(update)
 
         except Exception as e:
             logger.exception("Failed to get updates: %s", e)
@@ -1458,7 +1518,7 @@ class BotClient:
                 await runner.cleanup()
         else:
             while self.running:
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.5)
                 try:
                     updates = await self.updater(
                         limit=100, poll_timeout=self.long_poll_timeout
