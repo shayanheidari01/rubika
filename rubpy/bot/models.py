@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Callable, Optional, List, Union
 
 import rubpy
@@ -318,6 +318,8 @@ class Update(DictLike):
     new_message: Optional[Message] = None
     updated_message: Optional[Message] = None
     updated_payment: Optional[PaymentStatus] = None
+    update_time: Optional[str] = None
+    external_data: Optional[dict] = field(default_factory=dict)
     client: Optional["rubpy.BotClient"] = None
 
     @property
@@ -603,6 +605,7 @@ class InlineMessage(DictLike):
     aux_data: Optional[AuxData] = None
     message_id: Optional[str] = None
     chat_id: Optional[str] = None
+    external_data: Optional[dict] = field(default_factory=dict)
     client: "rubpy.BotClient" = None
 
     async def edit_text(self, text: str, message_id: Optional[str] = None):

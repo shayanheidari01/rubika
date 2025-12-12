@@ -143,7 +143,9 @@ class text(Filter):
             return True
 
         if self.regex:
-            return bool(self._compiled.match(text))
+            result = self._compiled.match(text)
+            update.external_data["match"] = result
+            return bool(result)
 
         return text == self.text
 
@@ -475,7 +477,9 @@ class button(Filter):
 
         # Perform match
         if self.regex:
-            return bool(self.button_id.match(button_id))
+            result = self.button_id.match(button_id)
+            update.external_data["match"] = result
+            return bool(result)
         else:
             return button_id == self.button_id
 
@@ -535,6 +539,8 @@ class is_edited(Filter):
         except KeyError:
             return False
 
+class edited(is_edited):
+    pass
 
 class sender_type(Filter):
     """

@@ -1021,7 +1021,7 @@ class BotClient:
                             else "updated_message"
                         )
                         msg_data = item.get(msg_key) or {}
-                        last_time = msg_data.get("time")
+                        last_time = item.get("update_time", msg_data.get("time")) 
                         if last_time is None and update_type == UpdateTypeEnum.UpdatedMessage:
                             last_time = current_time
 
@@ -1300,6 +1300,7 @@ class BotClient:
                         if update_type == UpdateTypeEnum.UpdatedMessage
                         else None
                     ),
+                    update_time=item.get("update_time"),
                 )
             except Exception as e:
                 logger.exception("Failed to parse message: %r", msg_data)
