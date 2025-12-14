@@ -19,7 +19,7 @@ client = BotClient(
 | `timeout` | `float` | `10.0` | تایم‌اوت کلی هر درخواست HTTP. |
 | `connector` | `aiohttp.TCPConnector` | `None` | اشتراک‌گذاری کانکشن با اپلیکیشن‌های دیگر. |
 | `max_retries` | `int` | `3` | تعداد تلاش مجدد برای خطاهای قابل بازیابی. |
-| `backoff_factor` | `float` | `0.5` | ضریب تصاعدی برای تأخیر بین تلاش‌های مجدد. |
+| `backoff_factor` | `float` | `1.0` | ضریب تصاعدی برای تأخیر بین تلاش‌های مجدد. |
 | `retry_statuses` | `Tuple[int,...]` | `(408,425,429,500,502,503,504)` | کدهای HTTP که باعث تلاش مجدد می‌شوند. |
 | `long_poll_timeout` | `float` | `30.0` | افزودن تایم‌اوت به درخواست (`getUpdates`) برای پولینگ طولانی. |
 | `parse_mode` | `ParseMode \| str` | `ParseMode.MARKDOWN` | حالت پیش‌فرض قالب‌بندی متن. |

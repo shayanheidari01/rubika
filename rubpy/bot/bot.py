@@ -105,6 +105,7 @@ class BotClient:
         rate_limit: float = 0.5,
         use_webhook: bool = False,
         timeout: Union[int, float] = 10.0,
+        poll_interval: Union[int, float] = 0.5,
         connector: "aiohttp.TCPConnector" = None,
         max_retries: int = 3,
         backoff_factor: float = 0.5,
@@ -112,7 +113,6 @@ class BotClient:
         long_poll_timeout: float = 30.0,
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
         fallback_urls: Optional[Sequence[str]] = None,
-        ignore_timeout: bool = False,
         persist_offset: bool = False,
         plugins: Optional[Sequence[str]] = None,
         auto_enable_plugins: bool = False,
@@ -129,12 +129,12 @@ class BotClient:
             rate_limit: Minimum delay in seconds between API requests.
             use_webhook: Whether the client should operate in webhook mode.
             timeout: Overall timeout for API requests.
+            poll_interval: Delay between successive long-polling iterations.
             connector: Optional shared aiohttp connector instance.
             max_retries: Maximum number of retries for retryable responses.
             backoff_factor: Base delay (in seconds) for exponential backoff.
             retry_statuses: HTTP status codes that should trigger retries.
             fallback_urls: Additional base URL templates to try if the primary URL fails.
-            ignore_timeout: Whether to keep retrying indefinitely on Bot API Timeout errors.
             persist_offset: Persist "next_offset_id" to disk during long polling when True.
         """
 
@@ -169,11 +169,11 @@ class BotClient:
         self.first_get_updates = True
         self.use_webhook = use_webhook
         self.timeout = timeout
+        self.poll_interval = float(poll_interval)
         self.connector = connector
         self.max_retries = max(1, int(max_retries))
         self.backoff_factor = max(0.0, float(backoff_factor))
         self.retry_statuses = set(retry_statuses or (408, 425, 429, 500, 502, 503, 504))
-        self.ignore_timeout = bool(ignore_timeout)
         self._session_lock = asyncio.Lock()
         self.long_poll_timeout = float(long_poll_timeout)
         self._default_plugins = list(plugins or [])
@@ -474,16 +474,6 @@ class BotClient:
                                 status=result.get("status", "ERROR"),
                                 dev_message=result.get("dev_message"),
                             )
-                            if self._should_force_retry(error):
-                                last_error = error
-                                logger.warning(
-                                    "Bot API Timeout on %s attempt %s: %s",
-                                    method,
-                                    attempt,
-                                    error.dev_message,
-                                )
-                                await self._sleep_backoff(attempt)
-                                break
                             raise error
 
                         return result["data"]
@@ -510,8 +500,6 @@ class BotClient:
                 break
 
             should_retry = attempt < self.max_retries
-            if not should_retry and self._should_force_retry(last_error):
-                should_retry = True
 
             if not should_retry:
                 break
@@ -613,12 +601,6 @@ class BotClient:
 
     def _is_retryable_status(self, status: Optional[int]) -> bool:
         return status in self.retry_statuses if status is not None else False
-
-    def _should_force_retry(self, error: Optional[BaseException]) -> bool:
-        if not (self.ignore_timeout and isinstance(error, APIException)):
-            return False
-        status = getattr(error, "status", "")
-        return isinstance(status, str) and status.lower() == "timeout"
 
     async def _sleep_backoff(self, attempt: int) -> None:
         """Wait for an exponentially increasing delay between retries."""
@@ -1519,7 +1501,7 @@ class BotClient:
                 await runner.cleanup()
         else:
             while self.running:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(self.poll_interval)
                 try:
                     updates = await self.updater(
                         limit=100, poll_timeout=self.long_poll_timeout
@@ -1527,9 +1509,16 @@ class BotClient:
                     if not updates:
                         continue
 
+                    tasks = []
                     for update in updates:
                         logger.debug("Processing polled update: %s", update)
-                        asyncio.create_task(self.process_update(update))
+                        tasks.append(self.process_update(update))
+
+                    if tasks:
+                        results = await asyncio.gather(*tasks, return_exceptions=True)
+                        for result in results:
+                            if isinstance(result, Exception):
+                                logger.error("Update processing failed: %s", result)
 
                 except Exception as e:
                     logger.error("Polling error: %s", e)
