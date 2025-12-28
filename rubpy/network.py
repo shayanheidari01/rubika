@@ -1,6 +1,6 @@
 import threading
 import asyncio
-from typing import Callable, Dict, Optional, Union
+from typing import Callable, Dict, Optional, Union, List
 import aiohttp
 import aiofiles
 import inspect
@@ -65,7 +65,7 @@ class Network:
         self.ws = None
 
         self.api_map: Dict[str, str] = {}
-        self.api_priority: list[str] = []
+        self.api_priority: List[str] = []
         self._api_code_by_url: Dict[str, str] = {}
 
     @staticmethod
@@ -82,8 +82,8 @@ class Network:
         normalized = self._normalize_url(url)
         return normalized in self._api_code_by_url if normalized else False
 
-    def _candidate_api_urls(self, preferred_url: Optional[str]) -> list[str]:
-        candidates: list[str] = []
+    def _candidate_api_urls(self, preferred_url: Optional[str]) -> List[str]:
+        candidates: List[str] = []
         seen = set()
 
         def add_candidate(candidate: Optional[str]) -> None:

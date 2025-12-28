@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import inspect
 import logging
+from collections.abc import Mapping as MappingABC
 from typing import Dict, Iterable, List, Mapping, Optional, Sequence, Set, Type, TYPE_CHECKING
 
 try:  # pragma: no cover - fallback for Python <3.8
@@ -256,8 +257,13 @@ class PluginManager:
         if hasattr(entry_points, "select"):
             return entry_points.select(group=self.entry_point_group)
 
+        if isinstance(entry_points, MappingABC):
+            candidates = entry_points.get(self.entry_point_group, ())
+        else:
+            candidates = entry_points
+
         return [
             entry_point
-            for entry_point in entry_points
-            if entry_point.group == self.entry_point_group
+            for entry_point in candidates
+            if getattr(entry_point, "group", None) == self.entry_point_group
         ]

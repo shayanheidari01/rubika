@@ -154,9 +154,9 @@ class BotClient:
 
         self._set_base_url_index(0)
         self.handlers: Dict[str, List[Tuple[Tuple[Filter, ...], Callable]]] = {}
-        self.start_handlers: list[Callable] = []
-        self.shutdown_handlers: list[Callable] = []
-        self.middlewares: list[Callable] = []
+        self.start_handlers: List[Callable] = []
+        self.shutdown_handlers: List[Callable] = []
+        self.middlewares: List[Callable] = []
         self.session = None
         self.running = False
         self.next_offset_id = (
