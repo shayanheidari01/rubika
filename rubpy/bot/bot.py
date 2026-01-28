@@ -87,7 +87,7 @@ class BotClient:
     """
 
     BASE_URL = "https://botapi.rubika.ir/v3/{}/"
-    FALLBACK_URLS: Tuple[str, ...] = ("https://messengerg2b1.iranlms.ir/v3/{}/",)
+    FALLBACK_URLS: Tuple[str, ...] = ("https://botapi.rubika.ir/v3/{}/",)
 
     @staticmethod
     def _format_base_url(template: str, token: str) -> str:
@@ -1094,11 +1094,6 @@ class BotClient:
     async def update_bot_endpoints(self, url: str, endpoint_type: str):
         return await self._make_request(
             "updateBotEndpoints", {"url": url, "type": endpoint_type}
-        )
-    
-    async def get_chat_member(self, chat_id: str, user_id: str):
-        return await self._make_request(
-            "getChatMember", {"chat_id": chat_id, "user_id": user_id}
         )
     
     async def pin_chat_message(self, chat_id: str, message_id: str, disable_notification: Optional[bool] = False):
