@@ -1495,6 +1495,7 @@ class BotClient:
             finally:
                 await runner.cleanup()
         else:
+            self.next_offset_id = f"{int(time.time()):08x}{'0'*16}"
             while self.running:
                 await asyncio.sleep(self.poll_interval)
                 try:
