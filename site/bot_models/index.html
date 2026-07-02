@@ -1,0 +1,2603 @@
+
+<!doctype html>
+<html lang="fa" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="آموزش و مستندات کتابخانه روبپای (Rubpy) برای ساخت ربات روبیکا با پایتون">
+      
+      
+        <meta name="author" content="شایان حیدری">
+      
+      
+        <link rel="canonical" href="https://rubpy.shayan-heidari.ir/bot_models/">
+      
+      
+        <link rel="prev" href="../bot_filters/">
+      
+      
+        <link rel="next" href="../bot_enums/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>مدل های بات - کتابخانه روبپای | Rubpy Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Vazirmatn:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Vazirmatn";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../css/termynal.css">
+    
+      <link rel="stylesheet" href="../css/custom.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="rtl" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="amber">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#file" class="md-skip">
+          پرش به محتویات
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="سرتیتر">
+    <a href=".." title="کتابخانه روبپای | Rubpy Docs" class="md-header__button md-logo" aria-label="کتابخانه روبپای | Rubpy Docs" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            کتابخانه روبپای | Rubpy Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              مدل های بات
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="amber"  aria-label="حالت تاریک"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="حالت تاریک" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="white" data-md-color-accent="amber"  aria-label="حالت روشن"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="حالت روشن" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="جستجو" placeholder="جستجو" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="جستجو">
+        
+        <button type="reset" class="md-search__icon md-icon" title="بازنشانی" aria-label="بازنشانی" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            راه‌اندازی جستجو
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/shayanheidari01/rubika/" title="رفتن به مخزن" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="هدایت" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="کتابخانه روبپای | Rubpy Docs" class="md-nav__button md-logo" aria-label="کتابخانه روبپای | Rubpy Docs" data-md-component="logo">
+      
+  <img src="https://raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png" alt="logo">
+
+    </a>
+    کتابخانه روبپای | Rubpy Docs
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/shayanheidari01/rubika/" title="رفتن به مخزن" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    معرفی
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot_client_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    متدهای بات
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot_filters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    فیلترهای بات
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    مدل های بات
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    مدل های بات
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="فهرست موضوعات">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      فهرست موضوعات
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#forwardedfrom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ForwardedFrom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paymentstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PaymentStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messagetextupdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageTextUpdate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#botcommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BotCommand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sticker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sticker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contactmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContactMessage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pollstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PollStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poll
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#livelocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LiveLocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonselectionitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonSelectionItem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonselection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonSelection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttoncalendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonCalendar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonnumberpicker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonNumberPicker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonstringpicker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonStringPicker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttontextbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonTextbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonlocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonLocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auxdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AuxData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joinchanneldata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JoinChannelData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openchatdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenChatData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonlink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonLink
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Button
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keypadrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KeypadRow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keypad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keypad
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messagekeypadupdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageKeypadUpdate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messageid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageId
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inlinemessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InlineMessage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot_enums/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    اینام های بات
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bot_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    مثال های بات
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../client_methods/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    متدهای حساب کاربری
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account_filters/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    فیلترهای حساب کاربری
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../account_examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    مثال های استفاده از حساب کاربری
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    سیستم پلاگین ها
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="فهرست موضوعات">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      فهرست موضوعات
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#file" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        File
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#chat" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chat
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#forwardedfrom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ForwardedFrom
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#paymentstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PaymentStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messagetextupdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageTextUpdate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bot" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Bot
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#botcommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BotCommand
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sticker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sticker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#contactmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ContactMessage
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pollstatus" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PollStatus
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poll" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Poll
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#location" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Location
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#livelocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        LiveLocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonselectionitem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonSelectionItem
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonselection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonSelection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttoncalendar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonCalendar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonnumberpicker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonNumberPicker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonstringpicker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonStringPicker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttontextbox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonTextbox
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonlocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonLocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#auxdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AuxData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#joinchanneldata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JoinChannelData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openchatdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenChatData
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#buttonlink" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ButtonLink
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#button" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Button
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keypadrow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        KeypadRow
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keypad" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keypad
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messagekeypadupdate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageKeypadUpdate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#messageid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MessageId
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Message
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#update" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Update
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#inlinemessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InlineMessage
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+  <h1>مدل های بات</h1>
+
+<p>تمام مدل‌ها به‌صورت <code>dataclass</code> و از پایه‌ی <code>DictLike</code> ارث‌بری می‌کنند. همهٔ فیلدها <code>Optional</code> هستند تا با payloadهای ناقص یا تغییریافته(در آینده) سازگار باشند. همچنین تمامی این مدل ها از <code>rubpy.bot.models</code> در دسترس هستند.</p>
+<hr />
+<h2 id="file"><code>File</code><a class="headerlink" href="#file" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>file_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ یکتأ فایل که سرور بازمی‌گرداند</td>
+</tr>
+<tr>
+<td><code>file_name</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام فایل</td>
+</tr>
+<tr>
+<td><code>size</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>اندازهٔ فایل (معمولاً بر حسب بایت یا رشته‌ای که API بازمی‌گرداند)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="chat"><code>Chat</code><a class="headerlink" href="#chat" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>chat_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ چت</td>
+</tr>
+<tr>
+<td><code>chat_type</code></td>
+<td style="text-align: right;"><code>Optional[ChatTypeEnum]</code></td>
+<td>نوع چت</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ کاربر</td>
+</tr>
+<tr>
+<td><code>first_name</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام کاربر</td>
+</tr>
+<tr>
+<td><code>last_name</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام خانوادگی کاربر</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان (برای گروه/کانال)</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام کاربری</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="forwardedfrom"><code>ForwardedFrom</code><a class="headerlink" href="#forwardedfrom" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type_from</code></td>
+<td style="text-align: right;"><code>Optional[ForwardedFromEnum]</code></td>
+<td>نوع منبع فوروارد</td>
+</tr>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام مبدا</td>
+</tr>
+<tr>
+<td><code>from_chat_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ چت مبدا</td>
+</tr>
+<tr>
+<td><code>from_sender_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ فرستندهٔ مبدا</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="paymentstatus"><code>PaymentStatus</code><a class="headerlink" href="#paymentstatus" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>payment_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ تراکنش/پرداخت</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td style="text-align: right;"><code>Optional[PaymentStatusEnum]</code></td>
+<td>وضعیت پرداخت (enum)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="messagetextupdate"><code>MessageTextUpdate</code><a class="headerlink" href="#messagetextupdate" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام ویرایش‌شده</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن جدید پیام</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="bot"><code>Bot</code><a class="headerlink" href="#bot" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bot_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ ربات</td>
+</tr>
+<tr>
+<td><code>bot_title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان/نام ربات</td>
+</tr>
+<tr>
+<td><code>avatar</code></td>
+<td style="text-align: right;"><code>Optional[File]</code></td>
+<td>آواتار ربات (فایل)</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>توضیحات ربات</td>
+</tr>
+<tr>
+<td><code>username</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام کاربری ربات</td>
+</tr>
+<tr>
+<td><code>start_message</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>پیام شروع (start)</td>
+</tr>
+<tr>
+<td><code>share_url</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>URL اشتراک‌گذاری ربات</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="botcommand"><code>BotCommand</code><a class="headerlink" href="#botcommand" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام فرمان</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>توضیح فرمان</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sticker"><code>Sticker</code><a class="headerlink" href="#sticker" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sticker_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ استیکر</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td style="text-align: right;"><code>Optional[File]</code></td>
+<td>فایل مربوط به استیکر</td>
+</tr>
+<tr>
+<td><code>emoji_character</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>ایموجی مرتبط با استیکر</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="contactmessage"><code>ContactMessage</code><a class="headerlink" href="#contactmessage" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>phone_number</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شماره تلفن</td>
+</tr>
+<tr>
+<td><code>first_name</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام</td>
+</tr>
+<tr>
+<td><code>last_name</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام خانوادگی</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="pollstatus"><code>PollStatus</code><a class="headerlink" href="#pollstatus" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>state</code></td>
+<td style="text-align: right;"><code>Optional[PollStatusEnum]</code></td>
+<td>وضعیت نظرسنجی (باز/بسته و ...)</td>
+</tr>
+<tr>
+<td><code>selection_index</code></td>
+<td style="text-align: right;"><code>Optional[int]</code></td>
+<td>ایندکس گزینهٔ انتخاب‌شده</td>
+</tr>
+<tr>
+<td><code>percent_vote_options</code></td>
+<td style="text-align: right;"><code>Optional[List[int]]</code></td>
+<td>درصد آرا هر گزینه (لیست)</td>
+</tr>
+<tr>
+<td><code>total_vote</code></td>
+<td style="text-align: right;"><code>Optional[int]</code></td>
+<td>مجموع آرا</td>
+</tr>
+<tr>
+<td><code>show_total_votes</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا مجموع آرا نمایش داده شود؟</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="poll"><code>Poll</code><a class="headerlink" href="#poll" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>question</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>سوال نظرسنجی</td>
+</tr>
+<tr>
+<td><code>options</code></td>
+<td style="text-align: right;"><code>Optional[List[str]]</code></td>
+<td>گزینه‌ها</td>
+</tr>
+<tr>
+<td><code>poll_status</code></td>
+<td style="text-align: right;"><code>Optional[PollStatus]</code></td>
+<td>وضعیت فعلی نظرسنجی</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="location"><code>Location</code><a class="headerlink" href="#location" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>longitude</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>طول جغرافیایی (رشته/عدد مطابق API)</td>
+</tr>
+<tr>
+<td><code>latitude</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عرض جغرافیایی (رشته/عدد مطابق API)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="livelocation"><code>LiveLocation</code><a class="headerlink" href="#livelocation" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start_time</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>زمان شروع (timestamp / رشته مطابق API)</td>
+</tr>
+<tr>
+<td><code>live_period</code></td>
+<td style="text-align: right;"><code>Optional[int]</code></td>
+<td>طول دورهٔ لایو به ثانیه</td>
+</tr>
+<tr>
+<td><code>current_location</code></td>
+<td style="text-align: right;"><code>Optional[Location]</code></td>
+<td>موقعیت فعلی (Location)</td>
+</tr>
+<tr>
+<td><code>user_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ کاربر ارسال‌کننده</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td style="text-align: right;"><code>Optional[LiveLocationStatusEnum]</code></td>
+<td>وضعیت لایو (enum)</td>
+</tr>
+<tr>
+<td><code>last_update_time</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>زمان آخرین آپدیت</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonselectionitem"><code>ButtonSelectionItem</code><a class="headerlink" href="#buttonselectionitem" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>text</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن آیتم انتخاب</td>
+</tr>
+<tr>
+<td><code>image_url</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>آدرس تصویر آیتم</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[ButtonSelectionTypeEnum]</code></td>
+<td>نوع آیتم (enum)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonselection"><code>ButtonSelection</code><a class="headerlink" href="#buttonselection" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>selection_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ مجموعهٔ انتخاب</td>
+</tr>
+<tr>
+<td><code>search_type</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نوع جستجو/فیلتر (رشتهٔ API)</td>
+</tr>
+<tr>
+<td><code>get_type</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نوع واکشی آیتم‌ها</td>
+</tr>
+<tr>
+<td><code>items</code></td>
+<td style="text-align: right;"><code>Optional[List[ButtonSelectionItem]]</code></td>
+<td>لیست آیتم‌ها</td>
+</tr>
+<tr>
+<td><code>is_multi_selection</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا چندانتخابی است؟</td>
+</tr>
+<tr>
+<td><code>columns_count</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>تعداد ستون‌ها (رشته مطابق API)</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان مجموعهٔ انتخاب</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttoncalendar"><code>ButtonCalendar</code><a class="headerlink" href="#buttoncalendar" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>مقدار پیش‌فرض (مثلاً تاریخ)</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[ButtonCalendarTypeEnum]</code></td>
+<td>نوع تقویم/نمایش (enum)</td>
+</tr>
+<tr>
+<td><code>min_year</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>کمینهٔ سال قابل انتخاب</td>
+</tr>
+<tr>
+<td><code>max_year</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>بیشینهٔ سال قابل انتخاب</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان تقویم</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonnumberpicker"><code>ButtonNumberPicker</code><a class="headerlink" href="#buttonnumberpicker" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>min_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>حداقل مقدار (رشته مطابق API)</td>
+</tr>
+<tr>
+<td><code>max_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>حداکثر مقدار</td>
+</tr>
+<tr>
+<td><code>default_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>مقدار پیش‌فرض</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان پیکر عددی</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonstringpicker"><code>ButtonStringPicker</code><a class="headerlink" href="#buttonstringpicker" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>items</code></td>
+<td style="text-align: right;"><code>Optional[List[str]]</code></td>
+<td>لیست رشته‌ای گزینه‌ها</td>
+</tr>
+<tr>
+<td><code>default_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>مقدار پیش‌فرض</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان انتخاب‌گر رشته‌ای</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttontextbox"><code>ButtonTextbox</code><a class="headerlink" href="#buttontextbox" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type_line</code></td>
+<td style="text-align: right;"><code>Optional[ButtonTextboxTypeLineEnum]</code></td>
+<td>نوع خط/ورودی (enum)</td>
+</tr>
+<tr>
+<td><code>type_keypad</code></td>
+<td style="text-align: right;"><code>Optional[ButtonTextboxTypeKeypadEnum]</code></td>
+<td>نوع کیپد (enum)</td>
+</tr>
+<tr>
+<td><code>place_holder</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن جایگزین (placeholder)</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان فیلد متنی</td>
+</tr>
+<tr>
+<td><code>default_value</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>مقدار پیش‌فرض</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonlocation"><code>ButtonLocation</code><a class="headerlink" href="#buttonlocation" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default_pointer_location</code></td>
+<td style="text-align: right;"><code>Optional[Location]</code></td>
+<td>محل اشاره‌گر پیش‌فرض</td>
+</tr>
+<tr>
+<td><code>default_map_location</code></td>
+<td style="text-align: right;"><code>Optional[Location]</code></td>
+<td>مکان نقشه پیش‌فرض</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[ButtonLocationTypeEnum]</code></td>
+<td>نوع ورودی مکان (enum)</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>عنوان</td>
+</tr>
+<tr>
+<td><code>location_image_url</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>تصویر/نقشه مرتبط (URL)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="auxdata"><code>AuxData</code><a class="headerlink" href="#auxdata" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>start_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ شروع (کمکی)</td>
+</tr>
+<tr>
+<td><code>button_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ دکمهٔ مرتبط</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="joinchanneldata"><code>JoinChannelData</code><a class="headerlink" href="#joinchanneldata" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>username</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نام کاربری کانال/گروه (در <code>__post_init__</code> با حذف <code>@</code> نرمال‌سازی می‌شود)</td>
+</tr>
+<tr>
+<td><code>ask_join</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا از کاربر درخواست ملحق شدن شود؟ (پیش‌فرض <code>False</code>)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="openchatdata"><code>OpenChatData</code><a class="headerlink" href="#openchatdata" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>object_guid</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ شیٔ (GUID)</td>
+</tr>
+<tr>
+<td><code>object_type</code></td>
+<td style="text-align: right;"><code>Optional[ChatTypeEnum]</code></td>
+<td>نوع شی (ChatTypeEnum)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="buttonlink"><code>ButtonLink</code><a class="headerlink" href="#buttonlink" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نوع لینک (رشتهٔ API)</td>
+</tr>
+<tr>
+<td><code>link_url</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>آدرس لینک — در <code>__post_init__</code> برخی لینک‌های <code>rubika.ir</code> به deep-link نرمال‌سازی می‌شوند</td>
+</tr>
+<tr>
+<td><code>joinchannel_data</code></td>
+<td style="text-align: right;"><code>Optional[JoinChannelData]</code></td>
+<td>داده‌های join-channel مرتبط</td>
+</tr>
+<tr>
+<td><code>open_chat_data</code></td>
+<td style="text-align: right;"><code>Optional[OpenChatData]</code></td>
+<td>داده‌های open-chat مرتبط</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="button"><code>Button</code><a class="headerlink" href="#button" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ دکمه</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[ButtonTypeEnum]</code></td>
+<td>نوع دکمه (enum)</td>
+</tr>
+<tr>
+<td><code>button_text</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن دکمه</td>
+</tr>
+<tr>
+<td><code>button_selection</code></td>
+<td style="text-align: right;"><code>Optional[ButtonSelection]</code></td>
+<td>دادهٔ انتخاب (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>button_calendar</code></td>
+<td style="text-align: right;"><code>Optional[ButtonCalendar]</code></td>
+<td>تقویم تعبیه‌شده</td>
+</tr>
+<tr>
+<td><code>button_number_picker</code></td>
+<td style="text-align: right;"><code>Optional[ButtonNumberPicker]</code></td>
+<td>پیکر عددی</td>
+</tr>
+<tr>
+<td><code>button_string_picker</code></td>
+<td style="text-align: right;"><code>Optional[ButtonStringPicker]</code></td>
+<td>پیکر رشته‌ای</td>
+</tr>
+<tr>
+<td><code>button_location</code></td>
+<td style="text-align: right;"><code>Optional[ButtonLocation]</code></td>
+<td>ورودی مکان</td>
+</tr>
+<tr>
+<td><code>button_textbox</code></td>
+<td style="text-align: right;"><code>Optional[ButtonTextbox]</code></td>
+<td>ورودی متنی</td>
+</tr>
+<tr>
+<td><code>button_link</code></td>
+<td style="text-align: right;"><code>Optional[ButtonLink]</code></td>
+<td>لینک/عملیات مرتبط</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="keypadrow"><code>KeypadRow</code><a class="headerlink" href="#keypadrow" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>buttons</code></td>
+<td style="text-align: right;"><code>Optional[List[Button]]</code></td>
+<td>لیست دکمه‌ها در یک ردیف</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="keypad"><code>Keypad</code><a class="headerlink" href="#keypad" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rows</code></td>
+<td style="text-align: right;"><code>Optional[List[KeypadRow]]</code></td>
+<td>ردیف‌های کیپد</td>
+</tr>
+<tr>
+<td><code>resize_keyboard</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا کیبورد قابل تغییر سایز است؟</td>
+</tr>
+<tr>
+<td><code>on_time_keyboard</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا کیبورد موقت/زمانی است؟</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="messagekeypadupdate"><code>MessageKeypadUpdate</code><a class="headerlink" href="#messagekeypadupdate" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام مورد به‌روزرسانی</td>
+</tr>
+<tr>
+<td><code>inline_keypad</code></td>
+<td style="text-align: right;"><code>Optional[Keypad]</code></td>
+<td>کیپد جدید اینلاین</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="messageid"><code>MessageId</code><a class="headerlink" href="#messageid" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام قدیمی</td>
+</tr>
+<tr>
+<td><code>new_message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام جدید (در صورت replace)</td>
+</tr>
+<tr>
+<td><code>file_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ فایل مرتبط</td>
+</tr>
+<tr>
+<td><code>chat_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ چت پیام</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td style="text-align: right;"><code>Optional["rubpy.BotClient"]</code></td>
+<td>ارجاع به کلاینت برای انجام عملیات</td>
+</tr>
+</tbody>
+</table>
+<p><strong>متدها (async)</strong></p>
+<ul>
+<li><code>delete()</code> — حذف پیام (فراخوانی <code>client.delete_message(chat_id, message_id or new_message_id)</code>)</li>
+<li><code>edit_text(new_text: str)</code> — ویرایش متن پیام (فراخوانی <code>client.edit_message_text(chat_id, message_id or new_message_id, new_text)</code>)</li>
+</ul>
+<blockquote>
+<p>توجه: برای کارکرد متدها، <code>client</code> باید ست شده باشد.</p>
+</blockquote>
+<hr />
+<h2 id="message"><code>Message</code><a class="headerlink" href="#message" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[MessageId]</code></td>
+<td>شناسهٔ پیام (MessageId)</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن پیام</td>
+</tr>
+<tr>
+<td><code>time</code></td>
+<td style="text-align: right;"><code>Optional[int]</code></td>
+<td>timestamp پیام</td>
+</tr>
+<tr>
+<td><code>is_edited</code></td>
+<td style="text-align: right;"><code>Optional[bool]</code></td>
+<td>آیا پیام ویرایش شده؟</td>
+</tr>
+<tr>
+<td><code>sender_type</code></td>
+<td style="text-align: right;"><code>Optional[MessageSenderEnum]</code></td>
+<td>نوع فرستنده (enum)</td>
+</tr>
+<tr>
+<td><code>sender_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ فرستنده</td>
+</tr>
+<tr>
+<td><code>aux_data</code></td>
+<td style="text-align: right;"><code>Optional[AuxData]</code></td>
+<td>داده‌های کمکی مرتبط</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td style="text-align: right;"><code>Optional[File]</code></td>
+<td>فایل پیوستی (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>reply_to_message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام که این پیام به آن پاسخ داده شده</td>
+</tr>
+<tr>
+<td><code>forwarded_from</code></td>
+<td style="text-align: right;"><code>Optional[ForwardedFrom]</code></td>
+<td>اطلاعات فوروارد</td>
+</tr>
+<tr>
+<td><code>forwarded_no_link</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>نسخهٔ فوروارد بدون لینک (رشتهٔ API)</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td style="text-align: right;"><code>Optional[Location]</code></td>
+<td>اطلاعات مکان (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>sticker</code></td>
+<td style="text-align: right;"><code>Optional[Sticker]</code></td>
+<td>استیکر (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>contact_message</code></td>
+<td style="text-align: right;"><code>Optional[ContactMessage]</code></td>
+<td>کانتکت (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>poll</code></td>
+<td style="text-align: right;"><code>Optional[Poll]</code></td>
+<td>نظرسنجی (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>live_location</code></td>
+<td style="text-align: right;"><code>Optional[LiveLocation]</code></td>
+<td>موقعیت زنده (در صورت وجود)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="update"><code>Update</code><a class="headerlink" href="#update" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td style="text-align: right;"><code>Optional[UpdateTypeEnum]</code></td>
+<td>نوع آپدیت (پیام جدید، ویرایش، حذف و ...)</td>
+</tr>
+<tr>
+<td><code>chat_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ چت مرتبط با آپدیت</td>
+</tr>
+<tr>
+<td><code>removed_message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام حذف‌شده (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>new_message</code></td>
+<td style="text-align: right;"><code>Optional[Message]</code></td>
+<td>پیام جدید (در رویداد پیام جدید)</td>
+</tr>
+<tr>
+<td><code>updated_message</code></td>
+<td style="text-align: right;"><code>Optional[Message]</code></td>
+<td>پیام به‌روزرسانی‌شده (در ویرایش)</td>
+</tr>
+<tr>
+<td><code>updated_payment</code></td>
+<td style="text-align: right;"><code>Optional[PaymentStatus]</code></td>
+<td>به‌روزرسانی وضعیت پرداخت (در رویداد پرداخت)</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td style="text-align: right;"><code>Optional["rubpy.BotClient"]</code></td>
+<td>ارجاع به کلاینت برای انجام عملیات</td>
+</tr>
+</tbody>
+</table>
+<p><strong>متدهای کاربردی (همه async)</strong></p>
+<ul>
+<li>
+<p><code>reply(text, chat_keypad=None, inline_keypad=None, disable_notification=False, chat_keypad_type=ChatKeypadTypeEnum.NONE, chat_id=None) -&gt; MessageId</code>
+  ارسال متن (فراخوانی <code>client.send_message</code>) — به‌صورت خودکار <code>reply_to_message_id</code> را از <code>self.new_message.message_id</code> می‌گیرد (در صورت وجود).</p>
+</li>
+<li>
+<p><code>reply_file(...), reply_photo(...), reply_video(...), reply_voice(...), reply_music(...), reply_gif(...)</code>
+  شورت‌کات‌های ارسال فایل با نوع مشخص (فراخوانی <code>client.send_file</code> با پارامتر <code>type</code>).</p>
+</li>
+<li>
+<p><code>delete(chat_id=None, message_id=None)</code> — حذف پیام (فراخوانی <code>client.delete_message</code>).</p>
+</li>
+<li>
+<p><code>download(file_id=None, save_as=None, progress=None, chunk_size=65536, as_bytes=False) -&gt; Union[str, bytes, None]</code>
+  دانلود فایل با امکان ذخیره یا بازگرداندن بایت‌ها (فراخوانی <code>client.download_file</code>).</p>
+</li>
+</ul>
+<blockquote>
+<p>همهٔ متدها ابتدا بررسی می‌کنند که <code>self.client</code> ست شده باشد و در غیر این صورت <code>ValueError</code> پرتاب می‌شود.</p>
+</blockquote>
+<hr />
+<h2 id="inlinemessage"><code>InlineMessage</code><a class="headerlink" href="#inlinemessage" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>فیلد</th>
+<th style="text-align: right;">نوع</th>
+<th>توضیحات</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sender_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ فرستندهٔ اینلاین</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>متن</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td style="text-align: right;"><code>Optional[File]</code></td>
+<td>فایل پیوست (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>location</code></td>
+<td style="text-align: right;"><code>Optional[Location]</code></td>
+<td>مکان (در صورت وجود)</td>
+</tr>
+<tr>
+<td><code>aux_data</code></td>
+<td style="text-align: right;"><code>Optional[AuxData]</code></td>
+<td>دادهٔ کمکی</td>
+</tr>
+<tr>
+<td><code>message_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ پیام اینلاین</td>
+</tr>
+<tr>
+<td><code>chat_id</code></td>
+<td style="text-align: right;"><code>Optional[str]</code></td>
+<td>شناسهٔ چت/کاربری که پیام را دریافت می‌کند</td>
+</tr>
+<tr>
+<td><code>client</code></td>
+<td style="text-align: right;"><code>Optional["rubpy.BotClient"]</code></td>
+<td>ارجاع به کلاینت</td>
+</tr>
+</tbody>
+</table>
+<p><strong>متدهای مشابه <code>Update</code> (async)</strong>
+<code>reply</code>, <code>reply_file</code>, <code>reply_photo</code>, <code>reply_voice</code>, <code>reply_music</code>, <code>reply_gif</code>, <code>reply_video</code>, <code>delete</code> — همان کارکرد <code>Update</code> را دارند ولی روی <code>self.chat_id</code>/<code>self.message_id</code> اجرا می‌شوند.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="پاورقی" >
+        
+          
+          <a href="../bot_filters/" class="md-footer__link md-footer__link--prev" aria-label="قبلی: فیلترهای بات">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                قبلی
+              </span>
+              <div class="md-ellipsis">
+                فیلترهای بات
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../bot_enums/" class="md-footer__link md-footer__link--next" aria-label="بعدی: اینام های بات">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                بعدی
+              </span>
+              <div class="md-ellipsis">
+                اینام های بات
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["search.suggest", "search.highlight", "content.tabs.link", "navigation.footer", "content.code.copy", "navigation.instant", "navigation.sections", "navigation.expand"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u06a9\u067e\u06cc \u0634\u062f", "clipboard.copy": "\u06a9\u067e\u06cc \u06a9\u0631\u062f\u0646", "search.result.more.one": "1 \u0645\u0648\u0631\u062f \u062f\u06cc\u06af\u0631 \u062f\u0631 \u0627\u06cc\u0646 \u0635\u0641\u062d\u0647", "search.result.more.other": "# \u0645\u0648\u0631\u062f \u062f\u06cc\u06af\u0631 \u062f\u0631 \u0627\u06cc\u0646 \u0635\u0641\u062d\u0647", "search.result.none": "\u0633\u0646\u062f\u06cc \u06cc\u0627\u0641\u062a \u0646\u0634\u062f", "search.result.one": "1 \u0633\u0646\u062f \u06cc\u0627\u0641\u062a \u0634\u062f", "search.result.other": "# \u0633\u0646\u062f \u06cc\u0627\u0641\u062a \u0634\u062f", "search.result.placeholder": "\u0628\u0631\u0627\u06cc \u0634\u0631\u0648\u0639 \u062c\u0633\u062a\u062c\u0648 \u062a\u0627\u06cc\u067e \u06a9\u0646\u06cc\u062f", "search.result.term.missing": "\u0645\u0648\u062c\u0648\u062f \u0646\u06cc\u0633\u062a", "select.version": "\u0627\u0646\u062a\u062e\u0627\u0628 \u0648\u06cc\u0631\u0627\u06cc\u0634"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../js/termynal.js"></script>
+      
+        <script src="../js/custom.js"></script>
+      
+        <script src="../&lt;script type=&#34;application/ld+json&#34;&gt;
+{
+  &#34;@context&#34;: &#34;https:/schema.org&#34;,
+  &#34;@type&#34;: &#34;SoftwareApplication&#34;,
+  &#34;name&#34;: &#34;Rubpy&#34;,
+  &#34;applicationCategory&#34;: &#34;DeveloperLibrary&#34;,
+  &#34;operatingSystem&#34;: &#34;Any&#34;,
+  &#34;url&#34;: &#34;https:/rubpy.shayan-heidari.ir/&#34;,
+  &#34;logo&#34;: &#34;https:/raw.githubusercontent.com/shayanheidari01/rubika/master/icon.png&#34;,
+  &#34;author&#34;: {
+    &#34;@type&#34;: &#34;Person&#34;,
+    &#34;name&#34;: &#34;شایان حیدری&#34;
+  },
+  &#34;description&#34;: &#34;کتابخانه روبپای (Rubpy) برای ساخت ربات‌های روبیکا با پایتون | شامل متدها، فیلترها، مدل‌ها و مثال‌های کامل.&#34;
+}
+&lt;/script&gt;
+"></script>
+      
+    
+  </body>
+</html>
