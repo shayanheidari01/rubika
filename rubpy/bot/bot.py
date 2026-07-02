@@ -11,10 +11,9 @@ from aiohttp import web
 from aiohttp.client_exceptions import (
     ClientError,
     ClientResponseError,
-    ContentTypeError,
 )
 import json
-from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Set, Union, Tuple, Type
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Union, Tuple, Type
 import logging
 from collections import deque
 import time
@@ -40,25 +39,6 @@ from rubpy.plugins import PluginManager, Plugin
 # Setup logging
 # logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
-
-def has_time_passed(last_time, seconds: int = 5) -> bool:
-    """
-    Check if a certain amount of time has passed since the last time.
-
-    Args:
-        last_time: The last time in seconds.
-        seconds: The amount of time to check for.
-
-    Returns:
-        bool: True if the time has passed, False otherwise.
-    """
-    try:
-        timestamp = int(float(last_time))
-        now = time.time()
-        return (now - timestamp) > seconds
-    except (TypeError, ValueError):
-        return False
-
 
 class BotClient:
     """
@@ -87,7 +67,6 @@ class BotClient:
     """
 
     BASE_URL = "https://botapi.rubika.ir/v3/{}/"
-    FALLBACK_URLS: Tuple[str, ...] = ("https://botapi.rubika.ir/v3/{}/",)
 
     @staticmethod
     def _format_base_url(template: str, token: str) -> str:
@@ -112,8 +91,7 @@ class BotClient:
         retry_statuses: Optional[Tuple[int, ...]] = None,
         long_poll_timeout: float = 30.0,
         parse_mode: Optional[Union[ParseMode, str]] = ParseMode.MARKDOWN,
-        fallback_urls: Optional[Sequence[str]] = None,
-        persist_offset: bool = False,
+        persist_offset: bool = True,
         plugins: Optional[Sequence[str]] = None,
         auto_enable_plugins: bool = False,
         plugin_entry_point_group: str = "rubpy.plugins",
@@ -134,25 +112,13 @@ class BotClient:
             max_retries: Maximum number of retries for retryable responses.
             backoff_factor: Base delay (in seconds) for exponential backoff.
             retry_statuses: HTTP status codes that should trigger retries.
-            fallback_urls: Additional base URL templates to try if the primary URL fails.
             persist_offset: Persist "next_offset_id" to disk during long polling when True.
         """
 
         self.token = token
         self.persist_offset = bool(persist_offset)
         self._offset_file: Optional[Path] = None
-
-        fallback_url_templates = fallback_urls or self.FALLBACK_URLS
-        self._base_urls: List[str] = []
-        for template in (self.BASE_URL, *fallback_url_templates):
-            url = self._format_base_url(template, token)
-            if url not in self._base_urls:
-                self._base_urls.append(url)
-
-        if not self._base_urls:
-            raise ValueError("No base URLs configured for BotClient")
-
-        self._set_base_url_index(0)
+        self.base_url = self._format_base_url(self.BASE_URL, token)
         self.handlers: Dict[str, List[Tuple[Tuple[Filter, ...], Callable]]] = {}
         self.start_handlers: List[Callable] = []
         self.shutdown_handlers: List[Callable] = []
@@ -163,6 +129,7 @@ class BotClient:
             self._load_persisted_offset() if self.persist_offset else None
         )
         self.processed_messages = deque(maxlen=1000)
+        self.recent_long_poll_updates: List[str] = []
         self._markdown = Markdown()
         self.rate_limit = rate_limit
         self.last_request_time = 0
@@ -407,104 +374,96 @@ class BotClient:
     ) -> Dict:
         """Perform an API request with retry and response validation."""
         await self._rate_limit_delay()
+        timeout = None
+        if extra_timeout is not None:
+            total_timeout = self.timeout + max(0.0, float(extra_timeout))
+            timeout = aiohttp.ClientTimeout(total=total_timeout)
 
         last_error: Optional[BaseException] = None
+        url = f"{self.base_url}{method}"
 
-        attempt = 1
-        while True:
-            attempted_indices: Set[int] = set()
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                await self._ensure_session()
+                if not self.session:
+                    raise RuntimeError("Client session is not initialized")
 
-            while True:
-                attempted_indices.add(self._base_url_index)
-                url = f"{self.base_url}{method}"
+                async with self.session.post(url, json=data, timeout=timeout) as response:
+                    raw_body = await response.text()
 
-                try:
-                    await self._ensure_session()
-                    if not self.session:
-                        raise RuntimeError("Client session is not initialized")
-
-                    timeout = None
-                    if extra_timeout is not None:
-                        total_timeout = self.timeout + max(0.0, float(extra_timeout))
-                        timeout = aiohttp.ClientTimeout(total=total_timeout)
-
-                    async with self.session.post(url, json=data, timeout=timeout) as response:
-                        try:
-                            response.raise_for_status()
-                        except ClientResponseError as exc:
-                            body = await response.text()
-                            if self._is_retryable_status(exc.status):
-                                last_error = exc
-                                failed_base = url
-                                if self._try_next_base_url(
-                                    attempted_indices,
-                                    reason=f"HTTP {exc.status} on {method}",
-                                ):
-                                    continue
-                                if attempt < self.max_retries:
-                                    logger.warning(
-                                        "Retryable HTTP error %s on %s attempt %s (base=%s): %s",
-                                        exc.status,
-                                        method,
-                                        attempt,
-                                        failed_base,
-                                        body,
-                                    )
-                                    await self._sleep_backoff(attempt)
-                                    break
-                            raise APIException(
-                                status=str(exc.status),
-                                dev_message=body or exc.message,
-                            )
-
-                        try:
-                            result = await response.json(content_type=None)
-                        except ContentTypeError:
-                            text = await response.text()
-                            raise APIException(status="InvalidResponse", dev_message=text)
-
-                        logger.debug(
-                            "API response for %s returned status=%s",
-                            method,
-                            result.get("status"),
+                    if response.status >= 400:
+                        error = APIException(
+                            status=str(response.status),
+                            dev_message=raw_body or response.reason,
                         )
-
-                        if result.get("status") != "OK":
-                            error = APIException(
-                                status=result.get("status", "ERROR"),
-                                dev_message=result.get("dev_message"),
-                            )
+                        if self._is_retryable_status(response.status):
                             raise error
+                        raise error
 
-                        return result["data"]
+                    try:
+                        result = json.loads(raw_body) if raw_body else {}
+                    except json.JSONDecodeError as exc:
+                        raise APIException(
+                            status="InvalidResponse",
+                            dev_message=raw_body or str(exc),
+                        ) from exc
 
-                except (ClientError, asyncio.TimeoutError) as exc:
-                    last_error = exc
-                    failed_base = url
-                    if self._try_next_base_url(
-                        attempted_indices, reason=str(exc)
-                    ):
-                        continue
-                    if attempt < self.max_retries:
-                        logger.warning(
-                            "Network error on %s attempt %s (base=%s): %s",
-                            method,
-                            attempt,
-                            failed_base,
-                            str(exc),
+                    if not isinstance(result, dict):
+                        raise APIException(
+                            status="InvalidResponse",
+                            dev_message=f"Unexpected response type: {type(result).__name__}",
                         )
-                        await self._sleep_backoff(attempt)
-                        break
-                    break
 
+                    logger.debug(
+                        "API response for %s returned status=%s",
+                        method,
+                        result.get("status"),
+                    )
+
+                    if result.get("status") != "OK":
+                        raise APIException(
+                            status=result.get("status", "ERROR"),
+                            dev_message=result.get("dev_message"),
+                        )
+
+                    if "data" not in result:
+                        raise APIException(
+                            status="InvalidResponse",
+                            dev_message=f"Missing data field in response for {method}",
+                        )
+
+                    return result["data"]
+
+            except APIException as exc:
+                last_error = exc
+                if (
+                    attempt < self.max_retries
+                    and exc.status is not None
+                    and str(exc.status).isdigit()
+                    and self._is_retryable_status(int(str(exc.status)))
+                ):
+                    logger.warning(
+                        "Retryable API error on %s attempt %s: %s",
+                        method,
+                        attempt,
+                        exc.dev_message or exc.status,
+                    )
+                    await self._sleep_backoff(attempt)
+                    continue
+                raise
+            except (ClientError, asyncio.TimeoutError) as exc:
+                last_error = exc
+                await self._close_session()
+                if attempt < self.max_retries:
+                    logger.warning(
+                        "Network error on %s attempt %s: %s",
+                        method,
+                        attempt,
+                        str(exc),
+                    )
+                    await self._sleep_backoff(attempt)
+                    continue
                 break
-
-            should_retry = attempt < self.max_retries
-
-            if not should_retry:
-                break
-
-            attempt += 1
 
         if last_error:
             raise last_error
@@ -540,25 +499,6 @@ class BotClient:
         if self.session and not self.session.closed:
             await self.session.close()
         self.session = None
-
-    def _set_base_url_index(self, index: int) -> None:
-        self._base_url_index = index
-        self.base_url = self._base_urls[index]
-
-    def _try_next_base_url(self, attempted_indices: Set[int], *, reason: str) -> bool:
-        for idx, _ in enumerate(self._base_urls):
-            if idx in attempted_indices:
-                continue
-            previous_url = self.base_url
-            self._set_base_url_index(idx)
-            logger.warning(
-                "Switching BotClient base URL from %s to %s due to %s",
-                previous_url,
-                self.base_url,
-                reason,
-            )
-            return True
-        return False
 
     def _offset_storage_path(self) -> Optional[Path]:
         """Build and memoize the file path for persisting offset IDs."""
@@ -987,31 +927,20 @@ class BotClient:
 
             response_updates = response.get("updates") or ()
             if response_updates:
-                current_time = round(time.time())
                 for item in response_updates:
                     update_type = item.get("type")
                     if update_type == UpdateTypeEnum.RemovedMessage:
                         continue
 
-                    if update_type in (
-                        UpdateTypeEnum.NewMessage,
-                        UpdateTypeEnum.UpdatedMessage,
-                    ):
-                        msg_key = (
-                            "new_message"
-                            if update_type == UpdateTypeEnum.NewMessage
-                            else "updated_message"
-                        )
-                        msg_data = item.get(msg_key) or {}
-                        last_time = item.get("update_time", msg_data.get("time")) 
-                        if last_time is None and update_type == UpdateTypeEnum.UpdatedMessage:
-                            last_time = current_time
-
-                        if last_time is not None and has_time_passed(last_time, 5):
-                            continue
+                    dedup_key = self._build_raw_update_key(item)
+                    if dedup_key and dedup_key in self.recent_long_poll_updates:
+                        logger.debug("Skipping duplicate long-poll update: %s", dedup_key)
+                        continue
 
                     update = self._parse_update(item)
                     if update:
+                        if dedup_key:
+                            self._remember_long_poll_update(dedup_key)
                         updates.append(update)
 
         except Exception as e:
@@ -1022,6 +951,34 @@ class BotClient:
             return []
 
         return updates
+
+    def _build_raw_update_key(self, item: Dict[str, Any]) -> Optional[str]:
+        update_type = item.get("type")
+        if not update_type:
+            return None
+        if update_type == UpdateTypeEnum.RemovedMessage:
+            message_id = item.get("removed_message_id")
+            if not message_id:
+                return None
+            return f"{update_type}:{message_id}"
+        if update_type in (UpdateTypeEnum.NewMessage, UpdateTypeEnum.UpdatedMessage):
+            message_key = (
+                "new_message"
+                if update_type == UpdateTypeEnum.NewMessage
+                else "updated_message"
+            )
+            message = item.get(message_key) or {}
+            message_id = message.get("message_id")
+            update_time = item.get("update_time", message.get("time"))
+            if not message_id:
+                return None
+            return f"{update_type}:{message_id}:{update_time}"
+        return None
+
+    def _remember_long_poll_update(self, dedup_key: str) -> None:
+        self.recent_long_poll_updates.append(dedup_key)
+        if len(self.recent_long_poll_updates) > 1000:
+            del self.recent_long_poll_updates[:-1000]
 
     async def get_chat(self, chat_id: str) -> Chat:
         result = await self._make_request("getChat", {"chat_id": chat_id})
@@ -1329,7 +1286,7 @@ class BotClient:
         # Create a unique key combining message_id and update_type to allow
         # processing both NewMessage and UpdatedMessage for the same message_id
         if isinstance(update, Update) and message_id:
-            dedup_key = f"{message_id}:{update.type}"
+            dedup_key = self._extract_update_key(update)
             if dedup_key in self.processed_messages:
                 logger.debug("Skipping duplicate update: %s", dedup_key)
                 return
@@ -1366,6 +1323,16 @@ class BotClient:
             if update.updated_message:
                 return update.updated_message.message_id
         return None
+
+    def _extract_update_key(self, update: Update) -> str:
+        message_id = self._extract_message_id(update) or ""
+        if update.type == UpdateTypeEnum.RemovedMessage:
+            return f"{update.type}:{message_id}"
+        message = update.new_message or update.updated_message
+        update_time = update.update_time if update.update_time is not None else (
+            getattr(message, "time", None) if message else None
+        )
+        return f"{update.type}:{message_id}:{update_time}"
 
     async def _filters_pass(
         self, update: Union[Update, InlineMessage], filters: Tuple[Filter, ...]
