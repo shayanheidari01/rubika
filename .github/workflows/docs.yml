@@ -33,11 +33,11 @@ jobs:
         run: pip install mkdocs mkdocs-material mdx-include
 
       - name: Build docs
-        run: mkdocs build --strict
+        run: mkdocs build --strict -f mkdocs.yml -d site
         working-directory: docs
 
       - name: Add CNAME
-        run: cp docs/CNAME site/CNAME
+        run: cp docs/CNAME docs/site/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
