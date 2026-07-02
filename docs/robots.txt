@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://rubpy.shayan-heidari.ir/sitemap.xml
